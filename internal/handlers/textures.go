@@ -16,6 +16,18 @@ func NewTextures(l*log.Logger) *Textures {
 }
 
 func (t*Textures) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	switch request.Method {
+	case http.MethodGet:
+		t.getTextures(writer, request)
+	case http.MethodPost:
+		return
+	}
+
+	// Catch all
+	writer.WriteHeader(http.StatusMethodNotAllowed)
+}
+
+func (t*Textures) getTextures(writer http.ResponseWriter, request *http.Request) {
 	texturesList := models.GetTextures()
 	err := texturesList.ToJSON(writer)
 
