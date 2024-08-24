@@ -6,21 +6,27 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/handlers"
 )
 
 func main() {
-	l := log.New(os.Stdout, "product-api", log.LstdFlags)
+	l := log.New(os.Stdout, "texture-api", log.LstdFlags)
+
+	// Create the handlers
 	hh := handlers.NewHello(l)
 	gh := handlers.NewGoodbye(l)
+	texturesHandler := handlers.NewTextures(l);
 
+	// Initialize the ServeMux and register the handlers
 	sm := http.NewServeMux()
-	
 	sm.Handle("/", hh)
 	sm.Handle("/goodbye", gh)
+	sm.Handle("/textures", texturesHandler)
 
+	// Initialize the new server
 	s := &http.Server{
 		Addr: ":9090",
 		Handler: sm,
@@ -29,6 +35,7 @@ func main() {
 		WriteTimeout: 1*time.Second,
 	}
 
+	// Start the server
 	go func() {
 		err := s.ListenAndServe()
 		if err != nil {
@@ -36,9 +43,10 @@ func main() {
 		}
 	}()
 
-	signalChannel := make(chan os.Signal)
+	// Register signals for graceful service termination
+	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt)
-	signal.Notify(signalChannel, os.Kill)
+	signal.Notify(signalChannel, syscall.SIGTERM)
 
 	sig := <- signalChannel
 	l.Println("Received terminate. Gracefully shutting down...", sig)
