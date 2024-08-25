@@ -16,15 +16,11 @@ func main() {
 	l := log.New(os.Stdout, "texture-api", log.LstdFlags)
 
 	// Create the handlers
-	hh := handlers.NewHello(l)
-	gh := handlers.NewGoodbye(l)
 	texturesHandler := handlers.NewTextures(l);
 
 	// Initialize the ServeMux and register the handlers
 	sm := http.NewServeMux()
-	sm.Handle("/", hh)
-	sm.Handle("/goodbye", gh)
-	sm.Handle("/textures", texturesHandler)
+	sm.Handle("/", texturesHandler)
 
 	// Initialize the new server
 	s := &http.Server{

@@ -15,6 +15,11 @@ type Texture struct {
 	UpdatedOn time.Time `json:"-"`
 }
 
+func (t *Texture) FromJSON(r io.Reader) error {
+	d := json.NewDecoder(r)
+	return d.Decode(t)
+}
+
 type Textures []*Texture
 
 func (t *Textures) ToJSON(w io.Writer) error {
@@ -24,6 +29,15 @@ func (t *Textures) ToJSON(w io.Writer) error {
 
 func GetTextures() Textures {
 	return texturesList
+}
+
+func AddTexture(t *Texture) {
+
+}
+
+func getNextID() int {
+// TODO: how to generate random uuid using golang
+	return 1
 }
 
 var texturesList = []*Texture{
