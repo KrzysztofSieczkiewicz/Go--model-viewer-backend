@@ -47,5 +47,7 @@ func (t*Textures) addTexture(writer http.ResponseWriter, request *http.Request) 
 		http.Error(writer,  err.Error(), http.StatusBadRequest)
 	}
 
+	models.AddTexture(texture)
+
 	t.logger.Printf("Texture: %#v", texture)
 }

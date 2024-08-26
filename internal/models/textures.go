@@ -3,7 +3,10 @@ package models
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"time"
+
+	gonanoid "github.com/matoous/go-nanoid"
 )
 
 type Texture struct {
@@ -32,12 +35,16 @@ func GetTextures() Textures {
 }
 
 func AddTexture(t *Texture) {
-
+	t.ID = getNextID()
+	texturesList = append(texturesList, t)
 }
 
-func getNextID() int {
-// TODO: how to generate random uuid using golang
-	return 1
+func getNextID() string {
+	id, err := gonanoid.Nanoid()
+	if err != nil {
+		log.Fatal(err)
+	}
+    return id
 }
 
 var texturesList = []*Texture{
