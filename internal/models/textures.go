@@ -49,7 +49,7 @@ func getNextID() string {
 
 var texturesList = []*Texture{
 	{
-		ID:        "1",
+		ID:        "FUCCNu--2Lru2QoKhR3zc",
 		Name:      "TestTexture1",
 		FilePath: "/test",
 		Tags: []string{"testTag1", "TestTag2"},
@@ -57,7 +57,7 @@ var texturesList = []*Texture{
 		UpdatedOn:	time.Now().UTC(),
 	},
 	{
-		ID:        "2",
+		ID:        "FGZO-fMtXeyAYRwgayFmb",
 		Name:      "TestTexture2",
 		FilePath: "/test",
 		Tags: []string{"testTag2", "TestTag3"},

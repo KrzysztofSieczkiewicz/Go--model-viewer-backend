@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/models"
 )
@@ -21,6 +22,25 @@ func (t*Textures) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		t.getTextures(writer, request)
 	case http.MethodPost:
 		t.addTexture(writer, request)
+	case http.MethodPut:
+		// Expect texture id in the URI
+		regex := regexp.MustCompile(`/[A-Za-z0-9]+-[A-Za-z0-9]+$`)
+		group := regex.FindAllStringSubmatch(request.URL.Path, -1)
+		
+		if len(group) != 1 {
+			http.Error(writer, "Invalid URI", http.StatusBadRequest)
+			return
+		}
+		if len(group[0]) != 1 {
+			http.Error(writer, "Invalid URI", http.StatusBadRequest)
+			return
+		}
+
+		id := group[0][0]
+
+		t.logger.Println("Got id: ", id)
+		
+
 	default:
 		writer.WriteHeader(http.StatusMethodNotAllowed)
 	}
