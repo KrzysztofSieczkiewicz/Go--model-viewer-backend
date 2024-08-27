@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -39,6 +40,35 @@ func AddTexture(t *Texture) {
 	texturesList = append(texturesList, t)
 }
 
+func UpdateTexture(id string, newTexture *Texture) error {
+	texture, index, err := findTexture(id)
+
+	if err != nil {
+		return err
+	}
+
+	texture.ID = id
+
+	fmt.Println("UPDATING TEXTURE: ", id)
+	fmt.Println("WITH DATA: ", newTexture)
+	
+	texturesList[index] = newTexture
+
+	return nil
+}
+
+func findTexture(id string) (*Texture, int, error) {
+	for i, t := range texturesList {
+		if t.ID == id {
+			fmt.Println("Found texture: ", t)
+			fmt.Println("With index: ", i)
+			return t, i, nil
+		}
+	}
+
+	return nil, -1, ErrTextureNotFound
+}
+
 func getNextID() string {
 	id, err := gonanoid.Nanoid()
 	if err != nil {
@@ -65,3 +95,6 @@ var texturesList = []*Texture{
 		UpdatedOn:	time.Now().UTC(),
 	},
 }
+
+
+var ErrTextureNotFound = fmt.Errorf("Texture not found")
