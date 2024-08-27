@@ -48,9 +48,6 @@ func UpdateTexture(id string, newTexture *Texture) error {
 	}
 
 	texture.ID = id
-
-	fmt.Println("UPDATING TEXTURE: ", id)
-	fmt.Println("WITH DATA: ", newTexture)
 	
 	texturesList[index] = newTexture
 
@@ -60,8 +57,6 @@ func UpdateTexture(id string, newTexture *Texture) error {
 func findTexture(id string) (*Texture, int, error) {
 	for i, t := range texturesList {
 		if t.ID == id {
-			fmt.Println("Found texture: ", t)
-			fmt.Println("With index: ", i)
 			return t, i, nil
 		}
 	}

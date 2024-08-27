@@ -80,7 +80,7 @@ func (t*Textures) updateTexture(writer http.ResponseWriter, request *http.Reques
 
 	err = models.UpdateTexture(id, texture)
 	if err == models.ErrTextureNotFound {
-		http.Error(writer, "Product not found", http.StatusNotFound)
+		http.Error(writer, "Texture not found", http.StatusNotFound)
 		return
 	}
 	if err != nil {
