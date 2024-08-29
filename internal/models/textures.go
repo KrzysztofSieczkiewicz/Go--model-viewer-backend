@@ -24,6 +24,11 @@ func (t *Texture) FromJSON(r io.Reader) error {
 	return d.Decode(t)
 }
 
+func (t *Texture) ToJSON(w io.Writer) error {
+	e := json.NewEncoder(w)
+	return e.Encode(t)
+}
+
 type Textures []*Texture
 
 func (t *Textures) ToJSON(w io.Writer) error {
@@ -35,21 +40,28 @@ func GetTextures() Textures {
 	return texturesList
 }
 
+func GetTexture(id string) (*Texture, error){
+	texture, _, err := findTexture(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return texture, nil
+}
+
 func AddTexture(t *Texture) {
 	t.ID = getNextID()
 	texturesList = append(texturesList, t)
 }
 
-func UpdateTexture(id string, newTexture *Texture) error {
-	texture, index, err := findTexture(id)
-
+func UpdateTexture(id string, t *Texture) error {
+	_, index, err := findTexture(id)
 	if err != nil {
 		return err
 	}
 
-	texture.ID = id
-	
-	texturesList[index] = newTexture
+	t.ID = id
+	texturesList[index] = t
 
 	return nil
 }

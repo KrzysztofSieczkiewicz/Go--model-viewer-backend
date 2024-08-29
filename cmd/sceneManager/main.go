@@ -16,16 +16,20 @@ func main() {
 	l := log.New(os.Stdout, "texture-api", log.LstdFlags)
 
 	// Create the handlers
-	texturesHandler := handlers.NewTextures(l);
+	texturesHandler := handlers.NewHandler(l);
 
 	// Initialize the ServeMux and register the handlers
-	sm := http.NewServeMux()
-	sm.Handle("/", texturesHandler)
+	router := http.NewServeMux()
+
+	router.HandleFunc("GET /textures", texturesHandler.GetTextures)
+	router.HandleFunc("POST /textures", texturesHandler.PostTexture)
+	router.HandleFunc("PUT /textures/{id}", texturesHandler.PutTexture)
+	router.HandleFunc("GET /textures/{id}", texturesHandler.GetTexture)
 
 	// Initialize the new server
 	s := &http.Server{
 		Addr: ":9090",
-		Handler: sm,
+		Handler: router,
 		IdleTimeout: 120*time.Second,
 		ReadTimeout: 1*time.Second,
 		WriteTimeout: 1*time.Second,
