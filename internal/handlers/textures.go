@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/models"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/data"
 )
 
 type Textures struct {
@@ -20,7 +20,7 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 
 	id := r.PathValue("id")
 
-	texture, err := models.GetTexture(id)
+	texture, err := data.GetTexture(id)
 	if err != nil {
 		http.Error(rw, "Unable to encode textures data to json", http.StatusInternalServerError)
 		return
@@ -36,7 +36,7 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 	t.logger.Println("Handle GET request")
 
-	texturesList := models.GetTextures()
+	texturesList := data.GetTextures()
 
 	err := texturesList.ToJSON(rw)
 	if err != nil {
@@ -48,7 +48,7 @@ func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
 	t.logger.Println("Handle POST request")
 
-	texture := &models.Texture{}
+	texture := &data.Texture{}
 
 	err := texture.FromJSON(r.Body)
 	if err != nil {
@@ -56,7 +56,7 @@ func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	models.AddTexture(texture)
+	data.AddTexture(texture)
 }
 
 func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 
 	id := r.PathValue("id")
 
-	texture := &models.Texture{}
+	texture := &data.Texture{}
 
 	err := texture.FromJSON(r.Body)
 	if err != nil {
@@ -72,8 +72,8 @@ func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = models.UpdateTexture(id, texture)
-	if err == models.ErrTextureNotFound {
+	err = data.UpdateTexture(id, texture)
+	if err == data.ErrTextureNotFound {
 		http.Error(rw, "Texture not found", http.StatusNotFound)
 		return
 	}
