@@ -16,13 +16,11 @@ func NewHandler(logger*log.Logger) *Textures {
 }
 
 func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
-	t.logger.Println("Handle GET request")
-
 	id := r.PathValue("id")
 
 	texture, err := data.GetTexture(id)
 	if err != nil {
-		http.Error(rw, "Unable to encode textures data to json", http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -34,8 +32,6 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
-	t.logger.Println("Handle GET request")
-
 	texturesList := data.GetTextures()
 
 	err := texturesList.ToJSON(rw)
@@ -46,8 +42,6 @@ func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
-	t.logger.Println("Handle POST request")
-
 	texture := &data.Texture{}
 
 	err := texture.FromJSON(r.Body)
@@ -60,8 +54,6 @@ func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
-	t.logger.Println("Handle PUT request")
-
 	id := r.PathValue("id")
 
 	texture := &data.Texture{}
@@ -82,3 +74,24 @@ func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+/*
+type KeyTexture struct {}
+
+func (t Textures) MiddlewareTexturesValidation(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		texture := &data.Texture{}
+
+		err := texture.FromJSON(r.Body)
+		if err != nil {
+			http.Error(rw,  "Unable to unmarshal Texture object from JSON:\n" + err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context().Value(KeyTexture, texture)
+		req := r.Context(ctx)
+
+		next.ServeHTTP(rw, req)
+	})
+}
+*/

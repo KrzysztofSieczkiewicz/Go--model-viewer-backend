@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/handlers"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/middleware"
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 	// Initialize the new server
 	s := &http.Server{
 		Addr: ":9090",
-		Handler: router,
+		Handler: middleware.Logging(router),
 		IdleTimeout: 120*time.Second,
 		ReadTimeout: 1*time.Second,
 		WriteTimeout: 1*time.Second,
