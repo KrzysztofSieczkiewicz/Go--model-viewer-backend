@@ -23,13 +23,12 @@ func main() {
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /textures", texturesHandler.GetTextures)
-	router.HandleFunc("POST /textures", texturesHandler.PostTexture)
-	router.HandleFunc("PUT /textures/{id}", texturesHandler.PutTexture)
+	router.HandleFunc("POST /textures", withMiddleware(texturesHandler.PostTexture, middleware.TextureJsonValidation))
+	router.HandleFunc("PUT /textures/{id}", withMiddleware(texturesHandler.PutTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("GET /textures/{id}", texturesHandler.GetTexture)
 
 	stack := middleware.CreateStack(
 		middleware.Logging,
-		middleware.TextureJsonValidation,
 	)
 	// Initialize the new server
 	s := &http.Server{
@@ -58,4 +57,14 @@ func main() {
 
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	s.Shutdown(tc)
+}
+
+
+// Wraps function in the provided middleware.
+// Returns as HandlerFunc to be provided to the router.HandleFunc()
+// Provides a way for single middleware injections for particular routes
+func withMiddleware(handlerFunction func(http.ResponseWriter, *http.Request), mw func(http.Handler) http.Handler) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mw(http.HandlerFunc(handlerFunction)).ServeHTTP(w, r)
+	})
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/data"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/middleware"
 )
 
 type Textures struct {
@@ -42,29 +43,15 @@ func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
-	texture := &data.Texture{}
-
-	err := texture.FromJSON(r.Body)
-	if err != nil {
-		http.Error(rw,  err.Error(), http.StatusBadRequest)
-		return
-	}
-
+	texture := r.Context().Value(middleware.KeyTexture{}).(*data.Texture)
 	data.AddTexture(texture)
 }
 
 func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	texture := r.Context().Value(middleware.KeyTexture{}).(*data.Texture)
 
-	texture := &data.Texture{}
-
-	err := texture.FromJSON(r.Body)
-	if err != nil {
-		http.Error(rw,  err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = data.UpdateTexture(id, texture)
+	err := data.UpdateTexture(id, texture)
 	if err == data.ErrTextureNotFound {
 		http.Error(rw, "Texture not found", http.StatusNotFound)
 		return
