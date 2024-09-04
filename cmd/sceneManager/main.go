@@ -27,10 +27,14 @@ func main() {
 	router.HandleFunc("PUT /textures/{id}", texturesHandler.PutTexture)
 	router.HandleFunc("GET /textures/{id}", texturesHandler.GetTexture)
 
+	stack := middleware.CreateStack(
+		middleware.Logging,
+		middleware.TextureJsonValidation,
+	)
 	// Initialize the new server
 	s := &http.Server{
 		Addr: ":9090",
-		Handler: middleware.Logging(router),
+		Handler: stack(router),
 		IdleTimeout: 120*time.Second,
 		ReadTimeout: 1*time.Second,
 		WriteTimeout: 1*time.Second,

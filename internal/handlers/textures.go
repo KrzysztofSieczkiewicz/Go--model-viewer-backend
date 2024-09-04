@@ -74,24 +74,3 @@ func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-/*
-type KeyTexture struct {}
-
-func (t Textures) MiddlewareTexturesValidation(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		texture := &data.Texture{}
-
-		err := texture.FromJSON(r.Body)
-		if err != nil {
-			http.Error(rw,  "Unable to unmarshal Texture object from JSON:\n" + err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		ctx := r.Context().Value(KeyTexture, texture)
-		req := r.Context(ctx)
-
-		next.ServeHTTP(rw, req)
-	})
-}
-*/
