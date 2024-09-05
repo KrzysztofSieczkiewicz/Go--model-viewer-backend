@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
 	"time"
 
+	validator "github.com/go-playground/validator/v10"
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
 type Texture struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	FilePath  string `json:"path"`
-	Tags      []string `json:"tags"`
+	ID        string    `json:"id" validate:"required"`
+	Name      string    `json:"name" validate:"required"`
+	FilePath  string    `json:"path" validate:"required,filepath"`
+	Tags      []string  `json:"tags"`
 	CreatedOn time.Time `json:"-"`
 	UpdatedOn time.Time `json:"-"`
 }
@@ -28,6 +30,24 @@ func (t *Texture) ToJSON(w io.Writer) error {
 	e := json.NewEncoder(w)
 	return e.Encode(t)
 }
+
+
+func (t *Texture) Validate() error {
+	validate := validator.New()
+
+	validate.RegisterValidation("filepath", validateFilePath)
+
+	return validate.Struct(t)
+}
+
+func validateFilePath(fl validator.FieldLevel) bool {
+	re := regexp.MustCompile(`^(.*)\/([^\/]*)$`)
+	matches := re.FindAllString(fl.Field().String(), -1)
+
+	return len(matches) == 1
+}
+
+
 
 type Textures []*Texture
 
