@@ -55,14 +55,15 @@ func main() {
 	sig := <- signalChannel
 	l.Println("Received terminate. Gracefully shutting down...", sig)
 
-	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	tc, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	s.Shutdown(tc)
 }
 
 
 // Wraps function in the provided middleware.
-// Returns HandlerFunc to be provided to the router.HandleFunc()
-// Provides a way for single middleware injections for particular routes
+// Returns wrapper as a HandlerFunc
+// Provides a way for single middleware injections
 func withMiddleware(handlerFunction func(http.ResponseWriter, *http.Request), mw func(http.Handler) http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mw(http.HandlerFunc(handlerFunction)).ServeHTTP(w, r)

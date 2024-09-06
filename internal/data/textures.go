@@ -12,10 +12,9 @@ import (
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
-// TODO: ADD CUSTOM NAME VERIFICATION (no illegal characters - just spaces, lowercase/uppercase, numbers, not longer than 64 characters)
 type Texture struct {
 	ID        string    `json:"id"`
-	Name      string    `json:"name" validate:"required"`
+	Name      string    `json:"name" validate:"required,name"`
 	FilePath  string    `json:"path" validate:"required,filepath"`
 	Tags      []string  `json:"tags"`
 	CreatedOn time.Time `json:"-"`
@@ -37,12 +36,20 @@ func (t *Texture) Validate() error {
 	validate := validator.New()
 
 	validate.RegisterValidation("filepath", validateFilePath)
+	validate.RegisterValidation("name", validateName)
 
 	return validate.Struct(t)
 }
 
 func validateFilePath(fl validator.FieldLevel) bool {
 	re := regexp.MustCompile(`^(.*)\/([^\/]*)$`)
+	matches := re.FindAllString(fl.Field().String(), -1)
+
+	return len(matches) == 1
+}
+
+func validateName(fl validator.FieldLevel) bool {
+	re := regexp.MustCompile(`^([a-zA-Z -_]*([_][0-9]*)?)$`)
 	matches := re.FindAllString(fl.Field().String(), -1)
 
 	return len(matches) == 1
