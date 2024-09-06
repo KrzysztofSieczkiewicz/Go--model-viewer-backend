@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/data"
@@ -16,6 +17,16 @@ func TextureJsonValidation(next http.Handler) http.Handler {
 		err := texture.FromJSON(r.Body)
 		if err != nil {
 			http.Error(rw, "Unable to unmarshal Texture object from JSON:\n"+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = texture.Validate()
+		if err != nil {
+			http.Error(
+				rw, 
+				fmt.Sprintf("Error validating texture:\n %s", err), 
+				http.StatusBadRequest,
+			)
 			return
 		}
 

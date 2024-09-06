@@ -2,6 +2,22 @@ package data
 
 import "testing"
 
+// Example requests for api testing:
+// PUT:
+// curl -v http://localhost:9090/textures/FUCCNu--2Lru2QoKhR3zc -XPUT -d "{\"name\":\"NewTestName\", \"path\":\"NewPath/asd\", \"tags\":[]}"
+//
+// POST:
+// curl -v http://localhost:9090/textures -XPOST -d "{\"name\":\"NewTestName\", \"path\":\"filepath/to/asset\"}"
+//
+// GET:
+// curl -v http://localhost:9090/textures
+//
+// GET: (SINGLE)
+// curl -v http://localhost:9090/textures/FUCCNu--2Lru2QoKhR3zcas
+
+
+
+
 func TestValidationNegative(t *testing.T) {
 	texture := &Texture{}
 

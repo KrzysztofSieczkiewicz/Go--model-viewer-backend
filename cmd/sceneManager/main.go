@@ -55,10 +55,7 @@ func main() {
 	sig := <- signalChannel
 	l.Println("Received terminate. Gracefully shutting down...", sig)
 
-	tc, err := context.WithTimeout(context.Background(), 30*time.Second)
-	if err != nil {
-		l.Fatal("Failed to set context with timeout. Shutting down abruptly... \n", err)
-	}
+	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	s.Shutdown(tc)
 }
 

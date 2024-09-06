@@ -12,8 +12,9 @@ import (
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
+// TODO: ADD CUSTOM NAME VERIFICATION (no illegal characters - just spaces, lowercase/uppercase, numbers, not longer than 64 characters)
 type Texture struct {
-	ID        string    `json:"id" validate:"required"`
+	ID        string    `json:"id"`
 	Name      string    `json:"name" validate:"required"`
 	FilePath  string    `json:"path" validate:"required,filepath"`
 	Tags      []string  `json:"tags"`
@@ -69,6 +70,7 @@ func GetTexture(id string) (*Texture, error){
 	return texture, nil
 }
 
+// TODO: how to add texture so 'tags' is not null, but empty (is there a point though?)
 func AddTexture(t *Texture) {
 	t.ID = getNextID()
 	texturesList = append(texturesList, t)
