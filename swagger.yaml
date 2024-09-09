@@ -1,0 +1,44 @@
+basePath: /
+consumes:
+    - application/json
+definitions:
+    Texture:
+        properties:
+            id:
+                type: string
+                x-go-name: ID
+            name:
+                type: string
+                x-go-name: Name
+            path:
+                type: string
+                x-go-name: FilePath
+            tags:
+                items:
+                    type: string
+                type: array
+                x-go-name: Tags
+        type: object
+        x-go-package: github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data
+info:
+    description: '# Documentation for SceneManager API'
+    title: of SceneManager API
+    version: 0.0.1
+paths:
+    /textures/{id}:
+        get:
+            description: Returns single texture based on provided id
+            operationId: texture
+            responses:
+                "200":
+                    $ref: '#/responses/textureResponse'
+produces:
+    - application/json
+responses:
+    textureResponse:
+        description: ""
+        schema:
+            $ref: '#/definitions/Texture'
+schemes:
+    - http
+swagger: "2.0"

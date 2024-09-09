@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	extMidddleware "github.com/go-openapi/runtime/middleware"
+
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/handlers"
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
@@ -26,6 +28,11 @@ func main() {
 	router.HandleFunc("POST /textures", withMiddleware(texturesHandler.PostTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("PUT /textures/{id}", withMiddleware(texturesHandler.PutTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("GET /textures/{id}", texturesHandler.GetTexture)
+
+	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := extMidddleware.Redoc(opts, nil)
+	router.Handle("/docs", sh)
+	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	stack := middleware.CreateStack(
 		middleware.Logging,

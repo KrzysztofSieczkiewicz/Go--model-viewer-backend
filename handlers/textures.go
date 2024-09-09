@@ -1,9 +1,9 @@
 // Package classification of SceneManager API
 //
-// Documentation for SceneManager API
+// # Documentation for SceneManager API
 //
 // Schemes: http
-// BasePath: /textures
+// BasePath: /
 // version: 0.0.1
 //
 // Consumes:
@@ -12,7 +12,6 @@
 // Produces:
 // - application/json
 // swagger:meta
-
 package handlers
 
 import (
@@ -23,6 +22,13 @@ import (
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
 
+// swagger:response textureResponse
+type textureResponse struct {
+	// Single texture with matching id
+	// in: body
+	Body data.Texture
+}
+
 type Textures struct {
 	logger *log.Logger
 }
@@ -31,6 +37,10 @@ func NewHandler(logger*log.Logger) *Textures {
 	return &Textures{logger}
 }
 
+// swagger:route GET /textures/{id} texture
+// Returns single texture based on provided id
+// responses:
+//  200: textureResponse
 func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
