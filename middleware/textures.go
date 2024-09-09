@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/data"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
 )
 
 type KeyTexture struct{}

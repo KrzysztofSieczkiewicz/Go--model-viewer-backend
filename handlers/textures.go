@@ -1,11 +1,26 @@
+// Package classification of SceneManager API
+//
+// Documentation for SceneManager API
+//
+// Schemes: http
+// BasePath: /textures
+// version: 0.0.1
+//
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+// swagger:meta
+
 package handlers
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/data"
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/middleware"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
 
 type Textures struct {

@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/handlers"
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/middleware"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/handlers"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
 
 func main() {
