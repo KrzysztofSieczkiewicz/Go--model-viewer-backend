@@ -95,6 +95,20 @@ func UpdateTexture(id string, t *Texture) error {
 	return nil
 }
 
+func DeleteTexture(id string) error {
+	_, index, err := findTexture(id)
+	if err != nil {
+		return err
+	}
+
+	texturesList = append(
+		texturesList[:index], 
+		texturesList[index+1:]...
+	)
+	
+	return nil
+}
+
 func findTexture(id string) (*Texture, int, error) {
 	for i, t := range texturesList {
 		if t.ID == id {

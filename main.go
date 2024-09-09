@@ -28,7 +28,9 @@ func main() {
 	router.HandleFunc("POST /textures", withMiddleware(texturesHandler.PostTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("PUT /textures/{id}", withMiddleware(texturesHandler.PutTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("GET /textures/{id}", texturesHandler.GetTexture)
+	router.HandleFunc("DELETE /textures/{id}", texturesHandler.DeleteTexture)
 
+	// Handle OpenAPI doc request
 	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := extMidddleware.Redoc(opts, nil)
 	router.Handle("/docs", sh)

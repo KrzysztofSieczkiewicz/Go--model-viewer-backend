@@ -86,3 +86,17 @@ func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (t*Textures) DeleteTexture(rw http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	err := data.DeleteTexture(id)
+	if err == data.ErrTextureNotFound {
+		http.Error(rw, "Texture not found", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(rw, "Issue occured during texture deletion", http.StatusInternalServerError)
+		return
+	}
+}
