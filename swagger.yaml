@@ -3,21 +3,30 @@ consumes:
     - application/json
 definitions:
     Texture:
+        description: Texture defines the structure for an API texture
         properties:
             id:
+                description: Unique id identifying texture in the database
                 type: string
                 x-go-name: ID
             name:
+                description: Texture name for identification by the end-user
                 type: string
                 x-go-name: Name
             path:
+                description: Filepath under which the texture can be found in the filesystem
                 type: string
                 x-go-name: FilePath
             tags:
+                description: Tags roughly describing the texture properties
                 items:
                     type: string
                 type: array
                 x-go-name: Tags
+        required:
+            - id
+            - name
+            - path
         type: object
         x-go-package: github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data
 info:
@@ -25,20 +34,61 @@ info:
     title: of SceneManager API
     version: 0.0.1
 paths:
-    /textures/{id}:
+    /textures:
         get:
-            description: Returns single texture based on provided id
-            operationId: texture
+            description: Returns all available textures based on id
+            operationId: getTextures
             responses:
                 "200":
                     $ref: '#/responses/textureResponse'
+        post:
+            description: Adds single texture to the database
+            operationId: getTexture
+            responses:
+                "201":
+                    $ref: '#/responses/noContent'
+    /textures/{id}:
+        delete:
+            description: 'Deletes a texture from the database '
+            operationId: deleteTexture
+            responses:
+                "204":
+                    $ref: '#/responses/noContent'
+                "404":
+                    $ref: '#/responses/noContent'
+                "500":
+                    $ref: '#/responses/noContent'
+        get:
+            description: Returns single texture based on id
+            operationId: getTexture
+            responses:
+                "200":
+                    $ref: '#/responses/texturesResponse'
+        put:
+            description: Updates single texture based on id
+            operationId: getTexture
+            responses:
+                "201":
+                    $ref: '#/responses/noContent'
+                "404":
+                    $ref: '#/responses/noContent'
+                "500":
+                    $ref: '#/responses/noContent'
 produces:
     - application/json
 responses:
+    noContent:
+        description: ""
     textureResponse:
         description: ""
         schema:
             $ref: '#/definitions/Texture'
+    texturesResponse:
+        description: ""
+        schema:
+            items:
+                $ref: '#/definitions/Texture'
+            type: array
 schemes:
     - http
 swagger: "2.0"

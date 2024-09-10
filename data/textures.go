@@ -12,10 +12,23 @@ import (
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
+// Texture defines the structure for an API texture
+// swagger:model Texture
 type Texture struct {
+	// Unique id identifying texture in the database
+	// required: true
 	ID        string    `json:"id"`
+
+	// Texture name for identification by the end-user
+	// required: true
 	Name      string    `json:"name" validate:"required,name"`
+
+	// Filepath under which the texture can be found in the filesystem
+	// required: true
 	FilePath  string    `json:"path" validate:"required,filepath"`
+
+	// Tags roughly describing the texture properties
+	// required: false
 	Tags      []string  `json:"tags"`
 	CreatedOn time.Time `json:"-"`
 	UpdatedOn time.Time `json:"-"`
