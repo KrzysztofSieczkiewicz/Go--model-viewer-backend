@@ -40,55 +40,69 @@ paths:
             operationId: getTextures
             responses:
                 "200":
-                    $ref: '#/responses/textureResponse'
+                    $ref: '#/responses/getTexturesResponse'
+                "500":
+                    $ref: '#/responses/internalServerErrorResponse'
         post:
             description: Adds single texture to the database
-            operationId: getTexture
+            operationId: postTexture
             responses:
                 "201":
-                    $ref: '#/responses/noContent'
+                    $ref: '#/responses/createdResponse'
     /textures/{id}:
         delete:
             description: 'Deletes a texture from the database '
             operationId: deleteTexture
             responses:
-                "204":
-                    $ref: '#/responses/noContent'
+                "200":
+                    $ref: '#/responses/okResponse'
                 "404":
-                    $ref: '#/responses/noContent'
+                    $ref: '#/responses/notFoundResponse'
                 "500":
-                    $ref: '#/responses/noContent'
+                    $ref: '#/responses/internalServerErrorResponse'
         get:
             description: Returns single texture based on id
             operationId: getTexture
             responses:
                 "200":
-                    $ref: '#/responses/texturesResponse'
+                    $ref: '#/responses/getTextureResponse'
+                "404":
+                    $ref: '#/responses/notFoundResponse'
+                "500":
+                    $ref: '#/responses/internalServerErrorResponse'
         put:
             description: Updates single texture based on id
-            operationId: getTexture
+            operationId: putTexture
             responses:
                 "201":
-                    $ref: '#/responses/noContent'
+                    $ref: '#/responses/createdResponse'
                 "404":
-                    $ref: '#/responses/noContent'
+                    $ref: '#/responses/notFoundResponse'
                 "500":
-                    $ref: '#/responses/noContent'
+                    $ref: '#/responses/internalServerErrorResponse'
 produces:
     - application/json
 responses:
-    noContent:
+    createdResponse:
         description: ""
-    textureResponse:
+    getTextureResponse:
         description: ""
         schema:
             $ref: '#/definitions/Texture'
-    texturesResponse:
+    getTexturesResponse:
         description: ""
         schema:
             items:
                 $ref: '#/definitions/Texture'
             type: array
+    internalServerErrorResponse:
+        description: ""
+    noContentResponse:
+        description: ""
+    notFoundResponse:
+        description: ""
+    okResponse:
+        description: ""
 schemes:
     - http
 swagger: "2.0"

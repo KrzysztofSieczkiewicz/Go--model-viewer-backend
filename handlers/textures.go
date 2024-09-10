@@ -22,32 +22,6 @@ import (
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
 
-// swagger:response textureResponse
-type textureResponseWrapper struct {
-	// Single texture with matching id
-	// in: body
-	Body data.Texture
-}
-
-// swagger:response texturesResponse
-type texturesResponseWrapper struct {
-	// All textures in the database
-	// in: body
-	Body []data.Texture
-}
-
-// swagger:response noContent
-type textureNoContent struct {
-}
-
-// swagger:parameters [getTexture, deleteTexture]
-type textureIdParameter struct {
-	// The id of the texture in the database
-	// in:path
-	// required: true
-	ID string `json:"id"`
-}
-
 // Textures is an http Handler
 type Textures struct {
 	logger *log.Logger
@@ -60,7 +34,9 @@ func NewHandler(logger*log.Logger) *Textures {
 // swagger:route GET /textures/{id} getTexture
 // Returns single texture based on id
 // responses:
-//  200: texturesResponse
+//  200: getTextureResponse
+//  404: notFoundResponse
+//  500: internalServerErrorResponse
 
 // GetTexture returns matched texture from the database
 func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
@@ -82,7 +58,8 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 // swagger:route GET /textures getTextures
 // Returns all available textures based on id
 // responses:
-//  200: textureResponse
+//  200: getTexturesResponse
+//  500: internalServerErrorResponse
 
 // GetTextures returns all textures available in the database
 func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
@@ -95,10 +72,10 @@ func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// swagger:route POST /textures getTexture
+// swagger:route POST /textures postTexture
 // Adds single texture to the database
 // responses:
-//  201: noContent
+//  201: createdResponse
 
 // PostTexture adds provided texture to the database
 func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
@@ -106,12 +83,12 @@ func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
 	data.AddTexture(texture)
 }
 
-// swagger:route PUT /textures/{id} getTexture
+// swagger:route PUT /textures/{id} putTexture
 // Updates single texture based on id
 // responses:
-//  201: noContent
-//  404: noContent
-//  500: noContent
+//  201: createdResponse
+//  404: notFoundResponse
+//  500: internalServerErrorResponse
 
 // PutTexture adds provided texture to the database
 func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
@@ -132,9 +109,9 @@ func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 // swagger:route DELETE /textures/{id} deleteTexture
 // Deletes a texture from the database 
 // responses:
-//  200: noContent
-//  404: noContent
-//  500: noContent
+//  200: okResponse
+//  404: notFoundResponse
+//  500: internalServerErrorResponse
 
 // DeleteTexture deletes texture from the database
 func (t*Textures) DeleteTexture(rw http.ResponseWriter, r *http.Request) {
