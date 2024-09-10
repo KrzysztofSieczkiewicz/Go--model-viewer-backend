@@ -2,7 +2,7 @@ package swagger
 
 import "github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
 
-// swagger:parameters getTexture, deleteTexture
+// swagger:parameters getTexture putTexture deleteTexture
 type TextureIdParameter struct {
 	// in:path
 	// name: id
