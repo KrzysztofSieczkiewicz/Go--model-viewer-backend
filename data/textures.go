@@ -42,17 +42,6 @@ type Texture struct {
 	UpdatedOn time.Time `json:"-"`
 }
 
-func (t *Texture) FromJSON(r io.Reader) error {
-	d := json.NewDecoder(r)
-	return d.Decode(t)
-}
-
-func (t *Texture) ToJSON(w io.Writer) error {
-	e := json.NewEncoder(w)
-	return e.Encode(t)
-}
-
-
 func (t *Texture) Validate() error {
 	validate := validator.New()
 

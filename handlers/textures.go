@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/utils"
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
 
@@ -50,7 +51,7 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = texture.ToJSON(rw)
+	err = utils.ToJSON(texture, rw)
 	if err != nil {
 		http.Error(rw, "Unable to encode textures data to json", http.StatusInternalServerError)
 		return
@@ -67,7 +68,7 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 	texturesList := data.GetTextures()
 
-	err := texturesList.ToJSON(rw)
+	err := utils.ToJSON(texturesList, rw)
 	if err != nil {
 		http.Error(rw, "Unable to encode textures data to json", http.StatusInternalServerError)
 		return
