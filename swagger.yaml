@@ -2,6 +2,16 @@ basePath: /
 consumes:
     - application/json
 definitions:
+    GenericErrors:
+        description: GenericErrors is a collection of validation error messages
+        properties:
+            messages:
+                items:
+                    type: string
+                type: array
+                x-go-name: Messages
+        type: object
+        x-go-package: github.com/KrzysztofSieczkiewicz/ModelViewerBackend/handlers/swagger
     Texture:
         description: Texture defines the structure for an API texture
         properties:
@@ -40,15 +50,23 @@ paths:
             operationId: getTextures
             responses:
                 "200":
-                    $ref: '#/responses/getTexturesResponse'
+                    $ref: '#/responses/getTextures'
                 "500":
-                    $ref: '#/responses/internalServerErrorResponse'
+                    $ref: '#/responses/error'
         post:
             description: Adds single texture to the database
             operationId: postTexture
+            parameters:
+                - description: |-
+                    Texture data structure to Create or Update
+                    Note: id field will be ignored by both Create and Update operations
+                  in: body
+                  name: Body
+                  schema:
+                    $ref: '#/definitions/Texture'
             responses:
                 "201":
-                    $ref: '#/responses/createdResponse'
+                    $ref: '#/responses/empty'
     /textures/{id}:
         delete:
             description: 'Deletes a texture from the database '
@@ -61,11 +79,11 @@ paths:
                   x-go-name: ID
             responses:
                 "200":
-                    $ref: '#/responses/okResponse'
+                    $ref: '#/responses/noContentResponse'
                 "404":
-                    $ref: '#/responses/notFoundResponse'
+                    $ref: '#/responses/errorResponse'
                 "500":
-                    $ref: '#/responses/internalServerErrorResponse'
+                    $ref: '#/responses/errorResponse'
         get:
             description: Returns single texture based on id
             operationId: getTexture
@@ -77,11 +95,11 @@ paths:
                   x-go-name: ID
             responses:
                 "200":
-                    $ref: '#/responses/getTextureResponse'
+                    $ref: '#/responses/getTexture'
                 "404":
-                    $ref: '#/responses/notFoundResponse'
+                    $ref: '#/responses/error'
                 "500":
-                    $ref: '#/responses/internalServerErrorResponse'
+                    $ref: '#/responses/error'
         put:
             description: Updates single texture based on id
             operationId: putTexture
@@ -91,36 +109,41 @@ paths:
                   required: true
                   type: string
                   x-go-name: ID
+                - description: |-
+                    Texture data structure to Create or Update
+                    Note: id field will be ignored by both Create and Update operations
+                  in: body
+                  name: Body
+                  schema:
+                    $ref: '#/definitions/Texture'
             responses:
                 "201":
                     $ref: '#/responses/createdResponse'
                 "404":
-                    $ref: '#/responses/notFoundResponse'
+                    $ref: '#/responses/errorResponse'
                 "500":
-                    $ref: '#/responses/internalServerErrorResponse'
+                    $ref: '#/responses/errorResponse'
 produces:
     - application/json
 responses:
-    createdResponse:
-        description: ""
-    getTextureResponse:
+    empty:
+        description: Generic empty response with no content
+    error:
+        description: Generic eror message returned as a string
+    errorValidation:
+        description: Validation errors defined as an array of strings
+        schema:
+            $ref: '#/definitions/GenericErrors'
+    getTexture:
         description: ""
         schema:
             $ref: '#/definitions/Texture'
-    getTexturesResponse:
+    getTextures:
         description: ""
         schema:
             items:
                 $ref: '#/definitions/Texture'
             type: array
-    internalServerErrorResponse:
-        description: ""
-    noContentResponse:
-        description: ""
-    notFoundResponse:
-        description: ""
-    okResponse:
-        description: ""
 schemes:
     - http
 swagger: "2.0"

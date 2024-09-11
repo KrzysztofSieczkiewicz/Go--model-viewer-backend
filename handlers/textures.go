@@ -34,13 +34,15 @@ func NewHandler(logger*log.Logger) *Textures {
 // swagger:route GET /textures/{id} getTexture
 // Returns single texture based on id
 // responses:
-//  200: getTextureResponse
-//  404: notFoundResponse
-//  500: internalServerErrorResponse
+//  200: getTexture
+//  404: error
+//  500: error
 
 // GetTexture returns matched texture from the database
 func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+
+	rw.Header().Add("Content-Type", "application/json")
 
 	texture, err := data.GetTexture(id)
 	if err != nil {
@@ -58,8 +60,8 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 // swagger:route GET /textures getTextures
 // Returns all available textures based on id
 // responses:
-//  200: getTexturesResponse
-//  500: internalServerErrorResponse
+//  200: getTextures
+//  500: error
 
 // GetTextures returns all textures available in the database
 func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
@@ -75,7 +77,7 @@ func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 // swagger:route POST /textures postTexture
 // Adds single texture to the database
 // responses:
-//  201: createdResponse
+//  201: empty
 
 // PostTexture adds provided texture to the database
 func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
@@ -87,8 +89,8 @@ func (t*Textures) PostTexture(rw http.ResponseWriter, r *http.Request) {
 // Updates single texture based on id
 // responses:
 //  201: createdResponse
-//  404: notFoundResponse
-//  500: internalServerErrorResponse
+//  404: errorResponse
+//  500: errorResponse
 
 // PutTexture adds provided texture to the database
 func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
@@ -109,9 +111,9 @@ func (t*Textures) PutTexture(rw http.ResponseWriter, r *http.Request) {
 // swagger:route DELETE /textures/{id} deleteTexture
 // Deletes a texture from the database 
 // responses:
-//  200: okResponse
-//  404: notFoundResponse
-//  500: internalServerErrorResponse
+//  200: noContentResponse
+//  404: errorResponse
+//  500: errorResponse
 
 // DeleteTexture deletes texture from the database
 func (t*Textures) DeleteTexture(rw http.ResponseWriter, r *http.Request) {

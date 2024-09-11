@@ -16,15 +16,23 @@ import (
 // swagger:model Texture
 type Texture struct {
 	// Unique id identifying texture in the database
-	// required: true
-	ID        string    `json:"id"`
+	// required: false
+	// min length: 8
+	// max length: 255
+	ID        string    `json:"id,omitempty"`
 
 	// Texture name for identification by the end-user
 	// required: true
+	// min length: 8
+	// max length: 255
+	// pattern: ^([a-zA-Z -_]*([_][0-9]*)?)$
 	Name      string    `json:"name" validate:"required,name"`
 
 	// Filepath under which the texture can be found in the filesystem
 	// required: true
+	// min length: 8
+	// max length: 255
+	// pattern: ^(.*)\/([^\/]*)$
 	FilePath  string    `json:"path" validate:"required,filepath"`
 
 	// Tags roughly describing the texture properties
