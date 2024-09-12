@@ -1,0 +1,149 @@
+basePath: /
+consumes:
+    - application/json
+definitions:
+    GenericErrors:
+        description: GenericErrors is a collection of validation error messages
+        properties:
+            messages:
+                items:
+                    type: string
+                type: array
+                x-go-name: Messages
+        type: object
+        x-go-package: github.com/KrzysztofSieczkiewicz/ModelViewerBackend/handlers/swagger
+    Texture:
+        description: Texture defines the structure for an API texture
+        properties:
+            id:
+                description: Unique id identifying texture in the database
+                type: string
+                x-go-name: ID
+            name:
+                description: Texture name for identification by the end-user
+                type: string
+                x-go-name: Name
+            path:
+                description: Filepath under which the texture can be found in the filesystem
+                type: string
+                x-go-name: FilePath
+            tags:
+                description: Tags roughly describing the texture properties
+                items:
+                    type: string
+                type: array
+                x-go-name: Tags
+        required:
+            - id
+            - name
+            - path
+        type: object
+        x-go-package: github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data
+info:
+    description: '# Documentation for SceneManager API'
+    title: of SceneManager API
+    version: 0.0.1
+paths:
+    /textures:
+        get:
+            description: Returns all available textures based on id
+            operationId: getTextures
+            responses:
+                "200":
+                    $ref: '#/responses/getTextures'
+                "500":
+                    $ref: '#/responses/error'
+        post:
+            description: Adds single texture to the database
+            operationId: postTexture
+            parameters:
+                - description: |-
+                    Texture data structure to Create or Update
+                    Note: id field will be ignored by both Create and Update operations
+                  in: body
+                  name: Body
+                  schema:
+                    $ref: '#/definitions/Texture'
+            responses:
+                "201":
+                    $ref: '#/responses/empty'
+    /textures/{id}:
+        delete:
+            description: 'Deletes a texture from the database '
+            operationId: deleteTexture
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: string
+                  x-go-name: ID
+            responses:
+                "200":
+                    $ref: '#/responses/noContentResponse'
+                "404":
+                    $ref: '#/responses/errorResponse'
+                "500":
+                    $ref: '#/responses/errorResponse'
+        get:
+            description: Returns single texture based on id
+            operationId: getTexture
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: string
+                  x-go-name: ID
+            responses:
+                "200":
+                    $ref: '#/responses/getTexture'
+                "404":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+        put:
+            description: Updates single texture based on id
+            operationId: putTexture
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: string
+                  x-go-name: ID
+                - description: |-
+                    Texture data structure to Create or Update
+                    Note: id field will be ignored by both Create and Update operations
+                  in: body
+                  name: Body
+                  schema:
+                    $ref: '#/definitions/Texture'
+            responses:
+                "201":
+                    $ref: '#/responses/createdResponse'
+                "404":
+                    $ref: '#/responses/errorResponse'
+                "500":
+                    $ref: '#/responses/errorResponse'
+produces:
+    - application/json
+responses:
+    empty:
+        description: Generic empty response with no content
+    error:
+        description: Generic eror message returned as a string
+    errorValidation:
+        description: Validation errors defined as an array of strings
+        schema:
+            $ref: '#/definitions/GenericErrors'
+    getTexture:
+        description: ""
+        schema:
+            $ref: '#/definitions/Texture'
+    getTextures:
+        description: ""
+        schema:
+            items:
+                $ref: '#/definitions/Texture'
+            type: array
+schemes:
+    - http
+swagger: "2.0"
