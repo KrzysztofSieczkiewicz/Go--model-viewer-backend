@@ -37,6 +37,7 @@ func main() {
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	stack := middleware.CreateStack(
+		middleware.Cors,
 		middleware.Logging,
 	)
 	// Initialize the new server
