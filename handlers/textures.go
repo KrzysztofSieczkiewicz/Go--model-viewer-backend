@@ -66,6 +66,8 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 
 // GetTextures returns all textures available in the database
 func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Add("Content-Type", "application/json")
+	
 	texturesList := data.GetTextures()
 
 	err := utils.ToJSON(texturesList, rw)

@@ -15,6 +15,8 @@ import (
 	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
 
+// TODO: Handle proper response headers writing (for no reason You're always responding with plain text instead of json)
+
 func main() {
 	l := log.New(os.Stdout, "texture-api", log.LstdFlags)
 
@@ -37,6 +39,7 @@ func main() {
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	stack := middleware.CreateStack(
+		middleware.Cors,
 		middleware.Logging,
 	)
 	// Initialize the new server
