@@ -36,6 +36,45 @@ type Texture struct {
 	Tags      []string  `json:"tags"`
 	CreatedOn time.Time `json:"-"`
 	UpdatedOn time.Time `json:"-"`
+
+	// Fields that should be created:
+	// Type - what kind of texture is this - Physical/Standard?
+	// QualityLevel - functions just like LOD
+	// Properties - object depending on texture type
+	// Properties.stuff - most numerical properties
+	// Properties.imageId - id of each image based property - if null, there is no texture
+
+	// User can have:
+	// Scanned assets - either preset texture or editable
+	// Primitives and 3D models - only editable
+
+	// Editable texture have some different types which differ by amount of properties and images
+	// You have the following texture types:
+	// Phong
+	// Physical
+	// Standard
+	// others
+
+	// Each texture type consists from few properties interchangeable with images.
+	// Image can have subtypes (normal/color/roughness) etc, but that doesn't need to be visible to the end user
+	// So each image set can be described with three properties:
+	// NAME_TYPE_SIZE
+	// which can be further reduced by naming a folder with imageId:
+	// imageId/TYPE_SIZE
+	// Where user by himself controls only the id (indirectly as he's choosing by name and thumbnail). 
+	// Type is depending on field type and size is controlled by quality level
+	
+	// So You can save an Image as an object with property of ID, name and filepath to the folder where all images are being stored (optionally - list available sizes)
+	// keeping in mind that images must follow certain naming convention and limiting files manipulation to internalApi with admin privilleges
+	// would create a solution where database is always consistent with filesystem
+
+	// In that case:
+	// TODO: Create a data model for image
+	// TODO: Create a folder and example image files including: thumbnail, 512x512, 1024x1024, 2048x2048
+	// TODO: Create a handler (consider mocking or creating a basic database)
+	// TODO: Handle images by separate subrouter
+	// TODO: Make some requests and test if files are properly being returned
+	// TODO: Move to textures enpoint remodelling
 }
 
 

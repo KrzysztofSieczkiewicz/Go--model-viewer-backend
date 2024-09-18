@@ -43,8 +43,6 @@ func NewHandler(logger*log.Logger) *Textures {
 func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	rw.Header().Add("Content-Type", "application/json")
-
 	texture, err := data.GetTexture(id)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusNotFound)
@@ -56,6 +54,8 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Unable to encode textures data to json", http.StatusInternalServerError)
 		return
 	}
+
+	rw.Header().Add("Content-Type", "application/json")
 }
 
 // swagger:route GET /textures getTextures
@@ -66,8 +66,6 @@ func (t*Textures) GetTexture(rw http.ResponseWriter, r *http.Request) {
 
 // GetTextures returns all textures available in the database
 func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Add("Content-Type", "application/json")
-	
 	texturesList := data.GetTextures()
 
 	err := utils.ToJSON(texturesList, rw)
@@ -75,6 +73,8 @@ func (t*Textures) GetTextures(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Unable to encode textures data to json", http.StatusInternalServerError)
 		return
 	}
+
+	rw.Header().Add("Content-Type", "application/json")
 }
 
 // swagger:route POST /textures postTexture

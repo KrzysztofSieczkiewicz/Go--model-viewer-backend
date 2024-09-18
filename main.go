@@ -31,6 +31,8 @@ func main() {
 	router.HandleFunc("PUT /textures/{id}", withMiddleware(texturesHandler.PutTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("GET /textures/{id}", texturesHandler.GetTexture)
 	router.HandleFunc("DELETE /textures/{id}", texturesHandler.DeleteTexture)
+	//router.HandleFunc("GET /textures/{id}/thumbnail", texturesHandler.GetThumbnail) // BETTER HANDLED BY GET TEXTURE
+	//router.HandleFunc("GET /textures/{id}/image/{type}/{size}", texturesHandler.GetImage)
 
 	// Handle OpenAPI doc request
 	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}
