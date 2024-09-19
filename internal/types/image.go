@@ -11,27 +11,27 @@ type Image struct {
 var (
 	InvalidMap = Image{"Invalid"}
 	// Standard material
-	ColorMap            = Image{"Color"}
-	RoughnessMap        = Image{"Roughness"}
-	MetalnessMap        = Image{"Metalness"}
-	EmissiveMap         = Image{"Emissive"}
-	AmbientOcclusionMap = Image{"Ambient Occlusion"}
-	NormalMap           = Image{"Normal"}
-	BumpMap             = Image{"Bump"}
-	DisplacementMap     = Image{"Displacement"}
+	ColorMap            = Image{"color"}
+	RoughnessMap        = Image{"roughness"}
+	MetalnessMap        = Image{"metalness"}
+	EmissiveMap         = Image{"emissive"}
+	AmbientOcclusionMap = Image{"ambient occlusion"}
+	NormalMap           = Image{"normal"}
+	BumpMap             = Image{"bump"}
+	DisplacementMap     = Image{"displacement"}
 
 	// Physical material (extends standard)
-	SpecularIntensityMap = Image{"Specular Intensity"}
-	SpecularColorMap     = Image{"Specular Color"}
-	ClearcoatMap         = Image{"Clearcoat"}
-	ClearcoatRoughness   = Image{"Clearcoat Roughness"}
-	ClearcoatNormalMap   = Image{"Clearcoat Normal"}
-	AnisotropyMap        = Image{"Anisotropy"}
-	IridescenceMap       = Image{"Iridescence"}
-	SheenColorMap        = Image{"Sheen Color"}
-	SheenRoughnessMap    = Image{"Sheen Roughness"}
-	ThicknessMap         = Image{"Thickness"}
-	TransmissionMap      = Image{"Transmission"}
+	SpecularIntensityMap = Image{"specular intensity"}
+	SpecularColorMap     = Image{"specular color"}
+	ClearcoatMap         = Image{"clearcoat"}
+	ClearcoatRoughness   = Image{"clearcoat roughness"}
+	ClearcoatNormalMap   = Image{"clearcoat normal"}
+	AnisotropyMap        = Image{"anisotropy"}
+	IridescenceMap       = Image{"iridescence"}
+	SheenColorMap        = Image{"sheen Color"}
+	SheenRoughnessMap    = Image{"sheen roughness"}
+	ThicknessMap         = Image{"thickness"}
+	TransmissionMap      = Image{"transmission"}
 )
 
 func (i Image) String() string {
