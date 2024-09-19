@@ -35,3 +35,22 @@ type ImageSet struct {
 
 type ImageSets []*ImageSet
 
+
+var imageSetsList = ImageSets{
+	{
+		ID: "1",
+		Name: "Pear",
+		ImgTypes: []types.Image{
+			types.AmbientOcclusionMap,
+			types.ColorMap, 
+			types.DisplacementMap,
+			types.NormalMap,
+			types.RoughnessMap,
+		},
+		ImgResolutions: []types.Resolution{
+			types.Resolution2048,
+			types.Resolution4096,
+		},
+		FilePath: "./textures/",
+	},
+}

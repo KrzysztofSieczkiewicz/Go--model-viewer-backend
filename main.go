@@ -21,16 +21,16 @@ func main() {
 	l := log.New(os.Stdout, "texture-api", log.LstdFlags)
 
 	// Create the handlers
-	texturesHandler := handlers.NewHandler(l);
+	th := handlers.NewTexturesHandler(l);
 
 	// Initialize the ServeMux and register the handlers
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /textures", texturesHandler.GetTextures)
-	router.HandleFunc("POST /textures", withMiddleware(texturesHandler.PostTexture, middleware.TextureJsonValidation))
-	router.HandleFunc("PUT /textures/{id}", withMiddleware(texturesHandler.PutTexture, middleware.TextureJsonValidation))
-	router.HandleFunc("GET /textures/{id}", texturesHandler.GetTexture)
-	router.HandleFunc("DELETE /textures/{id}", texturesHandler.DeleteTexture)
+	router.HandleFunc("GET /textures", th.GetTextures)
+	router.HandleFunc("POST /textures", withMiddleware(th.PostTexture, middleware.TextureJsonValidation))
+	router.HandleFunc("PUT /textures/{id}", withMiddleware(th.PutTexture, middleware.TextureJsonValidation))
+	router.HandleFunc("GET /textures/{id}", th.GetTexture)
+	router.HandleFunc("DELETE /textures/{id}", th.DeleteTexture)
 	//router.HandleFunc("GET /textures/{id}/thumbnail", texturesHandler.GetThumbnail) // BETTER HANDLED BY GET TEXTURE
 	//router.HandleFunc("GET /textures/{id}/image/{type}/{size}", texturesHandler.GetImage)
 

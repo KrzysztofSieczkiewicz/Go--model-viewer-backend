@@ -70,7 +70,7 @@ type Texture struct {
 
 	// In that case:
 	// DONE: Create a data model for image
-	// TODO: Create a folder and example image files including: thumbnail, 512x512, 1024x1024, 2048x2048
+	// DONE: Create a folder and example image files including: thumbnail, 512x512, 1024x1024, 2048x2048
 	// TODO: Create a handler (consider mocking or creating a basic database)
 	// TODO: Handle images by separate subrouter
 	// TODO: Make some requests and test if files are properly being returned
@@ -145,8 +145,7 @@ func getNextID() string {
 }
 
 
-
-var texturesList = []*Texture{
+var texturesList = Textures{
 	{
 		ID:        "FUCCNu--2Lru2QoKhR3zc",
 		Name:      "TestTexture1",

@@ -28,8 +28,8 @@ type Textures struct {
 	logger *log.Logger
 }
 
-func NewHandler(logger*log.Logger) *Textures {
-	return &Textures{logger}
+func NewTexturesHandler(l *log.Logger) *Textures {
+	return &Textures{l}
 }
 
 // swagger:route GET /textures/{id} getTexture

@@ -11,6 +11,7 @@ var (
 	Resolution512  = Resolution{"512x512"}
 	Resolution1024 = Resolution{"1024x1024"}
 	Resolution2048 = Resolution{"2048x2048"}
+	Resolution4096 = Resolution{"4096x4096"}
 )
 
 func (r Resolution) String() string {
@@ -25,6 +26,8 @@ func (r Resolution) FromString(s string) (Resolution, error) {
 		return Resolution1024, nil
 	case Resolution2048.res:
 		return Resolution2048, nil
+	case Resolution4096.res:
+		return Resolution4096, nil
 	}
 
 	return ResolutionError, fmt.Errorf("Resolution does not exist")
