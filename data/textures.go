@@ -74,7 +74,8 @@ type Texture struct {
 	// TODO: Create a handler (consider mocking or creating a basic database)
 	// TODO: Handle images by separate subrouter
 	// TODO: Make some requests and test if files are properly being returned
-	// TODO: Move to textures enpoint remodelling
+	// TODO: Move to textures endpoint remodelling
+	// TODO: Rename textures to materials, imageSets to textures, keep images as it is
 }
 
 
