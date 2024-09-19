@@ -69,7 +69,7 @@ type Texture struct {
 	// would create a solution where database is always consistent with filesystem
 
 	// In that case:
-	// TODO: Create a data model for image
+	// DONE: Create a data model for image
 	// TODO: Create a folder and example image files including: thumbnail, 512x512, 1024x1024, 2048x2048
 	// TODO: Create a handler (consider mocking or creating a basic database)
 	// TODO: Handle images by separate subrouter

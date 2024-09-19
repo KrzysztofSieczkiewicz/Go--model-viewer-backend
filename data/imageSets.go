@@ -30,7 +30,7 @@ type ImageSet struct {
 	// Filepath under which all associated images can be found
 	// required: true
 	// pattern: ^(.*)\/([^\/]*)$
-	FilePath	string	`json:"-" validate:"required"`
+	FilePath	string	`json:"-"`
 }
 
 type ImageSets []*ImageSet
