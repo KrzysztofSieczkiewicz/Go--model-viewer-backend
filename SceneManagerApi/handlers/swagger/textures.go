@@ -1,6 +1,6 @@
 package swagger
 
-import "github.com/KrzysztofSieczkiewicz/SceneManagerApi/data"
+import "github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/SceneManagerApi/data"
 
 // swagger:parameters getTexture putTexture deleteTexture
 type TextureIdParams struct {

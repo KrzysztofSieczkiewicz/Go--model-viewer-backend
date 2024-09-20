@@ -1,8 +1,6 @@
 package data
 
-import (
-	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/internal/types"
-)
+import "github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/SceneManagerApi/internal/types"
 
 // ImageSet defines a structure for a set of images that combine to single texture
 // swagger:model ImageSet

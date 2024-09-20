@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/data"
-	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/internal/utils"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/SceneManagerApi/data"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/SceneManagerApi/internal/utils"
 )
 
 type KeyTexture struct{}

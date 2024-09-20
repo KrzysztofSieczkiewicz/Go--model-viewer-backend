@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/handlers"
-	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/middleware"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/SceneManagerApi/handlers"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/SceneManagerApi/middleware"
 	extMidddleware "github.com/go-openapi/runtime/middleware"
 )
 
