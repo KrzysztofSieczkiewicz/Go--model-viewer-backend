@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
+	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/utils"
 )
 
 // ImageSets is an http Handler
@@ -16,8 +18,14 @@ func NewImageSetsHandler(l *log.Logger) *ImageSets {
 }
 
 
-func (is *ImageSets) GetImageSet(rw *http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+func (is *ImageSets) GetImageSets(rw http.ResponseWriter, r *http.Request) {
+	imgSets := data.GetImageSets()
 
-	fmt.Print(id)
+	err := utils.ToJSON(imgSets, rw)
+	if (err != nil) {
+		http.Error(rw, "Unable to encode textures data to json", http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Add("Content-Type", "application/json")
 }

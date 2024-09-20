@@ -22,17 +22,20 @@ func main() {
 
 	// Create the handlers
 	th := handlers.NewTexturesHandler(l);
+	ish := handlers.NewImageSetsHandler(l)
 
 	// Initialize the ServeMux and register the handlers
 	router := http.NewServeMux()
 
+	// TEXTURES
 	router.HandleFunc("GET /textures", th.GetTextures)
 	router.HandleFunc("POST /textures", withMiddleware(th.PostTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("PUT /textures/{id}", withMiddleware(th.PutTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("GET /textures/{id}", th.GetTexture)
 	router.HandleFunc("DELETE /textures/{id}", th.DeleteTexture)
-	//router.HandleFunc("GET /textures/{id}/thumbnail", texturesHandler.GetThumbnail) // BETTER HANDLED BY GET TEXTURE
-	//router.HandleFunc("GET /textures/{id}/image/{type}/{size}", texturesHandler.GetImage)
+	
+	// IMAGE SETS
+	router.HandleFunc("GET /imagesets", ish.GetImageSets)
 
 	// Handle OpenAPI doc request
 	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}

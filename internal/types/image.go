@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // TODO: Add color space property to enable filtering out maps that do not match requred colorspace
 
@@ -84,4 +87,23 @@ func (i Image) FromString(s string) (Image, error) {
 	
 
 	return InvalidMap, fmt.Errorf("map type does not exist")
+}
+
+func (i Image) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.imgType)
+}
+
+func (i *Image) UnmarshalJSON(data []byte) error {
+	var resString string
+	if err := json.Unmarshal(data, &resString); err != nil {
+		return err
+	}
+
+	imageType, err := i.FromString(resString)
+	if err != nil {
+		return err
+	}
+
+	*i = imageType
+	return nil
 }

@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Resolution struct {
 	res string
@@ -31,4 +34,23 @@ func (r Resolution) FromString(s string) (Resolution, error) {
 	}
 
 	return ResolutionError, fmt.Errorf("Resolution does not exist")
+}
+
+func (r Resolution) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.res)
+}
+
+func (r *Resolution) UnmarshalJSON(data []byte) error {
+	var resString string
+	if err := json.Unmarshal(data, &resString); err != nil {
+		return err
+	}
+
+	resolution, err := r.FromString(resString)
+	if err != nil {
+		return err
+	}
+
+	*r = resolution
+	return nil
 }

@@ -36,6 +36,11 @@ type ImageSet struct {
 type ImageSets []*ImageSet
 
 
+func GetImageSets() ImageSets {
+	return imageSetsList
+}
+
+
 var imageSetsList = ImageSets{
 	{
 		ID: "1",
