@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/utils"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/data"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/internal/utils"
 )
 
 // ImageSets is an http Handler
@@ -28,4 +28,8 @@ func (is *ImageSets) GetImageSets(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	rw.Header().Add("Content-Type", "application/json")
+}
+
+func (is *ImageSets) GetImageSetsQueried(rw http.ResponseWriter, r *http.Request) {
+
 }

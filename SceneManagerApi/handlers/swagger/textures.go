@@ -1,6 +1,6 @@
 package swagger
 
-import "github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
+import "github.com/KrzysztofSieczkiewicz/SceneManagerApi/data"
 
 // swagger:parameters getTexture putTexture deleteTexture
 type TextureIdParams struct {

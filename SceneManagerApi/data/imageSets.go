@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/types"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/internal/types"
 )
 
 // ImageSet defines a structure for a set of images that combine to single texture
@@ -18,6 +18,8 @@ type ImageSet struct {
 	// min length: 3
 	// max length: 255
 	Name	string	`json:"name" validate:"required"`
+
+	// Url pointing to the 
 
 	// Image type contains type to display only images relevant to requesting field
 	// required: true
@@ -38,6 +40,17 @@ type ImageSets []*ImageSet
 
 func GetImageSets() ImageSets {
 	return imageSetsList
+}
+
+func GetImageSetsQueried(types []types.Image, resolutions []types.Resolution) ImageSets {
+
+
+	return imageSetsList
+}
+
+
+func filterImageSets() {
+	
 }
 
 

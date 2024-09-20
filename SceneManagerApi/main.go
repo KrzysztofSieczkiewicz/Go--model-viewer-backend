@@ -9,10 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/handlers"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/middleware"
 	extMidddleware "github.com/go-openapi/runtime/middleware"
-
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/handlers"
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
 )
 
 // TODO: Handle proper response headers writing (for no reason You're always responding with plain text instead of json)

@@ -1,4 +1,4 @@
-module github.com/KrzysztofSieczkiewicz/ModelViewerBackend
+module github.com/KrzysztofSieczkiewicz/SceneManagerApi
 
 go 1.23.0
 

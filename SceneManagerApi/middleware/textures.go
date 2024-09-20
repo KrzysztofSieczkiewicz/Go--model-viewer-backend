@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/utils"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/data"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/internal/utils"
 )
 
 type KeyTexture struct{}

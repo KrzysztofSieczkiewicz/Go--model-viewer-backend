@@ -18,9 +18,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/data"
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/internal/utils"
-	"github.com/KrzysztofSieczkiewicz/ModelViewerBackend/middleware"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/data"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/internal/utils"
+	"github.com/KrzysztofSieczkiewicz/SceneManagerApi/middleware"
 )
 
 // Textures is an http Handler
