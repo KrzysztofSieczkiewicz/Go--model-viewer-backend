@@ -26,14 +26,12 @@ func main() {
 	// Initialize the ServeMux and register the handlers
 	router := http.NewServeMux()
 
-	// TEXTURES
 	router.HandleFunc("GET /textures", th.GetTextures)
 	router.HandleFunc("POST /textures", withMiddleware(th.PostTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("PUT /textures/{id}", withMiddleware(th.PutTexture, middleware.TextureJsonValidation))
 	router.HandleFunc("GET /textures/{id}", th.GetTexture)
 	router.HandleFunc("DELETE /textures/{id}", th.DeleteTexture)
 	
-	// IMAGE SETS
 	router.HandleFunc("GET /imagesets", ish.GetImageSets)
 
 	// Handle OpenAPI doc request
@@ -42,10 +40,12 @@ func main() {
 	router.Handle("/docs", sh)
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
+	// Create middleware stack
 	stack := middleware.CreateStack(
 		middleware.Cors,
 		middleware.Logging,
 	)
+	
 	// Initialize the new server
 	s := &http.Server{
 		Addr: ":9090",
