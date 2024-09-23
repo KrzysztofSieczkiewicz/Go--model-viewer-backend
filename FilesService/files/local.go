@@ -64,7 +64,7 @@ func (l *Local) Save(path string, contents io.Reader) error {
 }
 
 // Gets the file at the provided path and returns a reader
-func (l *Local) Get(path string) (*os.File, error) {
+func (l *Local) Read(path string) (*os.File, error) {
 	// get the full filepath
 	fp := l.fullPath(path)
 
