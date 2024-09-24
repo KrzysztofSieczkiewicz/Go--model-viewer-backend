@@ -114,6 +114,20 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 	return nil
 }
 
+// Deletes file under provided path. Returns error if file doesn't exist
+func (l *Local) Delete(path string) error {
+	fp := l.fullPath(path)
+	err := os.Remove(fp)
+	if os.IsNotExist(err) {
+		return xerrors.Errorf("Requested file doesn't exist: %w", err)
+	}
+	if err != nil {
+		return xerrors.Errorf("Unable to remove target file: %w", err)
+	}
+
+	return nil
+}
+
 
 // Returns the absolute path from provided relative path
 func (l *Local) fullPath(path string) string {
