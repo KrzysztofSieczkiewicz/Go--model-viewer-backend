@@ -31,11 +31,8 @@ func (f *Files)PostFile(rw http.ResponseWriter, r *http.Request) {
 
 func (f *Files) saveFile(id string, path string, rw http.ResponseWriter, r *http.Request) {
 	fp := filepath.Join(id, path)
-	err := f.store.Save(fp, r.Body)
+	err := f.store.Write(fp, r.Body)
 	if err != nil {
 		http.Error(rw, "Unable to save file", http.StatusInternalServerError)
 	}
 }
-
-
-

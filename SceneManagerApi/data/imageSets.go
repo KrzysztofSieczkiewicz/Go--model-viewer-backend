@@ -17,8 +17,6 @@ type ImageSet struct {
 	// max length: 255
 	Name	string	`json:"name" validate:"required"`
 
-	// Url pointing to the 
-
 	// Image type contains type to display only images relevant to requesting field
 	// required: true
 	ImgTypes	[]types.Image	`json:"types"`

@@ -10,7 +10,7 @@ import (
 
 // Implementation of the Storage interface that works for local disk
 type Local struct {
-	maxFileSize int    // Max file size in bytes
+	maxFileSize int64    // Max file size in bytes
 	basePath    string // Base path to the storage root
 }
 
@@ -24,46 +24,7 @@ func NewLocal(basePath string, maxSize int) (*Local, error) {
 	return &Local{basePath: p}, nil
 }
 
-// Save the contents of provided wroter to the given relative path
-// Removes the old file and writes a new one
-func (l *Local) Save(path string, contents io.Reader) error {
-	// get full filepath
-	fp := l.fullPath(path)
-
-	// get the file directory and ensure it exists
-	d := filepath.Dir(fp)
-	err := os.MkdirAll(d, os.ModePerm)
-	if err != nil {
-		return xerrors.Errorf("Unable to create directory: %w", err)
-	}
-
-	// if the file exists - delete it
-	_, err = os.Stat(fp)
-	if !os.IsNotExist(err) {
-		return xerrors.Errorf("Unable to get file info: %w", err)
-	}
-	if err != nil {
-		return xerrors.Errorf("Unable to delete file: %w", err)
-	}
-
-	// create a new file at the path
-	f, err := os.Create(fp)
-	if err != nil {
-		return xerrors.Errorf("Unable to create file: %w", err)
-	}
-	defer f.Close()
-
-	// write the contents to the new file
-	// TODO: add a check to make sure max filesize is not exceeded
-	_, err = io.Copy(f, contents)
-	if err != nil {
-		return xerrors.Errorf("Unable to write to file: %w", err)
-	}
-
-	return nil
-}
-
-// Gets the file at the provided path and returns a reader
+// Reads the file at the provided path and returns a reader
 func (l *Local) Read(path string) (*os.File, error) {
 	// get the full filepath
 	fp := l.fullPath(path)
@@ -77,8 +38,84 @@ func (l *Local) Read(path string) (*os.File, error) {
 	return r, nil
 }
 
+// Create and write a file under provided path. Does not overwrite existing files 
+// and will return an error if there already is an identical file
+func (l *Local) Write(path string, contents io.Reader) error {
+	// get full filepath
+	fp := l.fullPath(path)
 
-// Returns the absolute path from provided relative one
+	// create a new file at the path
+	f, err := os.OpenFile(fp, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0666)
+	if os.IsExist(err) {
+		return xerrors.Errorf("file already exists: %s", fp)
+	}
+	if err != nil {
+		return xerrors.Errorf("Unable to create file: %w", err)
+	}
+
+	// close the file when work is done, delete if any error occured
+	defer func() {
+        if err != nil {
+            os.Remove(fp)
+        }
+        f.Close()
+    }()
+
+	// create a LimitedReader for max file size handling
+    limitedReader := &io.LimitedReader{
+        R: contents,
+        N: l.maxFileSize + 1,
+    }
+
+	// write the contents to the new file
+	_, err = io.Copy(f, limitedReader)
+	if err != nil {
+		os.Remove(fp)
+		return xerrors.Errorf("Unable to write to file: %w", err)
+	}
+
+	// check if filesize limit was reached
+	if limitedReader.N == 0 {
+		os.Remove(fp)
+		return xerrors.Errorf("file size exceeds the maximum limit of %d bytes", l.maxFileSize)
+	}
+
+	return nil
+}
+
+// Overwrites provided file using temp file. Fails if requested file doesn't exist
+func (l *Local) Overwrite(path string, contents io.Reader) error {
+	// get the firectory and filename
+	fp := l.fullPath(path)
+	tfp := fp + ".tmp"
+
+	// check if requested file exists
+	_, err := os.Stat(fp)
+	if !os.IsNotExist(err) {
+		return xerrors.Errorf("File does not exist: %w", err)
+	}
+	if err != nil {
+		return xerrors.Errorf("Error during checking target file: %w", err)
+	}
+
+	// create and write to the temp file
+	err = l.Write(tfp, contents)
+	if err != nil {
+		return xerrors.Errorf("Unable to create and write to the tmp file: %w", err)
+	}
+
+	// replace the original file with the temporary file
+	err = os.Rename(tfp, fp)
+    if err != nil {
+		os.Remove(tfp)
+        return xerrors.Errorf("Unable to replace target file: %w", err)
+    }
+
+	return nil
+}
+
+
+// Returns the absolute path from provided relative path
 func (l *Local) fullPath(path string) string {
 	return filepath.Join(l.basePath, path)
 }
