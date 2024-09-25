@@ -33,10 +33,10 @@ func main() {
 	// Initialize the ServeMux and register handler functions
 	router := http.NewServeMux();
 
-	router.HandleFunc("GET /files/{id}{category}", fh.GetFile)
-	router.HandleFunc("POST /files/{id}{category}", fh.PostFile)
-	router.HandleFunc("PUT /files/{id}{category}", fh.PutFile)
-	router.HandleFunc("DELETE /files/{id}{category}", fh.DeleteFile)
+	router.HandleFunc("GET /files/{category}/{id}/{filename}", fh.GetFile)
+	router.HandleFunc("POST /files/{category}/{id}/{filename}", fh.PostFile)
+	router.HandleFunc("PUT /files/{category}/{id}/{filename}", fh.PutFile)
+	router.HandleFunc("DELETE /files/{category}/{id}/{filename}", fh.DeleteFile)
 
 
 	// Handle OpenAPI doc request

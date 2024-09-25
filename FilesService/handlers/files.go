@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -32,8 +33,9 @@ func NewFiles(s files.Storage, l *log.Logger) *Files {
 func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
+	fn := r.PathValue("filename")
 
-	fp := filepath.Join(c, id)
+	fp := filepath.Join(c, id, fn)
 
 	err := f.store.Write(fp, r.Body)
 	if err != nil {
@@ -46,8 +48,9 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
+	fn := r.PathValue("filename")
 
-	fp := filepath.Join(c, id)
+	fp := filepath.Join(c, id, fn)
 
 	err := f.store.Overwrite(fp, r.Body)
 	if err != nil {
@@ -60,23 +63,27 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
+	fn := r.PathValue("filename")
 
-	fp := filepath.Join(c, id)
+	fp := filepath.Join(c, id, fn)
 
-	// TODO - find a proper way to respond with the file -> try creating unique, temporary URL and returning that
-	_, err := f.store.Read(fp)
+	err := f.store.Read(fp, rw)
 	if err != nil {
 		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	rw.Header().Set("Content-Type", "application/octet-stream")
+    rw.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fn))
 }
 
 // Handles delete file request
 func (f *Files) DeleteFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
+	fn := r.PathValue("filename")
 
-	fp := filepath.Join(c, id)
+	fp := filepath.Join(c, id, fn)
 
 	err := f.store.Delete(fp)
 	if err != nil {
