@@ -11,4 +11,5 @@ type Storage interface {
 	Read(path string) (*os.File, error)
 	Write(path string, file io.Reader) error
 	Overwrite(path string, file io.Reader) error
+	Delete(path string) error
 }

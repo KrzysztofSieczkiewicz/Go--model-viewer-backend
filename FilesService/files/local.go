@@ -71,7 +71,7 @@ func (l *Local) Write(path string, contents io.Reader) error {
 	_, err = io.Copy(f, limitedReader)
 	if err != nil {
 		os.Remove(fp)
-		return xerrors.Errorf("Unable to write to file: %w", err)
+		return xerrors.Errorf("unable to write to file: %w", err)
 	}
 
 	// check if filesize limit was reached
@@ -92,23 +92,23 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 	// check if requested file exists
 	_, err := os.Stat(fp)
 	if !os.IsNotExist(err) {
-		return xerrors.Errorf("File does not exist: %w", err)
+		return xerrors.Errorf("file does not exist: %w", err)
 	}
 	if err != nil {
-		return xerrors.Errorf("Error during checking target file: %w", err)
+		return xerrors.Errorf("error during checking target file: %w", err)
 	}
 
 	// create and write to the temp file
 	err = l.Write(tfp, contents)
 	if err != nil {
-		return xerrors.Errorf("Unable to create and write to the tmp file: %w", err)
+		return xerrors.Errorf("unable to create and write to the tmp file: %w", err)
 	}
 
 	// replace the original file with the temporary file
 	err = os.Rename(tfp, fp)
     if err != nil {
 		os.Remove(tfp)
-        return xerrors.Errorf("Unable to replace target file: %w", err)
+        return xerrors.Errorf("unable to replace target file: %w", err)
     }
 
 	return nil
@@ -119,10 +119,10 @@ func (l *Local) Delete(path string) error {
 	fp := l.fullPath(path)
 	err := os.Remove(fp)
 	if os.IsNotExist(err) {
-		return xerrors.Errorf("Requested file doesn't exist: %w", err)
+		return xerrors.Errorf("requested file doesn't exist: %w", err)
 	}
 	if err != nil {
-		return xerrors.Errorf("Unable to remove target file: %w", err)
+		return xerrors.Errorf("unable to remove target file: %w", err)
 	}
 
 	return nil

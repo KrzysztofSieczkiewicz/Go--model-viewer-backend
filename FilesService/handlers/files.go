@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"FilesService/files"
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
 )
 
 // Handler for reading and writing files to provided storage
@@ -22,28 +23,64 @@ func NewFiles(s files.Storage, l *log.Logger) *Files {
 // TODO: think about a way of providing filepath and other data (including the file) to the request so a structured 
 // file system can be created
 // preferably, filepath should start with file TYPE (this will be solved separate endpoints for each file type) so each filetype will also have separate storage
-// next - there is no need for nested folders structure as each file has unique id
-// the only question is - do You need a filename to be added to an ID 
-// potentially it increases readability for human readers and further reduces collison chance, but that's not that impactful
-// on the other hand it requires passing additional data with requests (like filename).
-// CURRENTLY - it seems that better solution is to rely purely on ID
+// You can achieve structured folder system using
+// ID - as unique identifier
+// Category - as filepath, e.g. food/fruit
+// The only requirement would be to url-encode both the id and the category
 
 // Handles post file request. Doesn't allow for overwriting
 func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	fn := r.PathValue("filename")
+	c := r.PathValue("category")
 
-	fp := filepath.Join(id, fn)
+	fp := filepath.Join(c, id)
 
-	f.store.Write(fp, r.Body)
+	err := f.store.Write(fp, r.Body)
+	if err != nil {
+		http.Error(rw, "Failed to create the file: \n" + err.Error(), http.StatusBadRequest)
+		return
+	}
 }
 
 // Handles put file request. Doesn't allow for file creation
 func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	fn := r.PathValue("filename")
+	c := r.PathValue("category")
 
-	fp := filepath.Join(id, fn)
+	fp := filepath.Join(c, id)
 
-	f.store.Overwrite(fp, r.Body)
+	err := f.store.Overwrite(fp, r.Body)
+	if err != nil {
+		http.Error(rw, "Failed to update the file: \n" + err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+// Handles get file request
+func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	c := r.PathValue("category")
+
+	fp := filepath.Join(c, id)
+
+	// TODO - find a proper way to respond with the file -> try creating unique, temporary URL and returning that
+	_, err := f.store.Read(fp)
+	if err != nil {
+		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+// Handles delete file request
+func (f *Files) DeleteFile(rw http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	c := r.PathValue("category")
+
+	fp := filepath.Join(c, id)
+
+	err := f.store.Delete(fp)
+	if err != nil {
+		http.Error(rw, "Failed to delete the file: \n" + err.Error(), http.StatusBadRequest)
+		return
+	}
 }

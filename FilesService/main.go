@@ -1,8 +1,6 @@
 package main
 
 import (
-	"FilesService/files"
-	"FilesService/middleware"
 	"context"
 	"log"
 	"net/http"
@@ -11,6 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/handlers"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/middleware"
 	extMidddleware "github.com/go-openapi/runtime/middleware"
 )
 
@@ -19,19 +20,23 @@ var basePath = "./store"
 func main() {
 	l := log.New(os.Stdout, "FilesService", log.LstdFlags)
 
-	// Create the storage class with local storage
-	// Max file size: 5MB - TODO: Move to a variable
-
-	// TODO: create a handler for this new storage	
-	_, err := files.NewLocal(basePath, 5*1024*1000)
+	// Create the local files storage
+	// Max file size: 5MB
+	fs, err := files.NewLocal(basePath, 5*1024*1000)
 	if err != nil {
 		l.Fatal("Unable to initialize local storage")
 	}
 
 	// Create the handlers
+	fh := handlers.NewFiles(fs, l)
 
 	// Initialize the ServeMux and register handler functions
 	router := http.NewServeMux();
+
+	router.HandleFunc("GET /files/{id}{category}", fh.GetFile)
+	router.HandleFunc("POST /files/{id}{category}", fh.PostFile)
+	router.HandleFunc("PUT /files/{id}{category}", fh.PutFile)
+	router.HandleFunc("DELETE /files/{id}{category}", fh.DeleteFile)
 
 
 	// Handle OpenAPI doc request

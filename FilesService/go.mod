@@ -1,4 +1,4 @@
-module FilesService
+module github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService
 
 go 1.23.0
 
