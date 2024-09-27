@@ -7,8 +7,11 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 )
 
+require github.com/cespare/xxhash/v2 v2.1.2 // indirect
+
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
+	github.com/coocood/freecache v1.2.4
 	github.com/go-openapi/analysis v0.23.0 // indirect
 	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect

@@ -9,13 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/handlers"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/middleware"
 	extMidddleware "github.com/go-openapi/runtime/middleware"
 )
 
-var basePath = "./store"
+var basePath = "./fileStore"
 
 func main() {
 	l := log.New(os.Stdout, "FilesService", log.LstdFlags)
@@ -27,8 +28,11 @@ func main() {
 		l.Fatal("Unable to initialize local storage")
 	}
 
+	// Create a cache
+	fc := caches.NewFreeCache(50, 2)
+
 	// Create the handlers
-	fh := handlers.NewFiles(fs, l)
+	fh := handlers.NewFiles(fs, l, fc)
 
 	// Initialize the ServeMux and register handler functions
 	router := http.NewServeMux();

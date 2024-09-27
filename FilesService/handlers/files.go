@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
 )
 
@@ -13,21 +14,14 @@ import (
 type Files struct {
 	logger	*log.Logger
 	store	files.Storage
+	cache	caches.Cache
 }
 
-func NewFiles(s files.Storage, l *log.Logger) *Files {
+func NewFiles(s files.Storage, l *log.Logger, c caches.Cache) *Files {
 	return &Files{store: s, logger: l}
 }
 
 // TODO: Add paginated requests handling
-
-// TODO: think about a way of providing filepath and other data (including the file) to the request so a structured 
-// file system can be created
-// preferably, filepath should start with file TYPE (this will be solved separate endpoints for each file type) so each filetype will also have separate storage
-// You can achieve structured folder system using
-// ID - as unique identifier
-// Category - as filepath, e.g. food/fruit
-// The only requirement would be to url-encode both the id and the category
 
 // Handles post file request. Doesn't allow for overwriting
 func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
