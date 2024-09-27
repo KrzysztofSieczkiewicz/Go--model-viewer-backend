@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-type SignedUrlConfig struct {
-	
-}
-
 type SignedSlug struct {
 	secretKey string
 	expiresIn  time.Duration

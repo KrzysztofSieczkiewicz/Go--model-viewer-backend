@@ -5,9 +5,11 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 )
 
 // Handler for reading and writing files to provided storage
@@ -53,10 +55,24 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	id := r.PathValue("id")
+	fn := r.PathValue("filename")
+
+	fp := filepath.Join(c, id, fn)
+	tmpId := caches.GenerateUUID()
+
+	f.cache.Set(tmpId, fp)
+
+	// TODO: CONTINUE FROM HERE
+	signedurl.NewSignedSlug("", time.Duration(5))
+}
+
 // Handles get file request
 func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
 	c := r.PathValue("category")
+	id := r.PathValue("id")
 	fn := r.PathValue("filename")
 
 	fp := filepath.Join(c, id, fn)
