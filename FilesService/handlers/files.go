@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -34,7 +33,7 @@ func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *F
 		cache: c,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
-			baseUrl + "files",
+			baseUrl + "/files",
 			time.Duration(5 * int(time.Minute)),
 		),
 	}
@@ -84,34 +83,35 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	f.cache.Set(tmpId, fp)
 
 	// generate signedurl query based on uid
-	ss := f.signedUrl.GenerateSignedUrl(tmpId)
+	url := f.signedUrl.GenerateSignedUrl(tmpId)
 
-	// return signedurl
-
-	// TODO: Modify signedquery to generate full signedUrl
-	// Add a basePath in constructor parameter so each endpoint can handle it's own files
-	// Instead of handling it by a separate endpoint
-
-	// TODO: CONTINUE FROM HERE
-	rw.Write([]byte(ss))
+	rw.Write([]byte(url))
 }
 
-// Handles get file request
+// Handles get file request from signed url
 func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	fn := r.PathValue("filename")
+	id := r.URL.Query().Get("id")
+	exp := r.URL.Query().Get("expires")
+	sign := r.URL.Query().Get("signature")
 
-	fp := filepath.Join(c, id, fn)
-
-	err := f.store.Read(fp, rw)
+	err := f.signedUrl.ValidateSignedUrl(id, exp, sign)
 	if err != nil {
-		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusBadRequest)
+		http.Error(rw, "Invalid request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fp, err := f.cache.Get(id)
+	if err != nil {
+		http.Error(rw, "Failed to read cache", http.StatusInternalServerError)
+	}
+
+	err = f.store.Read(fp, rw)
+	if err != nil {
+		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	rw.Header().Set("Content-Type", "application/octet-stream")
-    rw.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fn))
 }
 
 // Handles delete file request

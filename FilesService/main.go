@@ -46,7 +46,7 @@ func main() {
 
 	// Initialize and register the handlers
 	fh := handlers.NewFiles(baseUrl, fs, l, fc)
-	router.HandleFunc("GET /files/{category}/{id}/{filename}", fh.GetFile)
+	router.HandleFunc("GET /files/", fh.GetFile)
 	router.HandleFunc("POST /files/{category}/{id}/{filename}", fh.PostFile)
 	router.HandleFunc("PUT /files/{category}/{id}/{filename}", fh.PutFile)
 	router.HandleFunc("DELETE /files/{category}/{id}/{filename}", fh.DeleteFile)
