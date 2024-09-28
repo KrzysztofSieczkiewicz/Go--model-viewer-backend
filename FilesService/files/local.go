@@ -15,7 +15,7 @@ type Local struct {
 }
 
 // Creates new Local filesystem with given basePath and max file size
-func NewLocal(basePath string, maxSize int) (*Local, error) {
+func NewLocal(basePath string, maxSizeMB int) (*Local, error) {
 	p, err := filepath.Abs(basePath)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func NewLocal(basePath string, maxSize int) (*Local, error) {
 
 	return &Local{
 		basePath: p, 
-		maxFileSize: int64(maxSize),
+		maxFileSize: int64(maxSizeMB*1024*1000),
 	}, nil
 }
 

@@ -14,29 +14,38 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/handlers"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/middleware"
 	extMidddleware "github.com/go-openapi/runtime/middleware"
-)
 
-var basePath = "./fileStore"
+	"github.com/joho/godotenv"
+)
 
 func main() {
 	l := log.New(os.Stdout, "FilesService", log.LstdFlags)
 
-	// Create the local files storage
-	// Max file size: 5MB
-	fs, err := files.NewLocal(basePath, 5*1024*1000)
+	// Load .env file and get env variables
+	err := godotenv.Load()
+    if err != nil {
+        log.Fatalf("Error loading .env file")
+    }
+	hostUrl := os.Getenv("HOST")
+	bindAddress := os.Getenv("BIND_ADDRESS")
+	baseFilePath := os.Getenv("BASE_FILE_PATH")
+
+	baseUrl := hostUrl + bindAddress
+
+	// Initialize the local files storage with Max file size: 5MB
+	fs, err := files.NewLocal(baseFilePath, 5)
 	if err != nil {
 		l.Fatal("Unable to initialize local storage")
 	}
 
-	// Create a cache
+	// Initialize a cache
 	fc := caches.NewFreeCache(50, 2)
 
-	// Create the handlers
-	fh := handlers.NewFiles(fs, l, fc)
-
-	// Initialize the ServeMux and register handler functions
+	// Initialize the ServeMux
 	router := http.NewServeMux();
 
+	// Initialize and register the handlers
+	fh := handlers.NewFiles(baseUrl, fs, l, fc)
 	router.HandleFunc("GET /files/{category}/{id}/{filename}", fh.GetFile)
 	router.HandleFunc("POST /files/{category}/{id}/{filename}", fh.PostFile)
 	router.HandleFunc("PUT /files/{category}/{id}/{filename}", fh.PutFile)
@@ -57,7 +66,7 @@ func main() {
 
 	// Initialize the new server
 	s := &http.Server{
-		Addr: ":9090",
+		Addr: bindAddress,
 		Handler: stack(router),
 		IdleTimeout: 120*time.Second,
 		ReadTimeout: 1*time.Second,

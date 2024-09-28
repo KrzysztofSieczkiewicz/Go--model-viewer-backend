@@ -19,20 +19,22 @@ import (
 
 // Handler for reading and writing files to provided storage
 type Files struct {
-	logger	*log.Logger
-	store	files.Storage
-	cache	caches.Cache
+	baseUrl		string
+	logger		*log.Logger
+	store		files.Storage
+	cache		caches.Cache
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewFiles(s files.Storage, l *log.Logger, c caches.Cache) *Files {
+func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *Files {
 	return &Files{
+		baseUrl: baseUrl,
 		store: s, 
 		logger: l,
 		cache: c,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
-			"localhost:9090/url",
+			baseUrl,
 			time.Duration(5 * int(time.Minute)),
 		),
 	}

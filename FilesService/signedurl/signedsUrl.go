@@ -12,14 +12,14 @@ import (
 
 type SignedUrl struct {
 	secretKey	string
-	basePath	string
+	baseUrl		string
 	expiresIn	time.Duration
 }
 
-func NewSignedUrl(secretKey string, basePath string, defaultExpire time.Duration) *SignedUrl {
+func NewSignedUrl(secretKey string, baseUrl string, defaultExpire time.Duration) *SignedUrl {
 	return &SignedUrl{
 		secretKey:	secretKey,
-		basePath:	basePath,
+		baseUrl:	baseUrl,
 		expiresIn:	defaultExpire,
 	}
 }
@@ -38,8 +38,8 @@ func (s *SignedUrl) GenerateSignedUrlCustom(tempID string, expiresIn time.Durati
 	signature := s.createHMACSignature(tempID, expirationTime)
 
 	signedUrl := fmt.Sprintf(
-		"%s/?id=%s&expires%d&signature%s",
-		s.basePath,
+		"%s/url/?id=%s&expires%d&signature%s",
+		s.baseUrl,
 		url.QueryEscape(tempID),
 		expirationTime,
 		signature,
