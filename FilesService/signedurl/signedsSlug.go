@@ -10,38 +10,36 @@ import (
 	"time"
 )
 
-type SignedSlug struct {
-	secretKey string
-	expiresIn  time.Duration
+type SignedUrl struct {
+	secretKey	string
+	basePath	string
+	expiresIn	time.Duration
 }
 
-func NewSignedSlug(secretKey string, expireIn time.Duration) *SignedSlug {
-	return &SignedSlug{
-		secretKey: secretKey,
-		expiresIn: expireIn,
+func NewSignedUrl(secretKey string, basePath string, defaultExpire time.Duration) *SignedUrl {
+	return &SignedUrl{
+		secretKey:	secretKey,
+		basePath:	basePath,
+		expiresIn:	defaultExpire,
 	}
 }
 
-func (s *SignedSlug) GenerateSignedSlug(tempID string) string {
-	expirationTime := time.Now().Add(s.expiresIn).Unix()
-	signature := s.createHMACSignature(tempID, expirationTime)
-
-	signedURL := fmt.Sprintf(
-		"?id=%s&expires%d&signature%s",
-		url.QueryEscape(tempID),
-		expirationTime,
-		signature,
+func (s *SignedUrl) GenerateSignedUrl(tempID string) string {
+	signedURL := s.GenerateSignedUrlCustom(
+		tempID,
+		s.expiresIn,
 	)
 
 	return signedURL
 }
 
-func (s *SignedSlug) GenerateSignedSlugCustom(tempID string, expiresIn time.Duration) string {
+func (s *SignedUrl) GenerateSignedUrlCustom(tempID string, expiresIn time.Duration) string {
 	expirationTime := time.Now().Add(expiresIn).Unix()
 	signature := s.createHMACSignature(tempID, expirationTime)
 
 	signedUrl := fmt.Sprintf(
-		"?id=%s&expires%d&signature%s",
+		"%s/?id=%s&expires%d&signature%s",
+		s.basePath,
 		url.QueryEscape(tempID),
 		expirationTime,
 		signature,
@@ -50,7 +48,7 @@ func (s *SignedSlug) GenerateSignedSlugCustom(tempID string, expiresIn time.Dura
 	return signedUrl
 }
 
-func (s *SignedSlug) ValidateSignedSlug(id string, expires string, signature string) error {
+func (s *SignedUrl) ValidateSignedUrl(id string, expires string, signature string) error {
 	expirationTime, err := strconv.ParseInt(expires, 10, 64)
 	if err != nil {
 		return fmt.Errorf("invalid expiration timestamp")
@@ -68,7 +66,7 @@ func (s *SignedSlug) ValidateSignedSlug(id string, expires string, signature str
 	return nil
 }
 
-func (s *SignedSlug) createHMACSignature(tempID string, expirationTime int64) string {
+func (s *SignedUrl) createHMACSignature(tempID string, expirationTime int64) string {
 	mac := hmac.New(sha256.New, []byte(s.secretKey))
 	data := fmt.Sprintf("%s:%d", tempID, expirationTime)
 	mac.Write([]byte(data))

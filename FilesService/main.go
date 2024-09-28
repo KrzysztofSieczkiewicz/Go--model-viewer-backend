@@ -42,6 +42,8 @@ func main() {
 	router.HandleFunc("PUT /files/{category}/{id}/{filename}", fh.PutFile)
 	router.HandleFunc("DELETE /files/{category}/{id}/{filename}", fh.DeleteFile)
 
+	router.HandleFunc("GET /url/{category}/{id}/{filename}", fh.GetFileUrl)
+
 
 	// Handle OpenAPI doc request
 	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}

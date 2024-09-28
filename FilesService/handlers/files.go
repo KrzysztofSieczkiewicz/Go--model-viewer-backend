@@ -12,15 +12,30 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 )
 
+// Example curls:
+// Get file: curl -v localhost:9090/files/random/1/thumbnail.png
+// Post file: curl -v -X POST -H "Content-Type: image/png" --data-binary @FilesService/thumbnail.png localhost:9090/files/random/1/thumbnail.png
+// Get url: curl -v localhost:9090/url/random/1/thumbnail.png
+
 // Handler for reading and writing files to provided storage
 type Files struct {
 	logger	*log.Logger
 	store	files.Storage
 	cache	caches.Cache
+	signedUrl	signedurl.SignedUrl
 }
 
 func NewFiles(s files.Storage, l *log.Logger, c caches.Cache) *Files {
-	return &Files{store: s, logger: l}
+	return &Files{
+		store: s, 
+		logger: l,
+		cache: c,
+		signedUrl: *signedurl.NewSignedUrl(
+			"Secret key my boy",
+			"localhost:9090/url",
+			time.Duration(5 * int(time.Minute)),
+		),
+	}
 }
 
 // TODO: Add paginated requests handling
@@ -61,12 +76,22 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	fn := r.PathValue("filename")
 
 	fp := filepath.Join(c, id, fn)
-	tmpId := caches.GenerateUUID()
 
+	// generate uid and cache it with corresponding filepath
+	tmpId := caches.GenerateUUID()
 	f.cache.Set(tmpId, fp)
 
+	// generate signedurl query based on uid
+	ss := f.signedUrl.GenerateSignedUrl(tmpId)
+
+	// return signedurl
+
+	// TODO: Modify signedquery to generate full signedUrl
+	// Add a basePath in constructor parameter so each endpoint can handle it's own files
+	// Instead of handling it by a separate endpoint
+
 	// TODO: CONTINUE FROM HERE
-	signedurl.NewSignedSlug("", time.Duration(5))
+	rw.Write([]byte(ss))
 }
 
 // Handles get file request
