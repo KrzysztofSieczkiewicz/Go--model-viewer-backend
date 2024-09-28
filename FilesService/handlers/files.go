@@ -34,7 +34,7 @@ func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *F
 		cache: c,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
-			baseUrl,
+			baseUrl + "files",
 			time.Duration(5 * int(time.Minute)),
 		),
 	}

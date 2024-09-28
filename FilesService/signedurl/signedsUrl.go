@@ -38,7 +38,7 @@ func (s *SignedUrl) GenerateSignedUrlCustom(tempID string, expiresIn time.Durati
 	signature := s.createHMACSignature(tempID, expirationTime)
 
 	signedUrl := fmt.Sprintf(
-		"%s/url/?id=%s&expires%d&signature%s",
+		"%s/?id=%s&expires%d&signature%s",
 		s.baseUrl,
 		url.QueryEscape(tempID),
 		expirationTime,
