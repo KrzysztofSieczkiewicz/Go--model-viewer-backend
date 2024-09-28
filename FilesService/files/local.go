@@ -10,8 +10,8 @@ import (
 
 // Implementation of the Storage interface that works for local disk
 type Local struct {
-	maxFileSize int64    // Max file size in bytes
-	basePath    string // Base path to the storage root
+	maxFileSize int64	// Max file size in bytes
+	basePath    string	// Base path to the storage root
 }
 
 // Creates new Local filesystem with given basePath and max file size

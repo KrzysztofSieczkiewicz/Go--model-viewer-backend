@@ -18,6 +18,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TODO: Improve error reporting and handling
+// TODO: Add swagger documentation
+// TODO: Create separate handlers for different file types
+// TODO: Update gitignore
+
 func main() {
 	l := log.New(os.Stdout, "FilesService", log.LstdFlags)
 

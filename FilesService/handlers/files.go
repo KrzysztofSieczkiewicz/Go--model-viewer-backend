@@ -39,9 +39,7 @@ func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *F
 	}
 }
 
-// TODO: Add paginated requests handling
-
-// Handles post file request. Doesn't allow for overwriting
+// Adds a file to the filesystem. Creates necessary folders. Returns an error when a file already exists
 func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
@@ -56,7 +54,7 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Handles put file request. Doesn't allow for file creation
+// Overwrites file in the filesystem. Returns an error on file not found
 func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
@@ -71,6 +69,7 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Returns an url to requested resource. Url is signed and timed
 func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
 	id := r.PathValue("id")
@@ -88,7 +87,7 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	rw.Write([]byte(url))
 }
 
-// Handles get file request from signed url
+// Returns a file in the body. Handles signed URLs created with GetFileUrl function
 func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	exp := r.URL.Query().Get("expires")
@@ -114,7 +113,7 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/octet-stream")
 }
 
-// Handles delete file request
+// Removes requested file. Doesn't remove any directories. Returns an error when file is not found
 func (f *Files) DeleteFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
