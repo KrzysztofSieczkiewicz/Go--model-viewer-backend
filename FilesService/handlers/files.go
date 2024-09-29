@@ -49,6 +49,10 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 
 	err := f.store.Write(fp, r.Body)
 	if err != nil {
+		if err == files.ErrFileAlreadyExists {
+			http.Error(rw, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(rw, "Failed to create the file: \n" + err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -64,7 +68,11 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 
 	err := f.store.Overwrite(fp, r.Body)
 	if err != nil {
-		http.Error(rw, "Failed to update the file: \n" + err.Error(), http.StatusBadRequest)
+		if err == files.ErrFileNotFound {
+			http.Error(rw, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(rw, "Failed to update the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -95,6 +103,10 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 
 	err := f.signedUrl.ValidateSignedUrl(id, exp, sign)
 	if err != nil {
+		if err == files.ErrFileNotFound {
+			http.Error(rw, err.Error(), http.StatusNotFound)
+			return
+		}
 		http.Error(rw, "Invalid request: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -102,11 +114,16 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 	fp, err := f.cache.Get(id)
 	if err != nil {
 		http.Error(rw, "Failed to read cache", http.StatusInternalServerError)
+		return
 	}
 
 	err = f.store.Read(fp, rw)
 	if err != nil {
-		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusNotFound)
+		if err == files.ErrFileNotFound {
+			http.Error(rw, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -123,7 +140,11 @@ func (f *Files) DeleteFile(rw http.ResponseWriter, r *http.Request) {
 
 	err := f.store.Delete(fp)
 	if err != nil {
-		http.Error(rw, "Failed to delete the file: \n" + err.Error(), http.StatusBadRequest)
+		if err == files.ErrFileNotFound {
+			http.Error(rw, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(rw, "Failed to delete the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
 }

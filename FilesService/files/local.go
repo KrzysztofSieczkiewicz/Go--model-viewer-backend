@@ -4,8 +4,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/xerrors"
 )
 
 // Implementation of the Storage interface that works for local disk
@@ -31,17 +29,26 @@ func NewLocal(basePath string, maxSizeMB int) (*Local, error) {
 func (l *Local) Read(path string, w io.Writer) error {
 	fp := l.fullPath(path)
 
+	// check if requested file exists
+	_, err := os.Stat(fp)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ErrFileNotFound
+		}
+		return ErrFileStat
+	}
+
 	// open the file
     f, err := os.Open(fp)
     if err != nil {
-        return xerrors.Errorf("Unable to open file: %w", err)
+        return ErrFileRead
     }
     defer f.Close()
 
-	// open the file
+	// write the file contents into the writer
 	_, err = io.Copy(w, f)
     if err != nil {
-        return xerrors.Errorf("Unable to write file contents to writer: %w", err)
+        return ErrFileWrite
     }
 
     return nil
@@ -55,16 +62,16 @@ func (l *Local) Write(path string, contents io.Reader) error {
 	// create directory stucture if it doesn't exist
 	err := os.MkdirAll(filepath.Dir(fp), 0755)
 	if err != nil {
-		return xerrors.Errorf("Unable to create directory: %w", err)
+		return ErrDirectoryCreate
 	}
 
 	// create a new file at the path
 	f, err := os.OpenFile(fp, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0666)
 	if err != nil {
 		if os.IsExist(err) {
-			return xerrors.Errorf("file already exists: %s", fp)
+			return ErrFileAlreadyExists
 		}
-		return xerrors.Errorf("Unable to create file: %w", err)
+		return ErrFileCreate
 	}
 
 	// close the file when done, delete the file if error occured
@@ -84,13 +91,13 @@ func (l *Local) Write(path string, contents io.Reader) error {
 	// write the contents to the new file
 	_, err = io.Copy(f, limitedReader)
 	if err != nil {
-		return xerrors.Errorf("unable to write to file: %w", err)
+		return ErrFileWrite
 	}
 
 	// check if filesize limit was reached
 	if limitedReader.N == 0 {
 		os.Remove(fp)
-		return xerrors.Errorf("file size exceeds the maximum limit of %d bytes", l.maxFileSize)
+		return ErrFileSizeExceeded
 	}
 
 	return nil
@@ -105,22 +112,22 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 	_, err := os.Stat(fp)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return xerrors.Errorf("file does not exist: %w", err)
+			return ErrFileNotFound
 		}
-		return xerrors.Errorf("error during checking target file: %w", err)
+		return ErrFileStat
 	}
 
 	// create and write to the temp file
 	err = l.Write(tfp, contents)
 	if err != nil {
-		return xerrors.Errorf("unable to create and write to the tmp file: %w", err)
+		return ErrFileWrite
 	}
 
 	// replace the original file with the temporary file
 	err = os.Rename(tfp, fp)
     if err != nil {
 		os.Remove(tfp)
-        return xerrors.Errorf("unable to replace target file: %w", err)
+        return ErrFileReplace
     }
 
 	return nil
@@ -132,9 +139,9 @@ func (l *Local) Delete(path string) error {
 	err := os.Remove(fp)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return xerrors.Errorf("requested file doesn't exist: %w", err)
+			return ErrFileNotFound
 		}
-		return xerrors.Errorf("unable to remove target file: %w", err)
+		return ErrFileDelete
 	}
 
 	return nil
