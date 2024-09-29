@@ -1,3 +1,13 @@
+// Package classification FilesService.
+//
+// Documentation of FilesApi
+//
+//	Schemes: http, https
+//	Host: localhost:9090
+//	BasePath: /files/
+//	Version: 1.0.0
+//
+// swagger:meta
 package main
 
 import (
@@ -18,10 +28,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// TODO: Improve error reporting and handling
 // TODO: Add swagger documentation
+// TODO: Add proper success headers and responses for handler. Update swagger desc. Give response body to 200 responses (?)
 // TODO: Create separate handlers for different file types
 // TODO: Update gitignore
+// TODO: Improve logging
 
 func main() {
 	l := log.New(os.Stdout, "FilesService", log.LstdFlags)

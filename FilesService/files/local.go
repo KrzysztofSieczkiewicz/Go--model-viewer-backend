@@ -30,13 +30,7 @@ func (l *Local) Read(path string, w io.Writer) error {
 	fp := l.fullPath(path)
 
 	// check if requested file exists
-	_, err := os.Stat(fp)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return ErrFileNotFound
-		}
-		return ErrFileStat
-	}
+	l.CheckFile(fp)
 
 	// open the file
     f, err := os.Open(fp)
@@ -109,16 +103,10 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 	tfp := fp + ".tmp"
 
 	// check if requested file exists
-	_, err := os.Stat(fp)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return ErrFileNotFound
-		}
-		return ErrFileStat
-	}
+	l.CheckFile(fp)
 
 	// create and write to the temp file
-	err = l.Write(tfp, contents)
+	err := l.Write(tfp, contents)
 	if err != nil {
 		return ErrFileWrite
 	}
@@ -142,6 +130,21 @@ func (l *Local) Delete(path string) error {
 			return ErrFileNotFound
 		}
 		return ErrFileDelete
+	}
+
+	return nil
+}
+
+// Checks if file is stored in the filesystem, retunrs an error on not found
+func (l *Local) CheckFile(path string) error {
+	fp := l.fullPath(path)
+
+	_, err := os.Stat(fp)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ErrFileNotFound
+		}
+		return ErrFileStat
 	}
 
 	return nil

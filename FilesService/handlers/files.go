@@ -39,7 +39,15 @@ func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *F
 	}
 }
 
-// Adds a file to the filesystem. Creates necessary folders. Returns an error when a file already exists
+// swagger:route POST /{category}/{id}/{filename} postFile
+//
+// Adds a file to the filesystem. Creates necessary folders. 
+// Returns an error when a file already exists
+//
+// Responses:
+// 	201: empty
+// 	403: error
+// 	500: error
 func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
@@ -53,12 +61,19 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, err.Error(), http.StatusForbidden)
 			return
 		}
-		http.Error(rw, "Failed to create the file: \n" + err.Error(), http.StatusBadRequest)
+		http.Error(rw, "Failed to create the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// Overwrites file in the filesystem. Returns an error on file not found
+// swagger:route PUT /{category}/{id}/{filename} putFile
+//
+// Updates a file in the filesystem. Returns an error on file not found
+//
+// Responses:
+// 	200: empty
+// 	404: error
+// 	500: error
 func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
@@ -77,13 +92,30 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Returns an url to requested resource. Url is signed and timed
+// swagger:route GET /{category}/{id}/{filename} getFileUrl
+//
+// Returns a signed url to requested resource. Url is timed
+//
+// Responses:
+// 	200: empty
+//	404: error
+//	500: error
 func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
 	id := r.PathValue("id")
 	fn := r.PathValue("filename")
 
 	fp := filepath.Join(c, id, fn)
+
+	// verify if file exists
+	err := f.store.CheckFile(fp)
+	if err != nil {
+		if err == files.ErrFileNotFound {
+			http.Error(rw, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
 
 	// generate uid and cache it with corresponding filepath
 	tmpId := caches.GenerateUUID()
@@ -95,7 +127,16 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	rw.Write([]byte(url))
 }
 
-// Returns a file in the body. Handles signed URLs created with GetFileUrl function
+
+// swagger:route GET ?{id}&{expires}&{signature} getFile
+//
+// Returns a file. Handles signed URLs created with GetFileUrl function
+//
+// Responses:
+// 	200: empty
+//	400: error
+//	404: error
+//	500: error
 func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	exp := r.URL.Query().Get("expires")
@@ -103,26 +144,18 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 
 	err := f.signedUrl.ValidateSignedUrl(id, exp, sign)
 	if err != nil {
-		if err == files.ErrFileNotFound {
-			http.Error(rw, err.Error(), http.StatusNotFound)
-			return
-		}
 		http.Error(rw, "Invalid request: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	fp, err := f.cache.Get(id)
 	if err != nil {
-		http.Error(rw, "Failed to read cache", http.StatusInternalServerError)
+		http.Error(rw, "Failed to read filepath from cache", http.StatusInternalServerError)
 		return
 	}
 
 	err = f.store.Read(fp, rw)
 	if err != nil {
-		if err == files.ErrFileNotFound {
-			http.Error(rw, err.Error(), http.StatusNotFound)
-			return
-		}
 		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -130,7 +163,16 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/octet-stream")
 }
 
-// Removes requested file. Doesn't remove any directories. Returns an error when file is not found
+// swagger:route DELETE /{category}/{id}/{filename} deleteFile
+//
+// Removes requested file from the filesystem.
+// Doesn't remove any directories. 
+// Returns an error when file is not found
+//
+// Responses:
+// 	204: empty
+//	404: error
+//	500: error
 func (f *Files) DeleteFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
