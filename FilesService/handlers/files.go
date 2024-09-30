@@ -39,7 +39,7 @@ func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *F
 	}
 }
 
-// swagger:route POST /{category}/{id}/{filename} postFile
+// swagger:route POST /{category}/{id}/{filename} files postFile
 //
 // Adds a file to the filesystem. Creates necessary folders. 
 // Returns an error when a file already exists
@@ -52,7 +52,6 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")
 	fn := r.PathValue("filename")
-
 	fp := filepath.Join(c, id, fn)
 
 	err := f.store.Write(fp, r.Body)
@@ -64,9 +63,11 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Failed to create the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	rw.WriteHeader(http.StatusCreated)
 }
 
-// swagger:route PUT /{category}/{id}/{filename} putFile
+// swagger:route PUT /{category}/{id}/{filename} files putFile
 //
 // Updates a file in the filesystem. Returns an error on file not found
 //
@@ -90,9 +91,11 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Failed to update the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	rw.WriteHeader(http.StatusOK)
 }
 
-// swagger:route GET /{category}/{id}/{filename} getFileUrl
+// swagger:route GET /{category}/{id}/{filename} files getFileUrl
 //
 // Returns a signed url to requested resource. Url is timed
 //
@@ -125,10 +128,12 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	url := f.signedUrl.GenerateSignedUrl(tmpId)
 
 	rw.Write([]byte(url))
+
+	rw.WriteHeader(http.StatusOK)
 }
 
 
-// swagger:route GET ?{id}&{expires}&{signature} getFile
+// swagger:route GET /{id}&{expires}&{signature} files getFile
 //
 // Returns a file. Handles signed URLs created with GetFileUrl function
 //
@@ -161,13 +166,12 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	rw.Header().Set("Content-Type", "application/octet-stream")
+	rw.WriteHeader(http.StatusOK)
 }
 
-// swagger:route DELETE /{category}/{id}/{filename} deleteFile
+// swagger:route DELETE /{category}/{id}/{filename} files deleteFile
 //
-// Removes requested file from the filesystem.
-// Doesn't remove any directories. 
-// Returns an error when file is not found
+// Removes requested file from the filesystem. Doesn't remove any directories. Returns an error when file is not found
 //
 // Responses:
 // 	204: empty
@@ -189,4 +193,6 @@ func (f *Files) DeleteFile(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Failed to delete the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	rw.WriteHeader(http.StatusNoContent)
 }

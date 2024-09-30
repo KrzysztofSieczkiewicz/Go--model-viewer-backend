@@ -28,8 +28,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// TODO: Add swagger documentation
-// TODO: Add proper success headers and responses for handler. Update swagger desc. Give response body to 200 responses (?)
+// DONE: Add swagger documentation
+// TODO: Add proper success headers and responses for handler. Update swagger desc.
+// Give response body to 200 responses (?)
+// Register content type for GetUrl
 // TODO: Create separate handlers for different file types
 // TODO: Update gitignore
 // TODO: Improve logging
