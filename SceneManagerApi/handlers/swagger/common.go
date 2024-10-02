@@ -1,17 +1,3 @@
-// Package classification of SceneManager API
-//
-// # Documentation for SceneManager API
-//
-// Schemes: http
-// BasePath: /
-// version: 0.0.1
-//
-// Consumes:
-// - application/json
-//
-// Produces:
-// - application/json
-// swagger:meta
 package swagger
 
 // Generic empty response with no content

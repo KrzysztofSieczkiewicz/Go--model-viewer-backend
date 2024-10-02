@@ -42,7 +42,13 @@ func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *F
 // swagger:route POST /{category}/{id}/{filename} files postFile
 //
 // Adds a file to the filesystem. Creates necessary folders. 
-// Returns an error when a file already exists
+// Returns an error when the file already exists
+//
+// consumes:
+//   - application/octet-stream
+//
+// produces:
+//	- application/json
 //
 // Responses:
 // 	201: empty
@@ -71,6 +77,12 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 //
 // Updates a file in the filesystem. Returns an error on file not found
 //
+// consumes:
+//  - application/octet-stream
+//
+// produces:
+//	- - text/plain
+//
 // Responses:
 // 	200: empty
 // 	404: error
@@ -97,10 +109,13 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 
 // swagger:route GET /{category}/{id}/{filename} files getFileUrl
 //
-// Returns a signed url to requested resource. Url is timed
+// Returns a signed url to requested resource. Url is timed depending on filesize
+//
+// produces:
+//  - text/plain
 //
 // Responses:
-// 	200: empty
+// 	200: urlResponse
 //	404: error
 //	500: error
 func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
@@ -109,6 +124,8 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	fn := r.PathValue("filename")
 
 	fp := filepath.Join(c, id, fn)
+
+	// TODO: Add filesize-based expiration time
 
 	// verify if file exists
 	err := f.store.CheckFile(fp)
@@ -129,6 +146,7 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Write([]byte(url))
 
+	rw.Header().Set("Content-Type", "text/plain")
 	rw.WriteHeader(http.StatusOK)
 }
 
@@ -137,8 +155,12 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 //
 // Returns a file. Handles signed URLs created with GetFileUrl function
 //
+// produces:
+//  - application/octet-stream
+//	- text/plain
+//
 // Responses:
-// 	200: empty
+// 	200: fileResponse
 //	400: error
 //	404: error
 //	500: error
@@ -172,6 +194,9 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 // swagger:route DELETE /{category}/{id}/{filename} files deleteFile
 //
 // Removes requested file from the filesystem. Doesn't remove any directories. Returns an error when file is not found
+//
+// produces:
+//	- text/plain
 //
 // Responses:
 // 	204: empty
