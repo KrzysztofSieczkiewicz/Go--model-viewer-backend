@@ -53,10 +53,10 @@ func (l *Local) Read(path string, w io.Writer) error {
 func (l *Local) Write(path string, contents io.Reader) error {
 	fp := l.fullPath(path)
 
-	// create directory stucture if it doesn't exist
-	err := os.MkdirAll(filepath.Dir(fp), 0755)
-	if err != nil {
-		return ErrDirectoryCreate
+	// check if the directory exists
+	dir := filepath.Dir(fp)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return ErrDirectoryNotFound
 	}
 
 	// create a new file at the path

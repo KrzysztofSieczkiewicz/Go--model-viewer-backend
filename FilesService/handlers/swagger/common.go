@@ -1,7 +1,11 @@
 package swagger
 
-// swagger:response empty
-type emptyResponse struct {
+// swagger:response message
+type message struct {
+    // Returned message
+	// in: body
+    // type: string
+	Message string `json:"message"`
 }
 
 // swagger:response error
@@ -30,7 +34,7 @@ type urlResponse struct {
 
 // Dummy function to avoid "unused" errors
 func init() {
-    _ = emptyResponse{}
+    _ = message{}
     _ = errorResponse{}
     _ = fileResponse{}
     _ = urlResponse{}

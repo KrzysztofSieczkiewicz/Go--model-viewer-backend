@@ -11,6 +11,21 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 )
 
+/*
+Written for imagesets but should work for anything
+TODO: required functionalities:
+1. Post Image - DONE
+3. Update image - DONE
+5. Delete image - DONE
+7. Delete image set
+8. Get image from set (url)
+9. Get entire set ([]url)
+10. Get resource from URL
+11. List available under given cathegory
+
+To handle these requests data must be moved from the url to the body - preferably as json
+*/
+
 // Example curls:
 // Get file: curl -v localhost:9090/files/random/1/thumbnail.png
 // Post file: curl -v -X POST -H "Content-Type: image/png" --data-binary @FilesService/thumbnail.png localhost:9090/files/random/1/thumbnail.png
