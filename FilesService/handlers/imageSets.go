@@ -297,21 +297,24 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create directory")
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create ImageSet")
 	}
 
-	utils.RespondWithMessage(rw, http.StatusCreated, "Image uploaded sucessfully")
+	utils.RespondWithMessage(rw, http.StatusCreated, "ImageSet created successfully")
 }
 
-// swagger:route POST /{category}/{id} imageSets putImageSet
+// swagger:route PUT /{category}/{id} imageSets putImageSet
 //
-// Update existing imageset
+// Update existing imageset id or category
+//
+// consumes:
+//	- application/json
 //
 // produces:
 //	- application/json
 //
 // Responses:
-// 	201: messageJson
+// 	200: messageJson
 //  400: messageJson
 // 	403: messageJson
 // 	500: messageJson
@@ -322,17 +325,66 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
 		return
 	}
+	ofp := filepath.Join(c, id)
 
-	fp := filepath.Join(c, id)
-
-	err := h.store.MakeDirectory(fp)
+	i := &data.ImageSet{}
+	err := utils.FromJSON(i, r.Body)
 	if err != nil {
-		if err == files.ErrDirectoryAlreadyExists {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
-			return
-		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create directory")
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusCreated, "Image uploaded sucessfully")
+	nfp := filepath.Join(i.Category, i.ID)
+
+	err = h.store.RenameDirectory(ofp, nfp)
+	if err != nil {
+		if err == files.ErrDirectoryAlreadyExists {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update ImageSet")
+		return
+	}
+
+	utils.RespondWithMessage(rw, http.StatusOK, "ImageSet updated successfully")
+}
+
+// swagger:route DELETE /{category}/{id} imageSets deleteImageSet
+//
+// Delete existing imageset
+//
+// consumes:
+//	- application/json
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: messageJson
+//  400: messageJson
+//	403: messageJson
+// 	500: messageJson
+func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	id := r.PathValue("id")
+	if c == "" || id == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+		return
+	}
+	fp := filepath.Join(c, id)
+
+	err := h.store.DeleteDirectory(fp)
+	if err != nil {
+		if err == files.ErrDirectoryNotFound {
+			utils.RespondWithMessage(rw, http.StatusBadRequest, "ImageSet doesn't exist")
+			return
+		}
+		if err == files.ErrDirectorySubdirectoryFound {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet contains subdirectories")
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		return
+	}
+
+	utils.RespondWithMessage(rw, http.StatusOK, "ImageSet removed successfully")
 }

@@ -25,7 +25,7 @@ func NewLocal(basePath string, maxSizeMB int) (*Local, error) {
 	}, nil
 }
 
-// Reads the file at the provided path and returns a reader
+
 func (l *Local) Read(path string, w io.Writer) error {
 	fp := l.fullPath(path)
 
@@ -48,8 +48,7 @@ func (l *Local) Read(path string, w io.Writer) error {
     return nil
 }
 
-// Create and write a file under provided path. Does not overwrite existing files 
-// and will return an error if there already is an identical file
+
 func (l *Local) Write(path string, contents io.Reader) error {
 	fp := l.fullPath(path)
 
@@ -97,7 +96,7 @@ func (l *Local) Write(path string, contents io.Reader) error {
 	return nil
 }
 
-// Overwrites provided file using temp file. Fails if requested file doesn't exist
+
 func (l *Local) Overwrite(path string, contents io.Reader) error {
 	fp := l.fullPath(path)
 	tfp := fp + ".tmp"
@@ -121,7 +120,7 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 	return nil
 }
 
-// Deletes file under provided path. Returns error if file doesn't exist
+
 func (l *Local) Delete(path string) error {
 	fp := l.fullPath(path)
 	err := os.Remove(fp)
@@ -135,7 +134,7 @@ func (l *Local) Delete(path string) error {
 	return nil
 }
 
-// Checks if file is stored in the filesystem, returns an error on not found
+
 func (l *Local) CheckFile(path string) error {
 	fp := l.fullPath(path)
 
@@ -150,7 +149,7 @@ func (l *Local) CheckFile(path string) error {
 	return nil
 }
 
-// Creates requested directory or dir structure, returns an error if path already exists
+
 func (l *Local) MakeDirectory(path string) error {
 	fp := l.fullPath(path)
 
@@ -164,6 +163,71 @@ func (l *Local) MakeDirectory(path string) error {
 	err = os.MkdirAll(fp, 0755)
 	if err != nil {
 		return ErrDirectoryCreate
+	}
+
+	return nil
+}
+
+
+func (l *Local) RenameDirectory(oldPath string, newPath string) error {
+	fop := l.fullPath(oldPath)
+	fnp := l.fullPath(newPath)
+
+	// check if the directory exists
+	_, err := os.Stat(fop)
+	if os.IsExist(err) {
+		return ErrDirectoryAlreadyExists
+	}
+
+	// rename the directory
+	err = os.Rename(fop, fnp)
+	if err != nil {
+		return ErrDirectoryRename
+	}
+
+	return nil
+}
+
+
+func (l *Local) DeleteDirectory(path string) error {
+	fp := l.fullPath(path)
+
+	// check if directory exists
+	_, err := os.Stat(fp)
+	if os.IsNotExist(err) {
+		return ErrDirectoryNotFound
+	}
+
+	// open the dir
+	dir, err := os.Open(fp)
+	if err != nil {
+		return ErrDirectoryRead
+	}
+
+	// check if directory doesn't contain subdirectories
+	for {
+		// Read dir contents
+		entries, err := dir.Readdir(-1)
+		if err != nil {
+			return ErrDirectoryRead
+		}
+		if err != io.EOF {
+			break
+		}
+
+		// Check if any entry is a directory
+		for _, entry := range entries {
+			if entry.IsDir() {
+				return ErrDirectorySubdirectoryFound
+			}
+		}
+	}
+
+	// close and remove the dir
+	dir.Close()
+	err = os.Remove(fp)
+	if err != nil {
+		return ErrDirectoryDelete
 	}
 
 	return nil

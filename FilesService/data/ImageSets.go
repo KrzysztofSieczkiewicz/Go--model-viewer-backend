@@ -5,7 +5,7 @@ import "fmt"
 type ImageSet struct {
 	ID       string  `json:"id"`
 	Category string  `json:"category"`
-	Images   []Image `json:"images"`
+	Images   []Image `json:"images,omitempty"`
 }
 
 type Image struct {
@@ -14,6 +14,7 @@ type Image struct {
 	FileExtension string `json:"extension"`
 }
 
+// Returns filename string from image properties
 func (i *Image) ConstructImageName() string {
 	return fmt.Sprintf(
 		"%s_%s.%s",
@@ -23,6 +24,7 @@ func (i *Image) ConstructImageName() string {
 	)
 }
 
+// Deconstructs image properties from the filename
 func (i *Image) DeconstructImageName() (*Image, error) {
 
 	return nil, nil

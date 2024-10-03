@@ -15,7 +15,7 @@ var ErrFileRead = errors.New("file couldn't be read")
 
 var ErrFileWrite = errors.New("file couldn't be written into")
 
-var ErrFileDelete = errors.New("fiel couldn't be deleted")
+var ErrFileDelete = errors.New("file couldn't be deleted")
 
 var ErrFileStat = errors.New("file couldn't be verified")
 
@@ -30,4 +30,12 @@ var ErrDirectoryNotFound = errors.New("directory doesn't exist")
 var ErrDirectoryAlreadyExists = errors.New("directory already exists")
 
 var ErrDirectoryCreate = errors.New("unable to create directory")
+
+var ErrDirectoryRead = errors.New("unable to open directory")
+
+var ErrDirectoryDelete = errors.New("directory couldn't be deleted")
+
+var ErrDirectoryRename = errors.New("unable to rename directory")
+
+var ErrDirectorySubdirectoryFound = errors.New("directory contains subdirectories")
 

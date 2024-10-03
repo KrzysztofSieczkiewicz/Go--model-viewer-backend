@@ -18,8 +18,8 @@ Written for imagesets but should work for anything. Required functionalities:
 3. Get image from set (url) - DONE
 4. Delete image - DONE
 
-1. Post Imageset
-2. Update Imageset
+1. Post Imageset - DONE
+2. Update Imageset - DONE
 3. Delete Imageset
 4. Get Imageset details and content
 5. List available in the category
