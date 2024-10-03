@@ -27,6 +27,8 @@ var ErrFileSizeExceeded = errors.New("maximum file size was exceeded")
 // Directories
 var ErrDirectoryNotFound = errors.New("directory doesn't exist")
 
+var ErrNotDirectory = errors.New("filepath doesn't end with directory")
+
 var ErrDirectoryAlreadyExists = errors.New("directory already exists")
 
 var ErrDirectoryCreate = errors.New("unable to create directory")
@@ -34,6 +36,8 @@ var ErrDirectoryCreate = errors.New("unable to create directory")
 var ErrDirectoryRead = errors.New("unable to open directory")
 
 var ErrDirectoryDelete = errors.New("directory couldn't be deleted")
+
+var ErrDirectoryStat = errors.New("directory couldn't be verified")
 
 var ErrDirectoryRename = errors.New("unable to rename directory")
 

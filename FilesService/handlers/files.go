@@ -20,8 +20,8 @@ Written for imagesets but should work for anything. Required functionalities:
 
 1. Post Imageset - DONE
 2. Update Imageset - DONE
-3. Delete Imageset
-4. Get Imageset details and content
+3. Get Imageset details and content - DONE
+4. Delete Imageset - DONE
 5. List available in the category
 
 1. Handle GET file request

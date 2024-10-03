@@ -14,7 +14,7 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
-// Example curls:
+// Example curls (OUTDATED):
 // Get file: curl -v localhost:9090/files/random/1/thumbnail.png
 // Post file: curl -v -X POST -H "Content-Type: image/png" --data-binary @FilesService/thumbnail.png localhost:9090/files/random/1/thumbnail.png
 // Get url: curl -v localhost:9090/url/random/1/thumbnail.png
@@ -269,6 +269,46 @@ func (f *Files) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 }
 
 
+func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	id := r.PathValue("id")
+	if c == "" || id == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+		return
+	}
+
+	fp := filepath.Join(c, id)
+
+	f, err := h.store.ListDirectoryContent(fp)
+	if err != nil {
+		if err == files.ErrDirectoryNotFound {
+			utils.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
+			return
+		}
+		if err == files.ErrNotDirectory {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "Requested path is not a directory")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve ImageSet data")
+		return
+	}
+
+	i := &data.Images{}
+	err = i.DeconstructImageNames(f)
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to deconstruct image names:")
+		return
+	}
+
+	is := &data.ImageSet{
+		ID: id,
+		Category: c,
+		Images: *i,
+	}
+
+	utils.RespondWithJSON(rw, http.StatusOK, is)
+}
+
 // swagger:route POST /{category}/{id} imageSets postImageSet
 //
 // Create a new image set.
@@ -317,6 +357,7 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 // 	200: messageJson
 //  400: messageJson
 // 	403: messageJson
+//	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
@@ -338,8 +379,12 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 
 	err = h.store.RenameDirectory(ofp, nfp)
 	if err != nil {
+		if err == files.ErrDirectoryNotFound {
+			utils.RespondWithMessage(rw, http.StatusNotFound, "Unable to find ImageSet")
+			return
+		}
 		if err == files.ErrDirectoryAlreadyExists {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
+			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
 			return
 		}
 		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update ImageSet")
@@ -363,6 +408,7 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 // 	200: messageJson
 //  400: messageJson
 //	403: messageJson
+//	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
@@ -376,7 +422,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 	err := h.store.DeleteDirectory(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusBadRequest, "ImageSet doesn't exist")
+			utils.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
 			return
 		}
 		if err == files.ErrDirectorySubdirectoryFound {

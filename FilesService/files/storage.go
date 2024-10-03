@@ -31,4 +31,7 @@ type Storage interface {
 	
 	// Deletes directory. Fails if it contains other directories
 	DeleteDirectory(path string) error
+
+	// Lists files in the directory
+	ListDirectoryContent(path string) ([]string, error)
 }

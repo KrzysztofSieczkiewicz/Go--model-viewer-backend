@@ -173,8 +173,14 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 	fop := l.fullPath(oldPath)
 	fnp := l.fullPath(newPath)
 
-	// check if the directory exists
+	// check if the requested directory exists
 	_, err := os.Stat(fop)
+	if os.IsNotExist(err) {
+		return ErrDirectoryNotFound
+	}
+
+	// check if the desired directory doesn't exist
+	_, err = os.Stat(fnp)
 	if os.IsExist(err) {
 		return ErrDirectoryAlreadyExists
 	}
@@ -231,6 +237,46 @@ func (l *Local) DeleteDirectory(path string) error {
 	}
 
 	return nil
+}
+
+
+func (l *Local) ListDirectoryContent(path string) ([]string, error) {
+	fp := l.fullPath(path)
+
+	// check if the directory exists
+	info, err := os.Stat(fp)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrDirectoryNotFound
+		}
+		return nil, ErrDirectoryStat
+	}
+	if !info.IsDir() {
+		return nil, ErrNotDirectory
+	}
+
+	// open the dir
+	dir, err := os.Open(fp)
+	if err != nil {
+		return nil, ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	// Read directory contents
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		return nil, ErrDirectoryRead
+	}
+
+	// save filenames
+	filenames := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() { // Check if the entry is a file
+			filenames = append(filenames, entry.Name()) // Add the filename to the slice
+		}
+	}
+
+	return filenames, nil
 }
 
 // Returns the absolute path from provided relative path
