@@ -14,11 +14,16 @@ type Image struct {
 	FileExtension string `json:"extension"`
 }
 
-func (i *Image) GetImageName() string {
+func (i *Image) ConstructImageName() string {
 	return fmt.Sprintf(
 		"%s_%s.%s",
 		i.ImgType,
 		i.Resolution,
 		i.FileExtension,
 	)
+}
+
+func (i *Image) DeconstructImageName() (*Image, error) {
+
+	return nil, nil
 }

@@ -12,19 +12,19 @@ import (
 )
 
 /*
-Written for imagesets but should work for anything
-TODO: required functionalities:
+Written for imagesets but should work for anything. Required functionalities:
 1. Post Image - DONE
-3. Update image - DONE
-4. Get image from set (url) - TODO
-5. Delete image - DONE
-7. Delete image set
-8. Get image from set (url)
-9. Get entire set ([]url)
-10. Get resource from URL
-11. List available under given cathegory
+2. Update image - DONE
+3. Get image from set (url) - DONE
+4. Delete image - DONE
 
-To handle these requests data must be moved from the url to the body - preferably as json
+1. Post Imageset
+2. Update Imageset
+3. Delete Imageset
+4. Get Imageset details and content
+5. List available in the category
+
+1. Handle GET file request
 */
 
 // Example curls:

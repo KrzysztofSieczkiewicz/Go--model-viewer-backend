@@ -14,23 +14,6 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
-/*
-TODO: required functionalities:
-1. Post Image
-2. Post multiple images within set
-3. Update image
-4. Update multiple images within set
-5. Delete image
-6. Delete multiple images within set
-7. Delete image set
-8. Get image from set (url)
-9. Get entire set ([]url)
-10. Get resource from URL
-11. List available under given cathegory
-
-To handle these requests data must be moved from the url to the body - preferably as json
-*/
-
 // Example curls:
 // Get file: curl -v localhost:9090/files/random/1/thumbnail.png
 // Post file: curl -v -X POST -H "Content-Type: image/png" --data-binary @FilesService/thumbnail.png localhost:9090/files/random/1/thumbnail.png
@@ -95,7 +78,7 @@ func (h *ImageSetsHandler) GetImageUrl(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	fn := i.GetImageName()
+	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
 	err = h.store.CheckFile(fp)
@@ -162,7 +145,7 @@ func (h *ImageSetsHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	
-	fn := i.GetImageName()
+	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
 	err = h.store.Write(fp, file)
@@ -224,7 +207,7 @@ func (h *ImageSetsHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	
-	fn := i.GetImageName()
+	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
 	err = h.store.Overwrite(fp, file)
@@ -269,7 +252,7 @@ func (f *Files) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fn := i.GetImageName()
+	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
 	err = f.store.Delete(fp)
@@ -283,4 +266,73 @@ func (f *Files) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusNoContent)
+}
+
+
+// swagger:route POST /{category}/{id} imageSets postImageSet
+//
+// Create a new image set.
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	201: messageJson
+//  400: messageJson
+// 	403: messageJson
+// 	500: messageJson
+func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	id := r.PathValue("id")
+	if c == "" || id == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+		return
+	}
+
+	fp := filepath.Join(c, id)
+
+	err := h.store.MakeDirectory(fp)
+	if err != nil {
+		if err == files.ErrDirectoryAlreadyExists {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create directory")
+	}
+
+	utils.RespondWithMessage(rw, http.StatusCreated, "Image uploaded sucessfully")
+}
+
+// swagger:route POST /{category}/{id} imageSets putImageSet
+//
+// Update existing imageset
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	201: messageJson
+//  400: messageJson
+// 	403: messageJson
+// 	500: messageJson
+func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	id := r.PathValue("id")
+	if c == "" || id == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+		return
+	}
+
+	fp := filepath.Join(c, id)
+
+	err := h.store.MakeDirectory(fp)
+	if err != nil {
+		if err == files.ErrDirectoryAlreadyExists {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create directory")
+	}
+
+	utils.RespondWithMessage(rw, http.StatusCreated, "Image uploaded sucessfully")
 }

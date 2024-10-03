@@ -135,7 +135,7 @@ func (l *Local) Delete(path string) error {
 	return nil
 }
 
-// Checks if file is stored in the filesystem, retunrs an error on not found
+// Checks if file is stored in the filesystem, returns an error on not found
 func (l *Local) CheckFile(path string) error {
 	fp := l.fullPath(path)
 
@@ -150,6 +150,24 @@ func (l *Local) CheckFile(path string) error {
 	return nil
 }
 
+// Creates requested directory or dir structure, returns an error if path already exists
+func (l *Local) MakeDirectory(path string) error {
+	fp := l.fullPath(path)
+
+	// check if the directory exists
+	_, err := os.Stat(fp)
+	if os.IsExist(err) {
+		return ErrDirectoryAlreadyExists
+	}
+
+	// create the directory
+	err = os.MkdirAll(fp, 0755)
+	if err != nil {
+		return ErrDirectoryCreate
+	}
+
+	return nil
+}
 
 // Returns the absolute path from provided relative path
 func (l *Local) fullPath(path string) string {

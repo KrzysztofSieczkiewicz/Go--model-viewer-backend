@@ -27,5 +27,7 @@ var ErrFileSizeExceeded = errors.New("maximum file size was exceeded")
 // Directories
 var ErrDirectoryNotFound = errors.New("directory doesn't exist")
 
+var ErrDirectoryAlreadyExists = errors.New("directory already exists")
+
 var ErrDirectoryCreate = errors.New("unable to create directory")
 
