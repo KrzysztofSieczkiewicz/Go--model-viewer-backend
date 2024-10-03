@@ -268,7 +268,19 @@ func (f *Files) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusNoContent)
 }
 
-
+// swagger:route GET /{category}/{id} imageSets getImageSet
+//
+// Returns ImageSet details and available images.
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: messageJson
+//  400: messageJson
+// 	403: messageJson
+//	404: messageJson
+// 	500: messageJson
 func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
 	id := r.PathValue("id")
