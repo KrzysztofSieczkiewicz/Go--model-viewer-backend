@@ -9,6 +9,7 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
@@ -58,6 +59,66 @@ func NewImageSets(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache
 	}
 }
 
+
+// swagger:route GET /{category}/{id} imageSets getImageUrl
+//
+// Returns a signed url to requested resource.
+//
+// consumes:
+//	- application/json
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: imageUrlJson
+//	404: messageJson
+//	500: messageJson
+func (h *ImageSetsHandler) GetImageUrl(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	id := r.PathValue("id")
+	if c == "" || id == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+		return
+	}
+
+	i := &data.Image{}
+	json := r.FormValue("json")
+	if json == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Missing JSON data")
+		return
+	}
+
+	err := utils.FromJSONString(i, json)
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		return
+	}
+
+	fn := i.GetImageName()
+	fp := filepath.Join(c, id, fn)
+
+	err = h.store.CheckFile(fp)
+	if err != nil {
+		if err == files.ErrFileNotFound {
+			http.Error(rw, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
+
+	tmpId := caches.GenerateUUID()
+	h.cache.Set(tmpId, fp)
+	url := h.signedUrl.GenerateSignedUrl(tmpId)
+
+    response := response.ImageUrlResponse{
+        Filename: fn,
+        URL:      url,
+    }
+
+	utils.RespondWithJSON(rw, http.StatusOK, response)
+}
+
 // swagger:route POST /{category}/{id} imageSets postImage
 //
 // Adds an image to the existing set.
@@ -69,10 +130,10 @@ func NewImageSets(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache
 //	- application/json
 //
 // Responses:
-// 	201: message
-//  400: message
-// 	403: message
-// 	500: message
+// 	201: messageJson
+//  400: messageJson
+// 	403: messageJson
+// 	500: messageJson
 func (h *ImageSetsHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
 	id := r.PathValue("id")
@@ -132,9 +193,9 @@ func (h *ImageSetsHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 //	- application/json
 //
 // Responses:
-// 	200: message
-// 	404: message
-// 	500: message
+// 	200: messageJson
+// 	404: messageJson
+// 	500: messageJson
 func (h *ImageSetsHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
 	id := r.PathValue("id")
@@ -191,8 +252,8 @@ func (h *ImageSetsHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 //
 // Responses:
 // 	204: empty
-//	404: error
-//	500: error
+//	404: messageJson
+//	500: messageJson
 func (f *Files) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	c := r.PathValue("category")

@@ -16,6 +16,7 @@ Written for imagesets but should work for anything
 TODO: required functionalities:
 1. Post Image - DONE
 3. Update image - DONE
+4. Get image from set (url) - TODO
 5. Delete image - DONE
 7. Delete image set
 8. Get image from set (url)
