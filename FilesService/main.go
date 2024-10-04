@@ -66,12 +66,26 @@ func main() {
 	// Initialize and register the handlers
 	fh := handlers.NewFiles(baseUrl, fs, l, fc)
 	router.HandleFunc("GET /files/", fh.GetFile)
+	router.HandleFunc("GET /files/{category}/{id}/{filename}", fh.GetFileUrl)
 	router.HandleFunc("POST /files/{category}/{id}/{filename}", fh.PostFile)
 	router.HandleFunc("PUT /files/{category}/{id}/{filename}", fh.PutFile)
 	router.HandleFunc("DELETE /files/{category}/{id}/{filename}", fh.DeleteFile)
 
-	router.HandleFunc("GET /url/{category}/{id}/{filename}", fh.GetFileUrl)
+	// IMAGES
+	ih := handlers.NewImages(baseUrl, fs, l, fc)
+	router.HandleFunc("GET /images/{category}/{id}", ih.GetUrl)
+	router.HandleFunc("GET /image/", ih.GetImage) // TODO: HANDLE THIS PROPERLY
+	router.HandleFunc("POST /images/{category}/{id}", ih.PostImage)
+	router.HandleFunc("PUT /images/{category}/{id}", ih.PutImage)
+	router.HandleFunc("DELETE /images/{category}/{id}", ih.DeleteImage)
 
+	// IMAGE SETS & CATEGORIES
+	ish := handlers.NewImageSets(baseUrl, fs, l, fc)
+	router.HandleFunc("GET /imageSets/{category}/{id}", ish.GetImageSet)
+	router.HandleFunc("POST /imageSets/{category}/{id}", ish.PostImageSet)
+	router.HandleFunc("PUT /imageSets/{category}/{id}", ish.PutImageSet)
+	router.HandleFunc("DELETE /imageSets/{category}/{id}", ish.DeleteImageSet)
+	router.HandleFunc("GET /imageSets/{category}", ish.GetCategory)
 
 	// Handle OpenAPI doc request
 	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}
