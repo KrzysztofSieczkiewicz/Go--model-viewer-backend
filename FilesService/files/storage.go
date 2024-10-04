@@ -33,5 +33,8 @@ type Storage interface {
 	DeleteDirectory(path string) error
 
 	// Lists files in the directory
-	ListDirectoryContent(path string) ([]string, error)
+	ListFiles(path string) ([]string, error)
+
+	// List subdirectories in the directory
+	ListDirectories(path string) ([]string, error)
 }

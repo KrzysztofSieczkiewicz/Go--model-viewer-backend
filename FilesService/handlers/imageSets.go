@@ -276,7 +276,7 @@ func (f *Files) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 //	- application/json
 //
 // Responses:
-// 	200: messageJson
+// 	200: imageSetJson
 //  400: messageJson
 // 	403: messageJson
 //	404: messageJson
@@ -291,7 +291,7 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 
 	fp := filepath.Join(c, id)
 
-	f, err := h.store.ListDirectoryContent(fp)
+	f, err := h.store.ListFiles(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
 			utils.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
@@ -312,7 +312,7 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	is := &data.ImageSet{
+	is := &response.ImageSetResponse{
 		ID: id,
 		Category: c,
 		Images: *i,
@@ -445,4 +445,43 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 	}
 
 	utils.RespondWithMessage(rw, http.StatusOK, "ImageSet removed successfully")
+}
+
+// swagger:route GET /{category} imageSets getCategory
+//
+// Returns ImageSet details and available images.
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: categoryContentsJson
+//  400: messageJson
+// 	403: messageJson
+//	404: messageJson
+// 	500: messageJson
+func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	if c == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		return
+	}
+
+	f, err := h.store.ListDirectories(c)
+	if err != nil {
+		if err == files.ErrDirectoryNotFound {
+			utils.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
+			return
+		}
+		if err == files.ErrNotDirectory {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "Requested path is not a directory")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve Category")
+		return
+	}
+
+	is := &response.CategoryResponse{Contents: f}
+
+	utils.RespondWithJSON(rw, http.StatusOK, is)
 }
