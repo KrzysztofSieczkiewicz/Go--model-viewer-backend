@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -58,12 +59,12 @@ func (s *SignedUrl) ValidateSignedUrl(id string, expires string, signature strin
 	}
 	
 	if time.Now().Unix() > expirationTime {
-		return fmt.Errorf("URL has expired")
+		return ErrUrlExpired
 	}
 
 	expectedSignature := s.createHMACSignature(id, expirationTime)
 	if !hmac.Equal([]byte(expectedSignature), []byte(signature)) {
-		return fmt.Errorf("invalid signature")
+		return ErrInvalidSignature
 	}
 
 	return nil
@@ -77,3 +78,9 @@ func (s *SignedUrl) createHMACSignature(tempID string, expirationTime int64) str
 
 	return hex.EncodeToString(mac.Sum(nil))
 }
+
+var ErrUrlExpired = errors.New("URL has expired")
+
+var ErrInvalidTimestamp = errors.New("invalid timestamp")
+
+var ErrInvalidSignature = errors.New("invalid signature")

@@ -22,7 +22,7 @@ Written for imagesets but should work for anything. Required functionalities:
 2. Update Imageset - DONE
 3. Get Imageset details and content - DONE
 4. Delete Imageset - DONE
-5. List available in the category
+5. List available in the category - DONE
 
 1. Handle GET file request
 */

@@ -8,3 +8,8 @@ type MessageResponse struct {
     // Returned message
 	Message string `json:"message"`
 }
+
+// swagger:response fileByteStream
+type FileResponse struct {
+    File []byte
+}

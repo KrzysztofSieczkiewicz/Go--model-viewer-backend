@@ -449,7 +449,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 
 // swagger:route GET /{category} imageSets getCategory
 //
-// Returns ImageSet details and available images.
+// List subdirectories available in the category
 //
 // produces:
 //	- application/json
@@ -484,4 +484,58 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 	is := &response.CategoryResponse{Contents: f}
 
 	utils.RespondWithJSON(rw, http.StatusOK, is)
+}
+
+
+// swagger:route GET /{id}&{expires}&{signature} imageSets getImage
+//
+// Returns an image from imageset. Handles signed URLs
+//
+// produces:
+//  - application/octet-stream
+//	- application/json
+//
+// Responses:
+// 	200: fileByteStream
+//	400: message
+//	403: message
+//	404: message
+//	500: message
+func (f *Files) GetImage(rw http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	exp := r.URL.Query().Get("expires")
+	sign := r.URL.Query().Get("signature")
+
+	err := f.signedUrl.ValidateSignedUrl(id, exp, sign)
+	if err != nil {
+		if err == signedurl.ErrUrlExpired {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "URL has expired")
+			return
+		}
+		if err == signedurl.ErrInvalidSignature {
+			utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid signature")
+			return
+		}
+		if err == signedurl.ErrInvalidTimestamp {
+			utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid timestamp")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	fp, err := f.cache.Get(id)
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Request doesn't match cache")
+		return
+	}
+
+	err = f.store.Read(fp, rw)
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to retrieve requested file")
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/octet-stream")
+	rw.WriteHeader(http.StatusOK)
 }
