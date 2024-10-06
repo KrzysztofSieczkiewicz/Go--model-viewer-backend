@@ -21,6 +21,7 @@ func FromJSONString(i interface{}, jsonStr string) error {
 // Serializes JSON string into provided interface
 func ToJSON(i interface{}, w io.Writer) error {
 	e := json.NewEncoder(w)
+	e.SetEscapeHTML(false)
 
 	return e.Encode(i)
 }

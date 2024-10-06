@@ -24,7 +24,7 @@ Written for imagesets but should work for anything. Required functionalities:
 4. Delete Imageset - DONE
 5. List available in the category - DONE
 
-1. Handle GET file request
+1. Handle GET file request - DONE
 */
 
 // Example curls:

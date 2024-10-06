@@ -74,7 +74,7 @@ func main() {
 	// IMAGES
 	ih := handlers.NewImages(baseUrl, fs, l, fc)
 	router.HandleFunc("GET /images/{category}/{id}", ih.GetUrl)
-	router.HandleFunc("GET /image/", ih.GetImage) // TODO: HANDLE THIS PROPERLY
+	router.HandleFunc("GET /images/", ih.GetImage) // TODO: HANDLE THIS PROPERLY
 	router.HandleFunc("POST /images/{category}/{id}", ih.PostImage)
 	router.HandleFunc("PUT /images/{category}/{id}", ih.PutImage)
 	router.HandleFunc("DELETE /images/{category}/{id}", ih.DeleteImage)

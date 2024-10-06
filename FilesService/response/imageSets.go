@@ -4,8 +4,6 @@ import "github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/d
 
 // swagger:response imageUrlJson
 type ImageUrlResponse struct {
-	// ID of parent imageset
-    ID         string  `json:"id"`
     // filename of returned image
     Filename   string  `json:"filename"`
     // url pointing to the resource

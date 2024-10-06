@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -13,6 +14,19 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
+
+/*
+Example curls:
+GET IMAGE URL:
+curl -v -X GET "http://localhost:9090/images/random/1" -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+
+POST IMAGE:
+curl -v -i -X POST http://localhost:9090/images/random/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+
+PUT IMAGE:
+curl -v -i -X PUT http://localhost:9090/images/random/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+
+*/
 
 // Handler for reading and writing images to the storage
 type ImagesHandler struct {
@@ -60,15 +74,9 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	i := &data.Image{}
-	json := r.FormValue("json")
-	if json == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Missing JSON data")
-		return
-	}
-
-	err := utils.FromJSONString(i, json)
+	err := utils.FromJSON(i, r.Body)
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
 		return
 	}
 
@@ -87,6 +95,8 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	tmpId := caches.GenerateUUID()
 	h.cache.Set(tmpId, fp)
 	url := h.signedUrl.GenerateSignedUrl(tmpId)
+
+	fmt.Println(url)
 
     response := response.ImageUrlResponse{
         Filename: fn,
@@ -172,14 +182,20 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Unable to parse form data")
+		return
+	}
+
 	i := &data.Image{}
-	json := r.FormValue("json")
+	json := r.FormValue("metadata")
 	if json == "" {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Missing JSON part of the request")
 		return
 	}
 
-	err := utils.FromJSONString(i, json)
+	err = utils.FromJSONString(i, json)
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
@@ -235,7 +251,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	i := &data.Image{}
-	json := r.FormValue("json")
+	json := r.FormValue("metadata")
 	if json == "" {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Missing JSON part of the request")
 		return
