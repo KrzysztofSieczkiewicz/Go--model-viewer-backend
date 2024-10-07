@@ -26,6 +26,9 @@ curl -v -i -X POST http://localhost:9090/images/random/1 -H "Content-Type: multi
 PUT IMAGE:
 curl -v -i -X PUT http://localhost:9090/images/random/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
 
+DELETE IMAGE:
+curl -v -i -X DELETE http://localhost:9090/images/random/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+
 */
 
 // Handler for reading and writing images to the storage
