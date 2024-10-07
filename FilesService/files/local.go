@@ -1,6 +1,7 @@
 package files
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -30,7 +31,7 @@ func (l *Local) Read(path string, w io.Writer) error {
 	fp := l.fullPath(path)
 
 	// check if requested file exists
-	l.CheckFile(fp)
+	l.CheckFile(path)
 
 	// open the file
     f, err := os.Open(fp)
@@ -64,6 +65,7 @@ func (l *Local) Write(path string, contents io.Reader) error {
 		if os.IsExist(err) {
 			return ErrFileAlreadyExists
 		}
+		fmt.Println(err)
 		return ErrFileCreate
 	}
 
@@ -96,23 +98,33 @@ func (l *Local) Write(path string, contents io.Reader) error {
 	return nil
 }
 
-
+// [IMMEDIATE] - add logging - find the issue with http 500 on each request
 func (l *Local) Overwrite(path string, contents io.Reader) error {
-	fp := l.fullPath(path)
-	tfp := fp + ".tmp"
+	// temp filename
+	tp := path + "_tmp"
 
 	// check if requested file exists
-	l.CheckFile(fp)
+	err := l.CheckFile(path)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 
 	// create and write to the temp file
-	err := l.Write(tfp, contents)
+	err = l.Write(tp, contents)
 	if err != nil {
+		fmt.Println(err)
 		return ErrFileWrite
 	}
+
+	// combine into full full paths
+	fp := l.fullPath(path)
+	tfp := l.fullPath(tp)
 
 	// replace the original file with the temporary file
 	err = os.Rename(tfp, fp)
     if err != nil {
+		fmt.Println(err)
 		os.Remove(tfp)
         return ErrFileReplace
     }
@@ -143,6 +155,7 @@ func (l *Local) CheckFile(path string) error {
 		if os.IsNotExist(err) {
 			return ErrFileNotFound
 		}
+		fmt.Println(err)
 		return ErrFileStat
 	}
 
