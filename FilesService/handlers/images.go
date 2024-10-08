@@ -18,7 +18,7 @@ import (
 /*
 Example curls:
 GET IMAGE URL:
-curl -v -X GET "http://localhost:9090/images/random/1" -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+curl -v -X GET http://localhost:9090/images/random/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 
 POST IMAGE:
 curl -v -i -X POST http://localhost:9090/images/random/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
@@ -28,7 +28,6 @@ curl -v -i -X PUT http://localhost:9090/images/random/1 -H "Content-Type: multip
 
 DELETE IMAGE:
 curl -v -i -X DELETE http://localhost:9090/images/random/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
-
 */
 
 // Handler for reading and writing images to the storage
@@ -221,7 +220,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusBadRequest, "Image set doesn't exist")
+			utils.RespondWithMessage(rw, http.StatusBadRequest, "ImageSet doesn't exist")
 			return
 		}
 		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create the file")
@@ -286,7 +285,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusOK, "Image uploaded sucessfully")
+	utils.RespondWithMessage(rw, http.StatusOK, "Image updated sucessfully")
 }
 
 // swagger:route DELETE /images/{category}/{id} images deleteImage

@@ -14,10 +14,20 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
-// Example curls (OUTDATED):
-// Get file: curl -v localhost:9090/files/random/1/thumbnail.png
-// Post file: curl -v -X POST -H "Content-Type: image/png" --data-binary @FilesService/thumbnail.png localhost:9090/files/random/1/thumbnail.png
-// Get url: curl -v localhost:9090/url/random/1/thumbnail.png
+/*
+Example curls:
+GET IMAGESET URL:
+curl -v -X GET http://localhost:9090/imageSets/random/1
+
+POST IMAGESET:
+curl -v -i -X POST http://localhost:9090/imageSets/random/1
+
+PUT IMAGESET:
+curl -v -i -X PUT http://localhost:9090/imageSets/random/1 -H "Content-Type: application/json" -d "{\"category\":\"random\",\"id\":\"4\"}"
+
+DELETE IMAGE:
+curl -v -i -X DELETE http://localhost:9090/imageSets/random/1
+*/
 
 // Handler for reading and writing files to provided storage
 type ImageSetsHandler struct {
@@ -124,6 +134,7 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 			return
 		}
 		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create ImageSet")
+		return
 	}
 
 	utils.RespondWithMessage(rw, http.StatusCreated, "ImageSet created successfully")
@@ -160,17 +171,13 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
 	}
-
 	nfp := filepath.Join(i.Category, i.ID)
 
+	// Rename imageSet
 	err = h.store.RenameDirectory(ofp, nfp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
 			utils.RespondWithMessage(rw, http.StatusNotFound, "Unable to find ImageSet")
-			return
-		}
-		if err == files.ErrDirectoryAlreadyExists {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
 			return
 		}
 		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update ImageSet")

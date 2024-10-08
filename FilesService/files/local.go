@@ -1,6 +1,7 @@
 package files
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -168,7 +169,7 @@ func (l *Local) MakeDirectory(path string) error {
 
 	// check if the directory exists
 	_, err := os.Stat(fp)
-	if os.IsExist(err) {
+	if !os.IsNotExist(err) {
 		return ErrDirectoryAlreadyExists
 	}
 
@@ -188,14 +189,8 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 
 	// check if the requested directory exists
 	_, err := os.Stat(fop)
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		return ErrDirectoryNotFound
-	}
-
-	// check if the desired directory doesn't exist
-	_, err = os.Stat(fnp)
-	if os.IsExist(err) {
-		return ErrDirectoryAlreadyExists
 	}
 
 	// rename the directory
@@ -208,44 +203,74 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 }
 
 
+func (l *Local) MoveDirectory(oldPath string, newPath string) error {
+	fop := l.fullPath(oldPath)
+	fnp := l.fullPath(newPath)
+
+	// check if the requested directory exists
+	_, err := os.Stat(fop)
+	if os.IsNotExist(err) {
+		return ErrDirectoryNotFound
+	}
+
+	// check if the desired directory doesn't already exist
+	_, err = os.Stat(fnp)
+	if os.IsExist(err) {
+		return ErrDirectoryAlreadyExists
+	}
+
+	// move the directory
+	// TODO
+
+	return nil
+}
+
+
 func (l *Local) DeleteDirectory(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
 	_, err := os.Stat(fp)
 	if os.IsNotExist(err) {
+		fmt.Printf("stat: %s", err)
 		return ErrDirectoryNotFound
 	}
 
 	// open the dir
 	dir, err := os.Open(fp)
 	if err != nil {
+		fmt.Printf("open: %s", err)
+		return ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	// Read dir contents
+	entries, err := dir.Readdir(-1)
+	if err != nil {
 		return ErrDirectoryRead
 	}
 
-	// check if directory doesn't contain subdirectories
-	for {
-		// Read dir contents
-		entries, err := dir.Readdir(-1)
-		if err != nil {
-			return ErrDirectoryRead
+	// Check if any entry is a directory
+	for _, entry := range entries {
+		if entry.IsDir() {
+			fmt.Printf("check subdir: %s", err)
+			return ErrDirectorySubdirectoryFound
 		}
-		if err != io.EOF {
-			break
-		}
+	}
 
-		// Check if any entry is a directory
-		for _, entry := range entries {
-			if entry.IsDir() {
-				return ErrDirectorySubdirectoryFound
-			}
-		}
+	// Remove directory contents
+	for _, entry := range entries {
+		err = os.Remove(fp + "/" + entry.Name())
+        if err != nil {
+            return ErrFileDelete
+        }
 	}
 
 	// close and remove the dir
 	dir.Close()
 	err = os.Remove(fp)
 	if err != nil {
+		fmt.Printf("delete: %s", err)
 		return ErrDirectoryDelete
 	}
 
