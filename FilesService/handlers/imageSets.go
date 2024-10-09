@@ -231,6 +231,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 		}
 		if err == files.ErrDirectorySubdirectoryFound {
 			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet contains subdirectories")
+			return
 		}
 		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
 		return
@@ -348,6 +349,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// TODO: replace this with proper request/response structs
 	i := &struct {
 		FilePath string
 	}{
@@ -378,4 +380,53 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.RespondWithMessage(rw, http.StatusOK, "Category updated successfully")
+}
+
+// swagger:route DELETE /imageCategories/{category} imageSets deleteImageSet
+//
+// Delete existing category, requires being emptied beforehand
+//
+// consumes:
+//	- application/json
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: messageJson
+//  400: messageJson
+//	403: messageJson
+//	404: messageJson
+// 	500: messageJson
+func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	if c == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		return
+	}
+
+	fp, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category")
+		return
+	}
+
+	// TODO: Add DeleteFiles and DeleteDirectories functions to clear the file beforehand
+	// Limit delete directory to not empty dirs
+
+	err = h.store.DeleteDirectory(fp)
+	if err != nil {
+		if err == files.ErrDirectoryNotFound {
+			utils.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
+			return
+		}
+		if err == files.ErrDirectorySubdirectoryFound {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "Category contains subdirectories")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		return
+	}
+
+	utils.RespondWithMessage(rw, http.StatusOK, "Category removed successfully")
 }
