@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -293,10 +292,9 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 //	- application/json
 //
 // Responses:
-// 	200: categoryContentsJson
+// 	200: messageJson
 //  400: messageJson
 // 	403: messageJson
-//	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request) {
 	c := r.PathValue("category")
@@ -326,13 +324,13 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 
 // swagger:route PUT /imageCategories/{category} imageSets putCategory
 //
-// Update existing Category. Allows to move category to the different directory
+// Update existing Category.
 //
 // produces:
 //	- application/json
 //
 // Responses:
-// 	200: categoryContentsJson
+// 	200: messageJson
 //  400: messageJson
 // 	403: messageJson
 //	404: messageJson
@@ -361,20 +359,18 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// TODO: FINISH THIS FUNCTIONALITY:
-	// curl -v -X PUT http://localhost:9090/imageCategories/random%2Ftest%2F1 -H "Content-Type: application/json" -d "{\"FilePath\":\"random/test2\"}"
-	// currently it's limited to moving
-	// what is required is atomization of functions in the storage/local
-	// check for subdirectories etc should be separated
-	// so your methods for categories and imagesets can be more granular than the same limited renamedirectory/make directory
-
-	fmt.Println("Old filepath: " + ofp)
-	fmt.Println("New filepath: " + i.FilePath)
-
-	err = h.store.RenameDirectory(ofp, i.FilePath)
+	err = h.store.MoveDirectory(ofp, i.FilePath)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
 			utils.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
+			return
+		}
+		if err == files.ErrDirectoryAlreadyExists {
+			utils.RespondWithMessage(rw, http.StatusBadRequest, "Category already exists")
+			return
+		}
+		if err == files.ErrDirectoryNonDirectoryFound {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "Category contains illegal files")
 			return
 		}
 		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update Category")

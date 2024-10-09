@@ -28,6 +28,9 @@ type Storage interface {
 
 	// Changes dir name and path. If old and new paths are in different directories functions as move. Doesn't create directories
 	RenameDirectory(oldPath string, newPath string) error
+
+	// Change directory name and path, Creates needed directories
+	MoveDirectory(oldPath string, newPath string) error
 	
 	// Deletes directory. Fails if it contains other directories
 	DeleteDirectory(path string) error

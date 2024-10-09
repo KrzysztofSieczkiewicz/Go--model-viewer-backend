@@ -41,5 +41,9 @@ var ErrDirectoryStat = errors.New("directory couldn't be verified")
 
 var ErrDirectoryRename = errors.New("unable to rename directory")
 
+var ErrDirectoryMove = errors.New("unable to move directory")
+
 var ErrDirectorySubdirectoryFound = errors.New("directory contains subdirectories")
+
+var ErrDirectoryNonDirectoryFound = errors.New("directory contains files that are not files")
 

@@ -201,7 +201,7 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 	fop := l.fullPath(oldPath)
 	fnp := l.fullPath(newPath)
 
-	// check if the requested directory exists
+	// check if requested directory exists
 	_, err := os.Stat(fop)
 	if os.IsNotExist(err) {
 		return ErrDirectoryNotFound
@@ -213,8 +213,30 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 		return ErrDirectoryAlreadyExists
 	}
 
-	// move the directory
-	// TODO
+	// check if requested directory contains non-directories
+	dir, err := os.Open(fop)
+	if err != nil {
+		return ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		return ErrDirectoryRead
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			return ErrDirectoryNonDirectoryFound
+		}
+	}
+	dir.Close()
+
+	// move requested directory
+	err = os.Rename(fop, fnp)
+	if err != nil {
+		return ErrDirectoryMove
+	}
 
 	return nil
 }
