@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -30,7 +29,7 @@ DELETE IMAGE:
 curl -v -i -X DELETE http://localhost:9090/images/random/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 */
 
-// Handler for reading and writing images to the storage
+// Handler for reading and writing images into the imageSets in the storage
 type ImagesHandler struct {
 	baseUrl		string
 	logger		*log.Logger
@@ -97,8 +96,6 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	tmpId := caches.GenerateUUID()
 	h.cache.Set(tmpId, fp)
 	url := h.signedUrl.GenerateSignedUrl(tmpId)
-
-	fmt.Println(url)
 
     response := response.ImageUrlResponse{
         Filename: fn,

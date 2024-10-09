@@ -2,7 +2,6 @@ package files
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -66,7 +65,6 @@ func (l *Local) Write(path string, contents io.Reader) error {
 		if os.IsExist(err) {
 			return ErrFileAlreadyExists
 		}
-		fmt.Println(err)
 		return ErrFileCreate
 	}
 
@@ -107,14 +105,12 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 	// check if requested file exists
 	err := l.CheckFile(path)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
 	// create and write to the temp file
 	err = l.Write(tp, contents)
 	if err != nil {
-		fmt.Println(err)
 		return ErrFileWrite
 	}
 
@@ -125,7 +121,6 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 	// replace the original file with the temporary file
 	err = os.Rename(tfp, fp)
     if err != nil {
-		fmt.Println(err)
 		os.Remove(tfp)
         return ErrFileReplace
     }
@@ -156,7 +151,6 @@ func (l *Local) CheckFile(path string) error {
 		if os.IsNotExist(err) {
 			return ErrFileNotFound
 		}
-		fmt.Println(err)
 		return ErrFileStat
 	}
 
@@ -232,14 +226,12 @@ func (l *Local) DeleteDirectory(path string) error {
 	// check if directory exists
 	_, err := os.Stat(fp)
 	if os.IsNotExist(err) {
-		fmt.Printf("stat: %s", err)
 		return ErrDirectoryNotFound
 	}
 
 	// open the dir
 	dir, err := os.Open(fp)
 	if err != nil {
-		fmt.Printf("open: %s", err)
 		return ErrDirectoryRead
 	}
 	defer dir.Close()
@@ -253,7 +245,6 @@ func (l *Local) DeleteDirectory(path string) error {
 	// Check if any entry is a directory
 	for _, entry := range entries {
 		if entry.IsDir() {
-			fmt.Printf("check subdir: %s", err)
 			return ErrDirectorySubdirectoryFound
 		}
 	}
@@ -270,7 +261,6 @@ func (l *Local) DeleteDirectory(path string) error {
 	dir.Close()
 	err = os.Remove(fp)
 	if err != nil {
-		fmt.Printf("delete: %s", err)
 		return ErrDirectoryDelete
 	}
 

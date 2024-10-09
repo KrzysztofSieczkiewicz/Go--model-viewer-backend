@@ -23,5 +23,5 @@ type ImageSetResponse struct {
 // swagger:response categoryContentsJson
 type CategoryResponse struct {
     // List of directories stored inside given category
-    Contents    []string  `json:"contents"`
+    ImageSets    []string  `json:"imageSets"`
 }

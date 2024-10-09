@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"time"
 
@@ -25,11 +27,21 @@ curl -v -i -X POST http://localhost:9090/imageSets/random/1
 PUT IMAGESET:
 curl -v -i -X PUT http://localhost:9090/imageSets/random/1 -H "Content-Type: application/json" -d "{\"category\":\"random\",\"id\":\"4\"}"
 
-DELETE IMAGE:
+DELETE IMAGESET:
 curl -v -i -X DELETE http://localhost:9090/imageSets/random/1
+
+GET CATEGORY:
+curl -v -X GET http://localhost:9090/imageCategories/random
+
+POST CATEGORY:
+curl -v -X POST http://localhost:9090/imageCategories/random%2Ftest%2F1
+
+PUT CATEGORY:
+curl -v -X PUT http://localhost:9090/imageCategories/random%2Ftest%2F1 -H "Content-Type: application/json" -d "{\"FilePath\":\"random/test2\"}"
+
 */
 
-// Handler for reading and writing files to provided storage
+// Handler for managing imageSets and categories
 type ImageSetsHandler struct {
 	baseUrl		string
 	logger		*log.Logger
@@ -142,7 +154,7 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 
 // swagger:route PUT /imageSets/{category}/{id} imageSets putImageSet
 //
-// Update existing imageset id or category
+// Update existing imageset id or category. Allows to move imageset to the different category, but it must be initialized beforehand
 //
 // consumes:
 //	- application/json
@@ -228,7 +240,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 	utils.RespondWithMessage(rw, http.StatusOK, "ImageSet removed successfully")
 }
 
-// swagger:route GET /imageSets/{category} imageSets getCategory
+// swagger:route GET /imageCategories/{category} imageSets getCategory
 //
 // List subdirectories available in the category
 //
@@ -248,7 +260,13 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f, err := h.store.ListDirectories(c)
+	fp, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category")
+		return
+	}
+
+	f, err := h.store.ListDirectories(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
 			utils.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
@@ -262,7 +280,106 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	is := &response.CategoryResponse{Contents: f}
+	is := &response.CategoryResponse{ImageSets: f}
 
 	utils.RespondWithJSON(rw, http.StatusOK, is)
+}
+
+// swagger:route POST /imageCategories/{category} imageSets postCategory
+//
+// Creates a requested directory path
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: categoryContentsJson
+//  400: messageJson
+// 	403: messageJson
+//	404: messageJson
+// 	500: messageJson
+func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	if c == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		return
+	}
+	
+	fp, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category")
+		return
+	}
+
+	err = h.store.MakeDirectory(fp)
+	if err != nil {
+		if err == files.ErrDirectoryAlreadyExists {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create Category")
+		return
+	}
+
+	utils.RespondWithMessage(rw, http.StatusOK, "Category created successfully")
+}
+
+// swagger:route PUT /imageCategories/{category} imageSets putCategory
+//
+// Update existing Category. Allows to move category to the different directory
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: categoryContentsJson
+//  400: messageJson
+// 	403: messageJson
+//	404: messageJson
+// 	500: messageJson
+func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) {
+	c := r.PathValue("category")
+	if c == "" {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		return
+	}
+
+	ofp, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category")
+		return
+	}
+
+	i := &struct {
+		FilePath string
+	}{
+		FilePath: "",
+	}
+	err = utils.FromJSON(i, r.Body)
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		return
+	}
+
+	// TODO: FINISH THIS FUNCTIONALITY:
+	// curl -v -X PUT http://localhost:9090/imageCategories/random%2Ftest%2F1 -H "Content-Type: application/json" -d "{\"FilePath\":\"random/test2\"}"
+	// currently it's limited to moving
+	// what is required is atomization of functions in the storage/local
+	// check for subdirectories etc should be separated
+	// so your methods for categories and imagesets can be more granular than the same limited renamedirectory/make directory
+
+	fmt.Println("Old filepath: " + ofp)
+	fmt.Println("New filepath: " + i.FilePath)
+
+	err = h.store.RenameDirectory(ofp, i.FilePath)
+	if err != nil {
+		if err == files.ErrDirectoryNotFound {
+			utils.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
+			return
+		}
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update Category")
+		return
+	}
+
+	utils.RespondWithMessage(rw, http.StatusOK, "Category updated successfully")
 }
