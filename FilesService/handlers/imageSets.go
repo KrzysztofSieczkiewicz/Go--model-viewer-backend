@@ -18,25 +18,28 @@ import (
 /*
 Example curls:
 GET IMAGESET URL:
-curl -v -X GET http://localhost:9090/imageSets/random/1
+curl -v -X GET http://localhost:9090/imageSets/random%2Ftest%2F/1
 
 POST IMAGESET:
-curl -v -i -X POST http://localhost:9090/imageSets/random/1
+curl -v -i -X POST http://localhost:9090/imageSets/random%2Ftest%2F/1
 
 PUT IMAGESET:
-curl -v -i -X PUT http://localhost:9090/imageSets/random/1 -H "Content-Type: application/json" -d "{\"category\":\"random\",\"id\":\"4\"}"
+curl -v -i -X PUT http://localhost:9090/imageSets/random%2Ftest%2F/1 -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"4\"}"
 
 DELETE IMAGESET:
-curl -v -i -X DELETE http://localhost:9090/imageSets/random/1
+curl -v -i -X DELETE http://localhost:9090/imageSets/random%2Ftest%2F/1
 
 GET CATEGORY:
-curl -v -X GET http://localhost:9090/imageCategories/random
+curl -v -X GET http://localhost:9090/imageCategories/random%2Ftest%2F
 
 POST CATEGORY:
 curl -v -X POST http://localhost:9090/imageCategories/random%2Ftest%2F1
 
 PUT CATEGORY:
 curl -v -X PUT http://localhost:9090/imageCategories/random%2Ftest%2F1 -H "Content-Type: application/json" -d "{\"FilePath\":\"random/test2\"}"
+
+DELETE CATEGORY:
+curl -v -i -X DELETE http://localhost:9090/imageCategories/random%2Ftest%2F/1
 
 */
 
@@ -77,12 +80,18 @@ func NewImageSets(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) {
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	if c == "" || id == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+	c, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
+
+	id, err := url.QueryUnescape( r.PathValue("id") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		return
+	}
+
 
 	fp := filepath.Join(c, id)
 
@@ -129,16 +138,21 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 // 	403: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request) {
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	if c == "" || id == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+	c, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		return
+	}
+
+	id, err := url.QueryUnescape( r.PathValue("id") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
 	fp := filepath.Join(c, id)
 
-	err := h.store.MakeDirectory(fp)
+	err = h.store.MakeDirectory(fp)
 	if err != nil {
 		if err == files.ErrDirectoryAlreadyExists {
 			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
@@ -168,16 +182,22 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) {
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	if c == "" || id == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+	c, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
+
+	id, err := url.QueryUnescape( r.PathValue("id") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		return
+	}
+
 	ofp := filepath.Join(c, id)
 
 	i := &data.ImageSet{}
-	err := utils.FromJSON(i, r.Body)
+	err = utils.FromJSON(i, r.Body)
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
@@ -215,21 +235,33 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Request) {
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	if c == "" || id == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+	c, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
+
+	id, err := url.QueryUnescape( r.PathValue("id") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		return
+	}
+
 	fp := filepath.Join(c, id)
 
-	err := h.store.DeleteDirectory(fp)
+	err = h.store.DeleteFiles(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
 			utils.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
 			return
 		}
-		if err == files.ErrDirectorySubdirectoryFound {
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		return
+	}
+
+	err = h.store.DeleteDirectory(fp)
+	if err != nil {
+		if err == files.ErrDirectoryNotEmpty {
 			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet contains subdirectories")
 			return
 		}
@@ -262,7 +294,7 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 
 	fp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category")
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
@@ -306,7 +338,7 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 	
 	fp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category")
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category from url")
 		return
 	}
 
@@ -345,7 +377,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 
 	ofp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category")
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
@@ -407,24 +439,27 @@ func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reques
 
 	fp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category")
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category from url")
 		return
 	}
 
-	// TODO: Add DeleteFiles and DeleteDirectories functions to clear the file beforehand
-	// Limit delete directory to not empty dirs
-
-	err = h.store.DeleteDirectory(fp)
+	err = h.store.DeleteSubdirectories(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
 			utils.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
 			return
 		}
-		if err == files.ErrDirectorySubdirectoryFound {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "Category contains subdirectories")
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
+		return
+	}
+
+	err = h.store.DeleteDirectory(fp)
+	if err != nil {
+		if err == files.ErrDirectoryNotEmpty {
+			utils.RespondWithMessage(rw, http.StatusForbidden, "Category contains files")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
 		return
 	}
 

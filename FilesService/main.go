@@ -89,6 +89,7 @@ func main() {
 	router.HandleFunc("GET /imageCategories/{category}", ish.GetCategory)
 	router.HandleFunc("POST /imageCategories/{category}", ish.PostCategory)
 	router.HandleFunc("PUT /imageCategories/{category}", ish.PutCategory)
+	router.HandleFunc("DELETE /imageCategories/{category}", ish.DeleteCategory)
 
 	// Handle OpenAPI doc request
 	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}

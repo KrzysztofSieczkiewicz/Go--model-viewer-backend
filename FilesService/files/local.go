@@ -241,6 +241,78 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 	return nil
 }
 
+func (l *Local) DeleteFiles(path string) error {
+	fp := l.fullPath(path)
+
+	// check if directory exists
+	_, err := os.Stat(fp)
+	if os.IsNotExist(err) {
+		return ErrDirectoryNotFound
+	}
+
+	// open the dir
+	dir, err := os.Open(fp)
+	if err != nil {
+		return ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	// Read dir contents
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		return ErrDirectoryRead
+	}
+
+	// Remove directory contents
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		err = os.Remove(fp + "/" + entry.Name())
+        if err != nil {
+            return ErrFileDelete
+        }
+	}
+
+	return nil
+}
+
+func (l *Local) DeleteSubdirectories(path string) error {
+	fp := l.fullPath(path)
+
+	// check if directory exists
+	_, err := os.Stat(fp)
+	if os.IsNotExist(err) {
+		return ErrDirectoryNotFound
+	}
+
+	// open the dir
+	dir, err := os.Open(fp)
+	if err != nil {
+		return ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	// Read dir contents
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		return ErrDirectoryRead
+	}
+
+	// Remove directory contents
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		err = os.Remove(fp + "/" + entry.Name())
+        if err != nil {
+            return ErrFileDelete
+        }
+	}
+	
+	return nil
+}
+
 
 func (l *Local) DeleteDirectory(path string) error {
 	fp := l.fullPath(path)
@@ -263,24 +335,13 @@ func (l *Local) DeleteDirectory(path string) error {
 	if err != nil {
 		return ErrDirectoryRead
 	}
-
-	// Check if any entry is a directory
-	for _, entry := range entries {
-		if entry.IsDir() {
-			return ErrDirectorySubdirectoryFound
-		}
+	// Check if empty
+	if len(entries) > 0 {
+		return ErrDirectoryNotEmpty
 	}
-
-	// Remove directory contents
-	for _, entry := range entries {
-		err = os.Remove(fp + "/" + entry.Name())
-        if err != nil {
-            return ErrFileDelete
-        }
-	}
-
-	// close and remove the dir
 	dir.Close()
+
+	// remove the dir
 	err = os.Remove(fp)
 	if err != nil {
 		return ErrDirectoryDelete

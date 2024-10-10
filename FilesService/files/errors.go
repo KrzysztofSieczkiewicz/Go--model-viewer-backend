@@ -43,7 +43,7 @@ var ErrDirectoryRename = errors.New("unable to rename directory")
 
 var ErrDirectoryMove = errors.New("unable to move directory")
 
-var ErrDirectorySubdirectoryFound = errors.New("directory contains subdirectories")
+var ErrDirectoryNotEmpty = errors.New("directory is not empty")
 
 var ErrDirectoryNonDirectoryFound = errors.New("directory contains files that are not files")
 

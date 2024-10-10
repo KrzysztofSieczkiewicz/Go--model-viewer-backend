@@ -31,8 +31,14 @@ type Storage interface {
 
 	// Change directory name and path, Creates needed directories
 	MoveDirectory(oldPath string, newPath string) error
+
+	// Remove files stored inside directory. Omits subdirectories
+	DeleteFiles(path string) error
+
+	// Remove subdirectories. Omits files
+	DeleteSubdirectories(path string) error
 	
-	// Deletes directory. Fails if it contains other directories
+	// Deletes directory. Fails if directory is not empty
 	DeleteDirectory(path string) error
 
 	// Lists files in the directory
