@@ -68,7 +68,7 @@ func NewImageSets(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache
 
 // swagger:route GET /imageSets/{category}/{id} imageSets getImageSet
 //
-// Returns ImageSet details and available images.
+// Return ImageSet details and available Images
 //
 // produces:
 //	- application/json
@@ -91,7 +91,6 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
-
 
 	fp := filepath.Join(c, id)
 
@@ -127,7 +126,7 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 
 // swagger:route POST /imageSets/{category}/{id} imageSets postImageSet
 //
-// Create a new image set.
+// Create a new image set
 //
 // produces:
 //	- application/json
@@ -357,7 +356,7 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 
 // swagger:route PUT /imageCategories/{category} imageSets putCategory
 //
-// Update existing Category.
+// Update existing Category
 //
 // produces:
 //	- application/json

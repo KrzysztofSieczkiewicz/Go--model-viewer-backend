@@ -1,0 +1,389 @@
+basePath: /files/
+definitions:
+    Image:
+        properties:
+            extension:
+                type: string
+                x-go-name: FileExtension
+            resolution:
+                type: string
+                x-go-name: Resolution
+            type:
+                type: string
+                x-go-name: ImgType
+        type: object
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data
+host: localhost:9090
+info:
+    description: Documentation of FilesApi
+    title: FilesService.
+    version: 1.0.0
+paths:
+    /{category}/{id}/{filename}:
+        delete:
+            description: Removes requested file from the filesystem. Doesn't remove any directories. Returns an error when file is not found
+            operationId: deleteFile
+            produces:
+                - text/plain
+            responses:
+                "204":
+                    $ref: '#/responses/empty'
+                "404":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+        get:
+            description: Returns a signed url to requested resource. Url is timed depending on filesize
+            operationId: getFileUrl
+            produces:
+                - text/plain
+            responses:
+                "200":
+                    $ref: '#/responses/urlResponse'
+                "404":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+        post:
+            consumes:
+                - application/octet-stream
+            description: "Adds a file to the filesystem. Creates necessary folders. \nReturns an error when the file already exists"
+            operationId: postFile
+            produces:
+                - application/json
+            responses:
+                "201":
+                    $ref: '#/responses/empty'
+                "403":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+        put:
+            consumes:
+                - application/octet-stream
+            description: Updates a file in the filesystem. Returns an error on file not found
+            operationId: putFile
+            produces:
+                - text/plain
+            responses:
+                "200":
+                    $ref: '#/responses/empty'
+                "404":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+    /{id}&{expires}&{signature}:
+        get:
+            description: Returns an image from imageset. Handles signed URLs
+            operationId: getImage
+            produces:
+                - application/octet-stream
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/fileByteStream'
+                "400":
+                    $ref: '#/responses/message'
+                "403":
+                    $ref: '#/responses/message'
+                "404":
+                    $ref: '#/responses/message'
+                "500":
+                    $ref: '#/responses/message'
+            tags:
+                - images
+    /imageCategories/{category}:
+        delete:
+            consumes:
+                - application/json
+            description: Delete existing category, requires being emptied beforehand
+            operationId: deleteImageSet
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/messageJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+        get:
+            description: List subdirectories available in the category
+            operationId: getCategory
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/categoryContentsJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+        post:
+            description: Creates a requested directory path
+            operationId: postCategory
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/messageJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+        put:
+            description: Update existing Category
+            operationId: putCategory
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/messageJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+    /imageSets/{category}/{id}:
+        delete:
+            consumes:
+                - application/json
+            description: Delete existing imageset
+            operationId: deleteImageSet
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/messageJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+        get:
+            description: Return ImageSet details and available Images
+            operationId: getImageSet
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/imageSetJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+        post:
+            description: Create a new image set
+            operationId: postImageSet
+            produces:
+                - application/json
+            responses:
+                "201":
+                    $ref: '#/responses/messageJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+        put:
+            consumes:
+                - application/json
+            description: Update existing imageset id or category. Allows to move imageset to the different category, but it must be initialized beforehand
+            operationId: putImageSet
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/messageJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            tags:
+                - imageSets
+    /images/{category}/{id}:
+        delete:
+            consumes:
+                - application/json
+            operationId: deleteImage
+            produces:
+                - application/json
+            responses:
+                "204":
+                    $ref: '#/responses/empty'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            summary: Removes image from the image set.
+            tags:
+                - images
+        get:
+            consumes:
+                - application/json
+            operationId: getImageUrl
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/imageUrlJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            summary: Returns a signed url to requested image.
+            tags:
+                - images
+        post:
+            consumes:
+                - multipart/form-data
+            operationId: postImage
+            produces:
+                - application/json
+            responses:
+                "201":
+                    $ref: '#/responses/messageJson'
+                "400":
+                    $ref: '#/responses/messageJson'
+                "403":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            summary: Adds an image to the existing set.
+            tags:
+                - images
+        put:
+            consumes:
+                - multipart/form-data
+            operationId: putImage
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/messageJson'
+                "404":
+                    $ref: '#/responses/messageJson'
+                "500":
+                    $ref: '#/responses/messageJson'
+            summary: Updates an image in the image set.
+            tags:
+                - images
+responses:
+    categoryContentsJson:
+        description: ""
+        headers:
+            imageSets:
+                description: List of directories stored inside given category
+                items:
+                    type: string
+                type: array
+    empty:
+        description: ""
+    error:
+        description: ""
+    fileByteStream:
+        description: ""
+        headers:
+            File:
+                items:
+                    format: uint8
+                    type: integer
+                type: array
+    fileResponse:
+        description: ""
+        schema:
+            items:
+                format: uint8
+                type: integer
+            type: array
+    imageSetJson:
+        description: ""
+        headers:
+            category:
+                description: Category
+                type: string
+            id:
+                description: ID of imageset
+                type: string
+            images:
+                description: Available images
+                items:
+                    $ref: '#/definitions/Image'
+                type: array
+    imageUrlJson:
+        description: ""
+        headers:
+            filename:
+                description: filename of returned image
+                type: string
+            id:
+                description: ID of imageset
+                type: string
+            url:
+                description: url pointing to the resource
+                type: string
+    message:
+        description: ""
+        headers:
+            message:
+                description: Returned message
+                type: string
+    messageJson:
+        description: ""
+        headers:
+            message:
+                description: Returned message
+                type: string
+    urlResponse:
+        description: ""
+schemes:
+    - http
+    - https
+swagger: "2.0"
