@@ -32,12 +32,13 @@ import (
 // DONE: Add proper success headers and responses for handler. Update swagger desc.
 // Give response body to 200 responses (?)
 // Register content type for GetUrl
-// TODO: Create separate handlers for different file types
-// TODO: Update gitignore
+// DONE: Create separate handlers for different file types
+// NO NEED: Update gitignore
 // TODO: Improve logging
 // TODO: Implement file type validation (based on filename decide if file is correct)
 
 func main() {
+	// Initialize logger
 	l := log.New(os.Stdout, "FilesService", log.LstdFlags)
 
 	// Load .env file and get env variables

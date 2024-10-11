@@ -125,7 +125,7 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 
 // swagger:route GET /{category}/{id}/{filename} files getFileUrl
 //
-// Returns a signed url to requested resource. Url is timed depending on filesize
+// Returns a signed url to requested resource. Url is timed
 //
 // produces:
 //  - text/plain
@@ -140,8 +140,6 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	fn := r.PathValue("filename")
 
 	fp := filepath.Join(c, id, fn)
-
-	// TODO: Add filesize-based expiration time
 
 	// verify if file exists
 	err := f.store.CheckFile(fp)

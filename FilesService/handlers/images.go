@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"time"
 
@@ -17,16 +18,16 @@ import (
 /*
 Example curls:
 GET IMAGE URL:
-curl -v -X GET http://localhost:9090/images/random/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+curl -v -X GET http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 
 POST IMAGE:
-curl -v -i -X POST http://localhost:9090/images/random/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+curl -v -i -X POST http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
 
 PUT IMAGE:
-curl -v -i -X PUT http://localhost:9090/images/random/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+curl -v -i -X PUT http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
 
 DELETE IMAGE:
-curl -v -i -X DELETE http://localhost:9090/images/random/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+curl -v -i -X DELETE http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 */
 
 // Handler for reading and writing images into the imageSets in the storage
@@ -46,7 +47,7 @@ func NewImages(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *
 		cache: c,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
-			baseUrl + "/files",
+			baseUrl + "/images",
 			time.Duration(5 * int(time.Minute)),
 		),
 	}
@@ -67,15 +68,20 @@ func NewImages(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *
 //	404: messageJson
 //	500: messageJson
 func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	if c == "" || id == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+	c, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		return
+	}
+
+	id, err := url.QueryUnescape( r.PathValue("id") )
+	if err != nil {
+		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
 	i := &data.Image{}
-	err := utils.FromJSON(i, r.Body)
+	err = utils.FromJSON(i, r.Body)
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
 		return
