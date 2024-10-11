@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -46,17 +46,19 @@ curl -v -i -X DELETE http://localhost:9090/imageCategories/random%2Ftest%2F/1
 // Handler for managing imageSets and categories
 type ImageSetsHandler struct {
 	baseUrl		string
-	logger		*log.Logger
+	logger		*slog.Logger
 	store		files.Storage
 	cache		caches.Cache
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewImageSets(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *ImageSetsHandler {
+func NewImageSets(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *ImageSetsHandler {
+	logger := l.With(slog.String("endpoint", "imageSets"))
+
 	return &ImageSetsHandler{
 		baseUrl: baseUrl,
 		store: s, 
-		logger: l,
+		logger: logger,
 		cache: c,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",

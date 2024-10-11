@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -35,13 +35,13 @@ Written for imagesets but should work for anything. Required functionalities:
 // Handler for reading and writing files to provided storage
 type Files struct {
 	baseUrl		string
-	logger		*log.Logger
+	logger		*slog.Logger
 	store		files.Storage
 	cache		caches.Cache
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewFiles(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *Files {
+func NewFiles(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *Files {
 	return &Files{
 		baseUrl: baseUrl,
 		store: s, 

@@ -12,7 +12,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -35,11 +37,14 @@ import (
 // DONE: Create separate handlers for different file types
 // NO NEED: Update gitignore
 // TODO: Improve logging
+// TODO: Improve swagger annotations (add model annotations, clean response annotations)
+// TODO: Clean up models, responses etc
 // TODO: Implement file type validation (based on filename decide if file is correct)
+// TODO: Improve local.go with proper code sharing and new common funcs - too much repetiton
 
 func main() {
 	// Initialize logger
-	l := log.New(os.Stdout, "FilesService", log.LstdFlags)
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 
 	// Load .env file and get env variables
 	err := godotenv.Load()
@@ -53,9 +58,9 @@ func main() {
 	baseUrl := hostUrl + bindAddress
 
 	// Initialize the local files storage with Max file size: 5MB
-	fs, err := files.NewLocal(baseFilePath, 5)
+	fs, err := files.NewLocal(baseFilePath, 5, logger)
 	if err != nil {
-		l.Fatal("Unable to initialize local storage")
+		logger.Error("Unable to initialize local storage")
 	}
 
 	// Initialize a cache
@@ -65,7 +70,7 @@ func main() {
 	router := http.NewServeMux();
 
 	// Initialize and register the handlers
-	fh := handlers.NewFiles(baseUrl, fs, l, fc)
+	fh := handlers.NewFiles(baseUrl, fs, logger, fc)
 	router.HandleFunc("GET /files/", fh.GetFile)
 	router.HandleFunc("GET /files/{category}/{id}/{filename}", fh.GetFileUrl)
 	router.HandleFunc("POST /files/{category}/{id}/{filename}", fh.PostFile)
@@ -73,7 +78,7 @@ func main() {
 	router.HandleFunc("DELETE /files/{category}/{id}/{filename}", fh.DeleteFile)
 
 	// IMAGES
-	ih := handlers.NewImages(baseUrl, fs, l, fc)
+	ih := handlers.NewImages(baseUrl, fs, logger, fc)
 	router.HandleFunc("GET /images/{category}/{id}", ih.GetUrl)
 	router.HandleFunc("GET /images/", ih.GetImage) // TODO: HANDLE THIS PROPERLY
 	router.HandleFunc("POST /images/{category}/{id}", ih.PostImage)
@@ -81,7 +86,7 @@ func main() {
 	router.HandleFunc("DELETE /images/{category}/{id}", ih.DeleteImage)
 
 	// IMAGE SETS & CATEGORIES
-	ish := handlers.NewImageSets(baseUrl, fs, l, fc)
+	ish := handlers.NewImageSets(baseUrl, fs, logger, fc)
 	router.HandleFunc("GET /imageSets/{category}/{id}", ish.GetImageSet)
 	router.HandleFunc("POST /imageSets/{category}/{id}", ish.PostImageSet)
 	router.HandleFunc("PUT /imageSets/{category}/{id}", ish.PutImageSet)
@@ -115,7 +120,7 @@ func main() {
 	go func() {
 		err := s.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			logger.Error(err.Error())
 		}
 	}()
 
@@ -125,7 +130,7 @@ func main() {
 	signal.Notify(signalChannel, syscall.SIGTERM)
 
 	sig := <- signalChannel
-	l.Println("Received terminate. Gracefully shutting down...", sig)
+	logger.Info(fmt.Sprintf("Received terminate. Gracefully shutting down... %s", sig.String()))
 
 	tc, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

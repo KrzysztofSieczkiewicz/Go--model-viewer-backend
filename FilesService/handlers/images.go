@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -33,13 +33,13 @@ curl -v -i -X DELETE http://localhost:9090/images/random%2Ftest%2F/1 -H "Content
 // Handler for reading and writing images into the imageSets in the storage
 type ImagesHandler struct {
 	baseUrl		string
-	logger		*log.Logger
+	logger		*slog.Logger
 	store		files.Storage
 	cache		caches.Cache
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewImages(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *ImagesHandler {
+func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *ImagesHandler {
 	return &ImagesHandler{
 		baseUrl: baseUrl,
 		store: s, 
@@ -55,7 +55,7 @@ func NewImages(baseUrl string, s files.Storage, l *log.Logger, c caches.Cache) *
 
 // swagger:route GET /images/{category}/{id} images getImageUrl
 //
-// Returns a signed url to requested image.
+// Return a signed url to requested image
 //
 // consumes:
 //	- application/json
@@ -113,7 +113,7 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 
 // swagger:route GET /{id}&{expires}&{signature} images getImage
 //
-// Returns an image from imageset. Handles signed URLs
+// Return an image from imageset. Handles signed URLs
 //
 // produces:
 //  - application/octet-stream
@@ -166,7 +166,7 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 
 // swagger:route POST /images/{category}/{id} images postImage
 //
-// Adds an image to the existing set.
+// Add an image to the existing set
 //
 // consumes:
 //  - multipart/form-data
@@ -235,7 +235,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 
 // swagger:route PUT /images/{category}/{id} images putImage
 //
-// Updates an image in the image set.
+// Update an image in the image set
 //
 // consumes:
 //  - multipart/form-data
@@ -293,7 +293,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 
 // swagger:route DELETE /images/{category}/{id} images deleteImage
 //
-// Removes image from the image set.
+// Remove image from the image set
 //
 // consumes:
 //  - application/json
