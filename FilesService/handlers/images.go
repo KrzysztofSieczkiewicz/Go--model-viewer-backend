@@ -68,6 +68,8 @@ func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) 
 //	404: messageJson
 //	500: messageJson
 func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET Image URL request")
+
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
@@ -126,6 +128,8 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 //	404: message
 //	500: message
 func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET Image request")
+
 	id := r.URL.Query().Get("id")
 	exp := r.URL.Query().Get("expires")
 	sign := r.URL.Query().Get("signature")
@@ -180,6 +184,8 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 // 	403: messageJson
 // 	500: messageJson
 func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing POST Image request")
+
 	c := r.PathValue("category")
 	id := r.PathValue("id")
 	if c == "" || id == "" {
@@ -248,6 +254,8 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 // 	404: messageJson
 // 	500: messageJson
 func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT Image request")
+
 	c := r.PathValue("category")
 	id := r.PathValue("id")
 	if c == "" || id == "" {
@@ -306,6 +314,8 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 //	404: messageJson
 //	500: messageJson
 func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing DELETE Image request")
+
 	id := r.PathValue("id")
 	c := r.PathValue("category")
 	if c == "" || id == "" {

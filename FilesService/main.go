@@ -36,7 +36,7 @@ import (
 // Register content type for GetUrl
 // DONE: Create separate handlers for different file types
 // NO NEED: Update gitignore
-// TODO: Improve logging
+// DONE: Improve logging
 // TODO: Improve swagger annotations (add model annotations, clean response annotations)
 // TODO: Clean up models, responses etc
 // TODO: Implement file type validation (based on filename decide if file is correct)
@@ -120,7 +120,7 @@ func main() {
 	go func() {
 		err := s.ListenAndServe()
 		if err != nil {
-			logger.Error(err.Error())
+			logger.Warn(err.Error())
 		}
 	}()
 

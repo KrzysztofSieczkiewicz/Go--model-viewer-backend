@@ -82,6 +82,8 @@ func NewImageSets(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cach
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET ImageSet request")
+
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
@@ -139,6 +141,8 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 // 	403: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing POST ImageSet request")
+
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
@@ -183,6 +187,8 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT ImageSet request")
+
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
@@ -236,6 +242,8 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing DELETE ImageSet request")
+
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
@@ -287,6 +295,8 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET ImageSet Category request")
+	
 	c := r.PathValue("category")
 	if c == "" {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
@@ -331,6 +341,8 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 // 	403: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing POST ImageSet Category request")
+
 	c := r.PathValue("category")
 	if c == "" {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
@@ -370,6 +382,8 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT ImageSet Category request")
+
 	c := r.PathValue("category")
 	if c == "" {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
@@ -432,6 +446,8 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 //	404: messageJson
 // 	500: messageJson
 func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing DELETE ImageSet Category request")
+
 	c := r.PathValue("category")
 	if c == "" {
 		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
