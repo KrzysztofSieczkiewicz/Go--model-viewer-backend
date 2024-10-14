@@ -5,9 +5,23 @@ import (
 	"strings"
 )
 
+// Image defines a properties of a image file that are used to construct filename
+// swagger:model Image
 type Image struct {
+	// Image type determining general image purpose (eg. Albedo, Roughness)
+	// required: true
+	// min length: 2
+	// max length: 64
 	ImgType       string `json:"type"`
+
+	// required: true
+	// min length: 7
+	// max length: 16
 	Resolution    string `json:"resolution"`
+	
+	// required: true
+	// min length: 2
+	// max length: 8
 	FileExtension string `json:"extension"`
 }
 

@@ -256,6 +256,7 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 		return ErrDirectoryNotFound
 	}
 
+	// TODO -> improve this check - it's not working
 	// check if the desired directory doesn't already exist
 	_, err = os.Stat(fnp)
 	if os.IsExist(err) {

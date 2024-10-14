@@ -32,12 +32,12 @@ import (
 
 // DONE: Add swagger documentation
 // DONE: Add proper success headers and responses for handler. Update swagger desc.
-// Give response body to 200 responses (?)
-// Register content type for GetUrl
+// DONE: Give response body to 200 responses (?)
+// DONE: Register content type for GetUrl
 // DONE: Create separate handlers for different file types
 // NO NEED: Update gitignore
 // DONE: Improve logging
-// TODO: Improve swagger annotations (add model annotations, clean response annotations)
+// DONE: Improve swagger annotations (add model annotations, clean up the response annotations)
 // TODO: Clean up models, responses etc
 // TODO: Implement file type validation (based on filename decide if file is correct)
 // TODO: Improve local.go with proper code sharing and new common funcs - too much repetiton

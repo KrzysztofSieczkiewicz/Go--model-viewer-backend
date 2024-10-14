@@ -36,11 +36,10 @@ POST CATEGORY:
 curl -v -X POST http://localhost:9090/imageCategories/random%2Ftest%2F1
 
 PUT CATEGORY:
-curl -v -X PUT http://localhost:9090/imageCategories/random%2Ftest%2F1 -H "Content-Type: application/json" -d "{\"FilePath\":\"random/test2\"}"
+curl -v -X PUT http://localhost:9090/imageCategories/random%2Ftest%2F1 -H "Content-Type: application/json" -d "{\"category\":\"random/test2\"}"
 
 DELETE CATEGORY:
 curl -v -i -X DELETE http://localhost:9090/imageCategories/random%2Ftest%2F/1
-
 */
 
 // Handler for managing imageSets and categories
@@ -76,23 +75,23 @@ func NewImageSets(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cach
 //	- application/json
 //
 // Responses:
-// 	200: imageSetJson
-//  400: messageJson
-// 	403: messageJson
-//	404: messageJson
-// 	500: messageJson
+// 	200: imageSet
+//  400: message
+// 	403: message
+//	404: message
+// 	500: message
 func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET ImageSet request")
 
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
 	id, err := url.QueryUnescape( r.PathValue("id") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
@@ -101,31 +100,31 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 	f, err := h.store.ListFiles(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
 			return
 		}
 		if err == files.ErrNotDirectory {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "Requested path is not a directory")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Requested path is not a directory")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve ImageSet data")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve ImageSet data")
 		return
 	}
 
 	i := &data.Images{}
 	err = i.DeconstructImageNames(f)
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to deconstruct image names:")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to deconstruct image names:")
 		return
 	}
 
-	is := &response.ImageSetResponse{
+	is := &data.ImageSet{
 		ID: id,
 		Category: c,
 		Images: *i,
 	}
 
-	utils.RespondWithJSON(rw, http.StatusOK, is)
+	response.RespondWithJSON(rw, http.StatusOK, is)
 }
 
 // swagger:route POST /imageSets/{category}/{id} imageSets postImageSet
@@ -136,22 +135,22 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 //	- application/json
 //
 // Responses:
-// 	201: messageJson
-//  400: messageJson
-// 	403: messageJson
-// 	500: messageJson
+// 	201: message
+//  400: message
+// 	403: message
+// 	500: message
 func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST ImageSet request")
 
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
 	id, err := url.QueryUnescape( r.PathValue("id") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
@@ -160,14 +159,14 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 	err = h.store.MakeDirectory(fp)
 	if err != nil {
 		if err == files.ErrDirectoryAlreadyExists {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create ImageSet")
 		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusCreated, "ImageSet created successfully")
+	response.RespondWithMessage(rw, http.StatusCreated, "ImageSet created successfully")
 }
 
 // swagger:route PUT /imageSets/{category}/{id} imageSets putImageSet
@@ -181,23 +180,23 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 //	- application/json
 //
 // Responses:
-// 	200: messageJson
-//  400: messageJson
-// 	403: messageJson
-//	404: messageJson
-// 	500: messageJson
+// 	200: message
+//  400: message
+// 	403: message
+//	404: message
+// 	500: message
 func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT ImageSet request")
 
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
 	id, err := url.QueryUnescape( r.PathValue("id") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
@@ -206,23 +205,22 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 	i := &data.ImageSet{}
 	err = utils.FromJSON(i, r.Body)
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
 	}
 	nfp := filepath.Join(i.Category, i.ID)
 
-	// Rename imageSet
 	err = h.store.RenameDirectory(ofp, nfp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusNotFound, "Unable to find ImageSet")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find ImageSet")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update ImageSet")
 		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusOK, "ImageSet updated successfully")
+	response.RespondWithMessage(rw, http.StatusOK, "ImageSet updated successfully")
 }
 
 // swagger:route DELETE /imageSets/{category}/{id} imageSets deleteImageSet
@@ -236,23 +234,23 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 //	- application/json
 //
 // Responses:
-// 	200: messageJson
-//  400: messageJson
-//	403: messageJson
-//	404: messageJson
-// 	500: messageJson
+// 	200: message
+//  400: message
+//	403: message
+//	404: message
+// 	500: message
 func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing DELETE ImageSet request")
 
 	c, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
 	id, err := url.QueryUnescape( r.PathValue("id") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
@@ -261,24 +259,24 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 	err = h.store.DeleteFiles(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
 		return
 	}
 
 	err = h.store.DeleteDirectory(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotEmpty {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "ImageSet contains subdirectories")
+			response.RespondWithMessage(rw, http.StatusForbidden, "ImageSet contains subdirectories")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
 		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusOK, "ImageSet removed successfully")
+	response.RespondWithMessage(rw, http.StatusOK, "ImageSet removed successfully")
 }
 
 // swagger:route GET /imageCategories/{category} imageSets getCategory
@@ -289,43 +287,43 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 //	- application/json
 //
 // Responses:
-// 	200: categoryContentsJson
-//  400: messageJson
-// 	403: messageJson
-//	404: messageJson
-// 	500: messageJson
+// 	200: categoryContents
+//  400: message
+// 	403: message
+//	404: message
+// 	500: message
 func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET ImageSet Category request")
 	
 	c := r.PathValue("category")
 	if c == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
 		return
 	}
 
 	fp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
 	f, err := h.store.ListDirectories(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
 			return
 		}
 		if err == files.ErrNotDirectory {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "Requested path is not a directory")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Requested path is not a directory")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve Category")
 		return
 	}
 
-	is := &response.CategoryResponse{ImageSets: f}
+	is := &response.CategoryResponse{Directories: f}
 
-	utils.RespondWithJSON(rw, http.StatusOK, is)
+	response.RespondWithJSON(rw, http.StatusOK, is)
 }
 
 // swagger:route POST /imageCategories/{category} imageSets postCategory
@@ -336,36 +334,36 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 //	- application/json
 //
 // Responses:
-// 	200: messageJson
-//  400: messageJson
-// 	403: messageJson
-// 	500: messageJson
+// 	200: message
+//  400: message
+// 	403: message
+// 	500: message
 func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST ImageSet Category request")
 
 	c := r.PathValue("category")
 	if c == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
 		return
 	}
 	
 	fp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category from url")
 		return
 	}
 
 	err = h.store.MakeDirectory(fp)
 	if err != nil {
 		if err == files.ErrDirectoryAlreadyExists {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create Category")
 		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusOK, "Category created successfully")
+	response.RespondWithMessage(rw, http.StatusOK, "Category created successfully")
 }
 
 // swagger:route PUT /imageCategories/{category} imageSets putCategory
@@ -376,60 +374,56 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 //	- application/json
 //
 // Responses:
-// 	200: messageJson
-//  400: messageJson
-// 	403: messageJson
-//	404: messageJson
-// 	500: messageJson
+// 	200: message
+//  400: message
+// 	403: message
+//	404: message
+// 	500: message
 func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT ImageSet Category request")
 
 	c := r.PathValue("category")
 	if c == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
 		return
 	}
 
 	ofp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
 
 	// TODO: replace this with proper request/response structs
-	i := &struct {
-		FilePath string
-	}{
-		FilePath: "",
-	}
+	i := &data.ImageSet{}
 	err = utils.FromJSON(i, r.Body)
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
 	}
 
-	err = h.store.MoveDirectory(ofp, i.FilePath)
+	err = h.store.MoveDirectory(ofp, i.Category)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
 			return
 		}
 		if err == files.ErrDirectoryAlreadyExists {
-			utils.RespondWithMessage(rw, http.StatusBadRequest, "Category already exists")
+			response.RespondWithMessage(rw, http.StatusBadRequest, "Category already exists")
 			return
 		}
 		if err == files.ErrDirectoryNonDirectoryFound {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "Category contains illegal files")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Category contains illegal files")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update Category")
 		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusOK, "Category updated successfully")
+	response.RespondWithMessage(rw, http.StatusOK, "Category updated successfully")
 }
 
-// swagger:route DELETE /imageCategories/{category} imageSets deleteImageSet
+// swagger:route DELETE /imageCategories/{category} imageSets deleteCategory
 //
 // Delete existing category, requires being emptied beforehand
 //
@@ -440,45 +434,45 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 //	- application/json
 //
 // Responses:
-// 	200: messageJson
-//  400: messageJson
-//	403: messageJson
-//	404: messageJson
-// 	500: messageJson
+// 	200: message
+//  400: message
+//	403: message
+//	404: message
+// 	500: message
 func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing DELETE ImageSet Category request")
 
 	c := r.PathValue("category")
 	if c == "" {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Category is required")
 		return
 	}
 
 	fp, err := url.QueryUnescape( r.PathValue("category") )
 	if err != nil {
-		utils.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode category from url")
 		return
 	}
 
 	err = h.store.DeleteSubdirectories(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotFound {
-			utils.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
 		return
 	}
 
 	err = h.store.DeleteDirectory(fp)
 	if err != nil {
 		if err == files.ErrDirectoryNotEmpty {
-			utils.RespondWithMessage(rw, http.StatusForbidden, "Category contains files")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Category contains files")
 			return
 		}
-		utils.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
 		return
 	}
 
-	utils.RespondWithMessage(rw, http.StatusOK, "Category removed successfully")
+	response.RespondWithMessage(rw, http.StatusOK, "Category removed successfully")
 }

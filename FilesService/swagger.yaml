@@ -1,18 +1,101 @@
 basePath: /files/
 definitions:
     Image:
+        description: Image defines a properties of a image file that are used to construct filename
         properties:
             extension:
+                maxLength: 8
+                minLength: 2
                 type: string
                 x-go-name: FileExtension
             resolution:
+                maxLength: 16
+                minLength: 7
                 type: string
                 x-go-name: Resolution
             type:
+                description: Image type determining general image purpose (eg. Albedo, Roughness)
+                maxLength: 64
+                minLength: 2
                 type: string
                 x-go-name: ImgType
+        required:
+            - type
+            - resolution
+            - extension
         type: object
         x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data
+    categoryContents:
+        properties:
+            directories:
+                description: List of directories stored inside given category
+                items:
+                    type: string
+                type: array
+                x-go-name: Directories
+        type: object
+        x-go-name: CategoryResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    empty:
+        type: object
+        x-go-name: EmptyResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    fileByteStream:
+        properties:
+            File:
+                description: File bytestream
+                items:
+                    format: uint8
+                    type: integer
+                type: array
+        type: object
+        x-go-name: FileResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    fileUrl:
+        properties:
+            filename:
+                description: filename
+                type: string
+                x-go-name: Filename
+            url:
+                description: url pointing to the resource
+                type: string
+                x-go-name: URL
+        type: object
+        x-go-name: FileUrlResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    imageSet:
+        description: ImageSet defines a properties of a set of images contributing to an entire texture with various resolutions or image types
+        properties:
+            category:
+                description: Category determining storage subdirectory
+                maxLength: 128
+                minLength: 3
+                type: string
+                x-go-name: Category
+            id:
+                description: ID as it is stored in the database
+                maxLength: 64
+                minLength: 2
+                type: string
+                x-go-name: ID
+            images:
+                description: List of images contriburing to this particular imageSet
+                items:
+                    $ref: '#/definitions/Image'
+                type: array
+                x-go-name: Images
+        type: object
+        x-go-name: ImageSet
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data
+    message:
+        properties:
+            message:
+                type: string
+                x-go-name: Message
+        type: object
+        x-go-name: MessageResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
 host: localhost:9090
 info:
     description: Documentation of FilesApi
@@ -27,7 +110,9 @@ paths:
                 - text/plain
             responses:
                 "204":
-                    $ref: '#/responses/empty'
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
                 "404":
                     $ref: '#/responses/error'
                 "500":
@@ -35,7 +120,7 @@ paths:
             tags:
                 - files
         get:
-            description: Returns a signed url to requested resource. Url is timed depending on filesize
+            description: Returns a signed url to requested resource. Url is timed
             operationId: getFileUrl
             produces:
                 - text/plain
@@ -57,7 +142,9 @@ paths:
                 - application/json
             responses:
                 "201":
-                    $ref: '#/responses/empty'
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
                 "403":
                     $ref: '#/responses/error'
                 "500":
@@ -73,7 +160,9 @@ paths:
                 - text/plain
             responses:
                 "200":
-                    $ref: '#/responses/empty'
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
                 "404":
                     $ref: '#/responses/error'
                 "500":
@@ -82,22 +171,32 @@ paths:
                 - files
     /{id}&{expires}&{signature}:
         get:
-            description: Returns an image from imageset. Handles signed URLs
+            description: Return an image from imageset. Can only be accessed by signed URLs
             operationId: getImage
             produces:
                 - application/octet-stream
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/fileByteStream'
+                    description: fileByteStream
+                    schema:
+                        $ref: '#/definitions/fileByteStream'
                 "400":
-                    $ref: '#/responses/message'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/message'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/message'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/message'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - images
     /imageCategories/{category}:
@@ -105,20 +204,30 @@ paths:
             consumes:
                 - application/json
             description: Delete existing category, requires being emptied beforehand
-            operationId: deleteImageSet
+            operationId: deleteCategory
             produces:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
         get:
@@ -128,15 +237,25 @@ paths:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/categoryContentsJson'
+                    description: categoryContents
+                    schema:
+                        $ref: '#/definitions/categoryContents'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
         post:
@@ -146,13 +265,21 @@ paths:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
         put:
@@ -162,15 +289,25 @@ paths:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
     /imageSets/{category}/{id}:
@@ -183,15 +320,25 @@ paths:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
         get:
@@ -201,15 +348,25 @@ paths:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/imageSetJson'
+                    description: imageSet
+                    schema:
+                        $ref: '#/definitions/imageSet'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
         post:
@@ -219,13 +376,21 @@ paths:
                 - application/json
             responses:
                 "201":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
         put:
@@ -237,152 +402,120 @@ paths:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - imageSets
     /images/{category}/{id}:
         delete:
             consumes:
                 - application/json
+            description: Remove image from the image set
             operationId: deleteImage
             produces:
                 - application/json
             responses:
                 "204":
-                    $ref: '#/responses/empty'
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
-            summary: Removes image from the image set.
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - images
         get:
             consumes:
                 - application/json
+            description: Return a signed url to requested image
             operationId: getImageUrl
             produces:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/imageUrlJson'
+                    description: fileUrl
+                    schema:
+                        $ref: '#/definitions/fileUrl'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
-            summary: Returns a signed url to requested image.
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - images
         post:
             consumes:
                 - multipart/form-data
+            description: Add an image to the existing set
             operationId: postImage
             produces:
                 - application/json
             responses:
                 "201":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "400":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "403":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
-            summary: Adds an image to the existing set.
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - images
         put:
             consumes:
                 - multipart/form-data
+            description: Update an image in the image set
             operationId: putImage
             produces:
                 - application/json
             responses:
                 "200":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
-                    $ref: '#/responses/messageJson'
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "500":
-                    $ref: '#/responses/messageJson'
-            summary: Updates an image in the image set.
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
             tags:
                 - images
-responses:
-    categoryContentsJson:
-        description: ""
-        headers:
-            imageSets:
-                description: List of directories stored inside given category
-                items:
-                    type: string
-                type: array
-    empty:
-        description: ""
-    error:
-        description: ""
-    fileByteStream:
-        description: ""
-        headers:
-            File:
-                items:
-                    format: uint8
-                    type: integer
-                type: array
-    fileResponse:
-        description: ""
-        schema:
-            items:
-                format: uint8
-                type: integer
-            type: array
-    imageSetJson:
-        description: ""
-        headers:
-            category:
-                description: Category
-                type: string
-            id:
-                description: ID of imageset
-                type: string
-            images:
-                description: Available images
-                items:
-                    $ref: '#/definitions/Image'
-                type: array
-    imageUrlJson:
-        description: ""
-        headers:
-            filename:
-                description: filename of returned image
-                type: string
-            id:
-                description: ID of imageset
-                type: string
-            url:
-                description: url pointing to the resource
-                type: string
-    message:
-        description: ""
-        headers:
-            message:
-                description: Returned message
-                type: string
-    messageJson:
-        description: ""
-        headers:
-            message:
-                description: Returned message
-                type: string
-    urlResponse:
-        description: ""
 schemes:
     - http
     - https
