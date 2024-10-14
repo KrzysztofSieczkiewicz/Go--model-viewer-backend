@@ -38,9 +38,10 @@ import (
 // NO NEED: Update gitignore
 // DONE: Improve logging
 // DONE: Improve swagger annotations (add model annotations, clean up the response annotations)
-// TODO: Clean up models, responses etc
-// TODO: Implement file type validation (based on filename decide if file is correct)
-// TODO: Improve local.go with proper code sharing and new common funcs - too much repetiton
+// DONE: Clean up models, responses etc
+// TODO: Improve local.go with proper code sharing and new common funcs - too much repetiton + occasional verbose/non-functioning checks
+// continue from Overwrite method (remember to make internal write() func to reduce Write() length)
+// TODO: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
 
 func main() {
 	// Initialize logger

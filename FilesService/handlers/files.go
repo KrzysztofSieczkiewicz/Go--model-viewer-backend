@@ -76,7 +76,7 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 	fn := r.PathValue("filename")
 	fp := filepath.Join(c, id, fn)
 
-	err := f.store.Write(fp, r.Body)
+	err := f.store.WriteFile(fp, r.Body)
 	if err != nil {
 		if err == files.ErrFileAlreadyExists {
 			http.Error(rw, err.Error(), http.StatusForbidden)
@@ -110,9 +110,9 @@ func (f *Files) PutFile(rw http.ResponseWriter, r *http.Request) {
 
 	fp := filepath.Join(c, id, fn)
 
-	err := f.store.Overwrite(fp, r.Body)
+	err := f.store.OverwriteFile(fp, r.Body)
 	if err != nil {
-		if err == files.ErrFileNotFound {
+		if err == files.ErrNotFound {
 			http.Error(rw, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -142,9 +142,9 @@ func (f *Files) GetFileUrl(rw http.ResponseWriter, r *http.Request) {
 	fp := filepath.Join(c, id, fn)
 
 	// verify if file exists
-	err := f.store.CheckFile(fp)
+	err := f.store.IfExists(fp)
 	if err != nil {
-		if err == files.ErrFileNotFound {
+		if err == files.ErrNotFound {
 			http.Error(rw, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -195,7 +195,7 @@ func (f *Files) GetFile(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = f.store.Read(fp, rw)
+	err = f.store.ReadFile(fp, rw)
 	if err != nil {
 		http.Error(rw, "Failed to read the file: \n" + err.Error(), http.StatusInternalServerError)
 		return
@@ -223,9 +223,9 @@ func (f *Files) DeleteFile(rw http.ResponseWriter, r *http.Request) {
 
 	fp := filepath.Join(c, id, fn)
 
-	err := f.store.Delete(fp)
+	err := f.store.DeleteFile(fp)
 	if err != nil {
-		if err == files.ErrFileNotFound {
+		if err == files.ErrNotFound {
 			http.Error(rw, err.Error(), http.StatusNotFound)
 			return
 		}

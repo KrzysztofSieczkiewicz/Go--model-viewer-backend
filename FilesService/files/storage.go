@@ -7,20 +7,21 @@ import (
 // Defines behavior for file operations.
 // Different implementations might allow for local/cloud storage
 type Storage interface {
+	// Checks if filepath can be found in the filesystem
+	IfExists(path string) error
+
+
 	// Reads the file at the provided path and returns a reader
-	Read(path string, writer io.Writer) error
+	ReadFile(path string, writer io.Writer) error
 
 	// Create and write a file under provided path. Returns an error if file already exists
-	Write(path string, file io.Reader) error
+	WriteFile(path string, file io.Reader) error
 
 	// Overwrites provided file using temp file. Fails if requested file doesn't exist
-	Overwrite(path string, file io.Reader) error
+	OverwriteFile(path string, file io.Reader) error
 
 	// Deletes file under provided path. Returns error if file doesn't exist
-	Delete(path string) error
-
-	// Checks if file is stored in the filesystem
-	CheckFile(path string) error
+	DeleteFile(path string) error
 
 
 	// Creates requested directory or dir structure, returns an error if path already exists
@@ -32,10 +33,10 @@ type Storage interface {
 	// Change directory name and path, Creates needed directories
 	MoveDirectory(oldPath string, newPath string) error
 
-	// Remove files stored inside directory. Omits subdirectories
+	// Remove files stored in provided filepath. Omits subdirectories
 	DeleteFiles(path string) error
 
-	// Remove subdirectories. Omits files
+	// Remove subdirectories in provided filepath. Omits files
 	DeleteSubdirectories(path string) error
 	
 	// Deletes directory. Fails if directory is not empty

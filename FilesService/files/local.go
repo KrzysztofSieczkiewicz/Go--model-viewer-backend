@@ -1,7 +1,6 @@
 package files
 
 import (
-	"errors"
 	"io"
 	"log/slog"
 	"os"
@@ -34,13 +33,33 @@ func NewLocal(basePath string, maxSizeMB int, l *slog.Logger) (*Local, error) {
 }
 
 
-func (l *Local) Read(path string, w io.Writer) error {
+func (l *Local) IfExists(path string) error {
+	l.logger.Info("Looking for file: " + path)
+
+	fp := l.fullPath(path)
+
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Info("File not found: " + path)
+		return ErrNotFound
+	}
+
+	l.logger.Info("File found: " + path)
+	return nil
+}
+
+
+func (l *Local) ReadFile(path string, w io.Writer) error {
 	l.logger.Info("Reading the file: " + path)
 
 	fp := l.fullPath(path)
 
 	// check if requested file exists
-	l.CheckFile(path)
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested file not found: " + path)
+		return ErrNotFound
+	}
 
 	// open the file
     f, err := os.Open(fp)
@@ -62,17 +81,17 @@ func (l *Local) Read(path string, w io.Writer) error {
 }
 
 
-func (l *Local) Write(path string, contents io.Reader) error {
+func (l *Local) WriteFile(path string, contents io.Reader) error {
 	l.logger.Info("Writing the file: " + path)
 
 	fp := l.fullPath(path)
 
 	// check if the directory exists
 	dir := filepath.Dir(fp)
-	_, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryNotFound
+	exists := l.verifyIfExists(dir)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + path)
+		return ErrNotFound
 	}
 
 	// create a new file at the path
@@ -118,30 +137,26 @@ func (l *Local) Write(path string, contents io.Reader) error {
 	return nil
 }
 
-// [IMMEDIATE] - add logging - find the issue with http 500 on each request
-func (l *Local) Overwrite(path string, contents io.Reader) error {
+func (l *Local) OverwriteFile(path string, contents io.Reader) error {
 	l.logger.Info("Overwriting the file: " + path)
 
-	// temp filename
-	tp := path + "_tmp"
+	// combine into full paths
+	fp := l.fullPath(path)
+	tfp := l.fullPath(path + "_tmp")
 
-	// check if requested file exists
-	err := l.CheckFile(path)
-	if err != nil {
-		l.logger.Warn(err.Error())
-		return err
+	// check if file exists
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested file not found: " + path)
+		return ErrNotFound
 	}
 
 	// create and write to the temp file
-	err = l.Write(tp, contents)
+	err := l.WriteFile(tfp, contents)
 	if err != nil {
 		l.logger.Error(err.Error())
 		return ErrFileWrite
 	}
-
-	// combine into full full paths
-	fp := l.fullPath(path)
-	tfp := l.fullPath(tp)
 
 	// replace the original file with the temporary file
 	err = os.Rename(tfp, fp)
@@ -156,16 +171,21 @@ func (l *Local) Overwrite(path string, contents io.Reader) error {
 }
 
 
-func (l *Local) Delete(path string) error {
+func (l *Local) DeleteFile(path string) error {
 	l.logger.Info("Deleting the file: " + path)
 
 	fp := l.fullPath(path)
+
+	// check if file exists
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested file not found: " + path)
+		return ErrNotFound
+	}
+
+	// remove the file
 	err := os.Remove(fp)
 	if err != nil {
-		if os.IsNotExist(err) {
-			l.logger.Warn(err.Error())
-			return ErrFileNotFound
-		}
 		l.logger.Error(err.Error())
 		return ErrFileDelete
 	}
@@ -174,40 +194,19 @@ func (l *Local) Delete(path string) error {
 	return nil
 }
 
-
-func (l *Local) CheckFile(path string) error {
-	l.logger.Info("Checking the file: " + path)
-
-	fp := l.fullPath(path)
-
-	_, err := os.Stat(fp)
-	if err != nil {
-		if os.IsNotExist(err) {
-			l.logger.Warn(err.Error())
-			return ErrFileNotFound
-		}
-		l.logger.Error(err.Error())
-		return ErrFileStat
-	}
-
-	l.logger.Info("File checked: " + path)
-	return nil
-}
-
-
 func (l *Local) MakeDirectory(path string) error {
 	l.logger.Info("Creating directory: " + path)
 	fp := l.fullPath(path)
 
 	// check if the directory exists
-	_, err := os.Stat(fp)
-	if !os.IsNotExist(err) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryAlreadyExists
+	exists := l.verifyIfExists(fp)
+	if exists {
+		l.logger.Warn("Requested directory not found: " + path)
+		return ErrFileAlreadyExists
 	}
 
 	// create the directory
-	err = os.MkdirAll(fp, 0755)
+	err := os.MkdirAll(fp, 0755)
 	if err != nil {
 		l.logger.Error(err.Error())
 		return ErrDirectoryCreate
@@ -225,14 +224,14 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 	fnp := l.fullPath(newPath)
 
 	// check if the requested directory exists
-	_, err := os.Stat(fop)
-	if errors.Is(err, os.ErrNotExist) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryNotFound
+	exists := l.verifyIfExists(fop)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + oldPath)
+		return ErrNotFound
 	}
 
 	// rename the directory
-	err = os.Rename(fop, fnp)
+	err := os.Rename(fop, fnp)
 	if err != nil {
 		l.logger.Error(err.Error())
 		return ErrDirectoryRename
@@ -250,18 +249,17 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 	fnp := l.fullPath(newPath)
 
 	// check if requested directory exists
-	_, err := os.Stat(fop)
-	if os.IsNotExist(err) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryNotFound
+	exists := l.verifyIfExists(fop)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + oldPath)
+		return ErrNotFound
 	}
 
-	// TODO -> improve this check - it's not working
 	// check if the desired directory doesn't already exist
-	_, err = os.Stat(fnp)
-	if os.IsExist(err) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryAlreadyExists
+	exists = l.verifyIfExists(fnp)
+	if exists {
+		l.logger.Warn("Requested directory already exists: " + newPath)
+		return ErrNotFound
 	}
 
 	// check if requested directory contains non-directories
@@ -303,10 +301,10 @@ func (l *Local) DeleteFiles(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	_, err := os.Stat(fp)
-	if os.IsNotExist(err) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryNotFound
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + path)
+		return ErrNotFound
 	}
 
 	// open the dir
@@ -346,10 +344,10 @@ func (l *Local) DeleteSubdirectories(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	_, err := os.Stat(fp)
-	if os.IsNotExist(err) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryNotFound
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + path)
+		return ErrNotFound
 	}
 
 	// open the dir
@@ -390,10 +388,10 @@ func (l *Local) DeleteDirectory(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	_, err := os.Stat(fp)
-	if os.IsNotExist(err) {
-		l.logger.Warn(err.Error())
-		return ErrDirectoryNotFound
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + path)
+		return ErrNotFound
 	}
 
 	// open the dir
@@ -412,8 +410,8 @@ func (l *Local) DeleteDirectory(path string) error {
 	}
 	// Check if empty
 	if len(entries) > 0 {
-		l.logger.Warn(ErrDirectoryNotEmpty.Error())
-		return ErrDirectoryNotEmpty
+		l.logger.Warn(ErrDirNotEmpty.Error())
+		return ErrDirNotEmpty
 	}
 	dir.Close()
 
@@ -434,15 +432,14 @@ func (l *Local) ListFiles(path string) ([]string, error) {
 	fp := l.fullPath(path)
 
 	// check if the directory exists
-	info, err := os.Stat(fp)
-	if err != nil {
-		if os.IsNotExist(err) {
-			l.logger.Warn(err.Error())
-			return nil, ErrDirectoryNotFound
-		}
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryStat
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + path)
+		return nil, ErrNotFound
 	}
+
+	// check if filepath is a directory
+	info, _ := os.Stat(fp)
 	if !info.IsDir() {
 		l.logger.Warn(ErrNotDirectory.Error())
 		return nil, ErrNotDirectory
@@ -481,15 +478,14 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 	fp := l.fullPath(path)
 
 	// check if the directory exists
-	info, err := os.Stat(fp)
-	if err != nil {
-		if os.IsNotExist(err) {
-			l.logger.Warn(err.Error())
-			return nil, ErrDirectoryNotFound
-		}
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryStat
+	exists := l.verifyIfExists(fp)
+	if !exists {
+		l.logger.Warn("Requested directory not found: " + path)
+		return nil, ErrNotFound
 	}
+
+	// check if filepath is a directory
+	info, _ := os.Stat(fp)
 	if !info.IsDir() {
 		l.logger.Warn(ErrNotDirectory.Error())
 		return nil, ErrNotDirectory
@@ -525,4 +521,18 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 // Returns the absolute path from provided relative path
 func (l *Local) fullPath(path string) string {
 	return filepath.Join(l.basePath, path)
+}
+
+// Verifies if filepath exists in the filesystem
+func (l *Local) verifyIfExists(fullPath string) (bool) {
+	l.logger.Info("Looking for file: " + fullPath)
+
+	_, err := os.Stat(fullPath)
+	if err != nil {
+		l.logger.Info("Filepath not found: " + fullPath)
+		return false
+	}
+
+	l.logger.Info("Filepath found: " + fullPath)
+	return true
 }

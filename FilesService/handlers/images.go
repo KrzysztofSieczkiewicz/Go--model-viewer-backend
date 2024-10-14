@@ -92,9 +92,9 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
-	err = h.store.CheckFile(fp)
+	err = h.store.IfExists(fp)
 	if err != nil {
-		if err == files.ErrFileNotFound {
+		if err == files.ErrNotFound {
 			http.Error(rw, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -158,7 +158,7 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.Read(fp, rw)
+	err = h.store.ReadFile(fp, rw)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to retrieve requested file")
 		return
@@ -222,13 +222,13 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
-	err = h.store.Write(fp, file)
+	err = h.store.WriteFile(fp, file)
 	if err != nil {
 		if err == files.ErrFileAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Image already exists")
 			return
 		}
-		if err == files.ErrDirectoryNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusBadRequest, "ImageSet doesn't exist")
 			return
 		}
@@ -286,9 +286,9 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
-	err = h.store.Overwrite(fp, file)
+	err = h.store.OverwriteFile(fp, file)
 	if err != nil {
-		if err == files.ErrFileNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
 			return
 		}
@@ -333,9 +333,9 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	fn := i.ConstructImageName()
 	fp := filepath.Join(c, id, fn)
 
-	err = h.store.Delete(fp)
+	err = h.store.DeleteFile(fp)
 	if err != nil {
-		if err == files.ErrFileNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Image was not found")
 			return
 		}

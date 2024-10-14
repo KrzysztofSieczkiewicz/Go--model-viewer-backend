@@ -99,7 +99,7 @@ func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) 
 
 	f, err := h.store.ListFiles(fp)
 	if err != nil {
-		if err == files.ErrDirectoryNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
 			return
 		}
@@ -212,7 +212,7 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 
 	err = h.store.RenameDirectory(ofp, nfp)
 	if err != nil {
-		if err == files.ErrDirectoryNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find ImageSet")
 			return
 		}
@@ -258,7 +258,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 
 	err = h.store.DeleteFiles(fp)
 	if err != nil {
-		if err == files.ErrDirectoryNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
 			return
 		}
@@ -268,7 +268,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 
 	err = h.store.DeleteDirectory(fp)
 	if err != nil {
-		if err == files.ErrDirectoryNotEmpty {
+		if err == files.ErrDirNotEmpty {
 			response.RespondWithMessage(rw, http.StatusForbidden, "ImageSet contains subdirectories")
 			return
 		}
@@ -309,7 +309,7 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 
 	f, err := h.store.ListDirectories(fp)
 	if err != nil {
-		if err == files.ErrDirectoryNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
 			return
 		}
@@ -404,7 +404,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 
 	err = h.store.MoveDirectory(ofp, i.Category)
 	if err != nil {
-		if err == files.ErrDirectoryNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
 			return
 		}
@@ -456,7 +456,7 @@ func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reques
 
 	err = h.store.DeleteSubdirectories(fp)
 	if err != nil {
-		if err == files.ErrDirectoryNotFound {
+		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
 			return
 		}
@@ -466,7 +466,7 @@ func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reques
 
 	err = h.store.DeleteDirectory(fp)
 	if err != nil {
-		if err == files.ErrDirectoryNotEmpty {
+		if err == files.ErrDirNotEmpty {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Category contains files")
 			return
 		}
