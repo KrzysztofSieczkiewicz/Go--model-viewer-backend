@@ -3,6 +3,7 @@ package files
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -295,7 +296,7 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 		return ErrAlreadyExists
 	}
 
-	// check if target directory doesn't contain files
+	// check if target directory is not a category (must not contain files)
 	is, err := l.containsOnlyDirectories(fnp)
 	if err != nil {
 		return err
@@ -376,22 +377,13 @@ func (l *Local) DeleteSubdirectories(path string) error {
 		return ErrNotFound
 	}
 
-	// open the dir
-	dir, err := os.Open(fp)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryRead
-	}
-	defer dir.Close()
-
 	// Read dir contents
-	entries, err := dir.Readdir(-1)
+	entries, err := l.readDirectory(fp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryRead
+		return err
 	}
 
-	// Remove directory contents
+	// Remove subdirectories
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
@@ -423,26 +415,17 @@ func (l *Local) DeleteDirectory(path string) error {
 		return ErrNotFound
 	}
 
-	// open the dir
-	dir, err := os.Open(fp)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryRead
-	}
-	defer dir.Close()
-
 	// Read dir contents
-	entries, err := dir.Readdir(-1)
+	entries, err := l.readDirectory(fp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryRead
+		return err
 	}
+	
 	// Check if empty
 	if len(entries) > 0 {
 		l.logger.Warn(ErrDirNotEmpty.Error())
 		return ErrDirNotEmpty
 	}
-	dir.Close()
 
 	// remove the dir
 	err = os.Remove(fp)
@@ -471,25 +454,19 @@ func (l *Local) ListFiles(path string) ([]string, error) {
 	}
 
 	// check if filepath is a directory
-	info, _ := os.Stat(fp)
-	if !info.IsDir() {
+	isFile, err := l.isFile(fp)
+	if err != nil {
+		return nil, err
+	}
+	if isFile {
 		l.logger.Warn(ErrNotDirectory.Error())
 		return nil, ErrNotDirectory
 	}
 
-	// open the dir
-	dir, err := os.Open(fp)
+	// read directory contents
+	entries, err := l.readDirectory(fp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
-	}
-	defer dir.Close()
-
-	// Read directory contents
-	entries, err := dir.Readdir(-1)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
+		return nil, err
 	}
 
 	// save filenames
@@ -500,13 +477,13 @@ func (l *Local) ListFiles(path string) ([]string, error) {
 		}
 	}
 
-	l.logger.Info("Done reading files from directory: " + path)
+	l.logger.Info("Finished reading files from directory: " + path)
 	return filenames, nil
 }
 
 
 func (l *Local) ListDirectories(path string) ([]string, error) {
-	l.logger.Info("Listing subdirectories in directory: " + path)
+	l.logger.Info("Listing subdirectories in the directory: " + path)
 	fp := l.fullPath(path)
 
 	// check if the directory exists
@@ -520,25 +497,19 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 	}
 
 	// check if filepath is a directory
-	info, _ := os.Stat(fp)
-	if !info.IsDir() {
+	isFile, err := l.isFile(fp)
+	if err != nil {
+		return nil, err
+	}
+	if isFile {
 		l.logger.Warn(ErrNotDirectory.Error())
 		return nil, ErrNotDirectory
 	}
 
-	// open the dir
-	dir, err := os.Open(fp)
+	// read directory contents
+	entries, err := l.readDirectory(fp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
-	}
-	defer dir.Close()
-
-	// Read directory contents
-	entries, err := dir.Readdir(-1)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
+		return nil, err
 	}
 
 	// save subdirectories list
@@ -549,9 +520,10 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 		}
 	}
 
-	l.logger.Info("Listed subdirectories in directory: " + path)
+	l.logger.Info("Listed subdirectories in the directory: " + path)
 	return dirs, nil
 }
+
 
 
 // Returns the absolute path from the relative path
@@ -587,8 +559,7 @@ func (l *Local) isFile(fullpath string) (bool, error) {
 		return false, ErrStat
 	}
 	if file.IsDir() {
-		l.logger.Warn(ErrNotFile.Error())
-		return false, ErrNotFile
+		return false, nil
 	}
 
 	l.logger.Info("Verified the file: " + fullpath)
@@ -664,7 +635,7 @@ func (l *Local) writeFile(fullpath string, writer io.WriteCloser, contents io.Re
 	return nil
 }
 
-// remove requested filepath
+// Removes requested filepath
 func (l *Local) remove(fullPath string) error {
 	l.logger.Info("Removing the filepath: " + fullPath)
 
@@ -678,7 +649,7 @@ func (l *Local) remove(fullPath string) error {
 	return nil
 }
 
-// change filepath to the new provided string. Doesn't create directories.
+// Changes filepath to the new provided string. Doesn't create directories.
 func (l *Local) changeFilepath(old string, new string) error {
 	l.logger.Info(fmt.Sprintf("Modifying filepath from: %s\nto: %s", old, new))
 
@@ -692,7 +663,7 @@ func (l *Local) changeFilepath(old string, new string) error {
 	return nil
 }
 
-// create directories structure matching requested filepath
+// Creates directories structure matching requested filepath
 func (l *Local) createFilepath(fullpath string) error {
 	l.logger.Info("Creating filepath: " + fullpath)
 	
@@ -704,4 +675,28 @@ func (l *Local) createFilepath(fullpath string) error {
 
 	l.logger.Info("Created filepath: " + fullpath)
 	return nil
+}
+
+// Reads directory contents
+func (l *Local) readDirectory(fullpath string) ([]fs.FileInfo, error) {
+	l.logger.Info("Reading the directory: " + fullpath)
+
+	// open the dir
+	dir, err := os.Open(fullpath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return nil, ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	// Read directory contents
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return nil, ErrDirectoryRead
+	}
+
+	l.logger.Info("Finished reading the directory: " + fullpath)
+
+	return entries, nil
 }
