@@ -78,7 +78,7 @@ func (f *Files) PostFile(rw http.ResponseWriter, r *http.Request) {
 
 	err := f.store.WriteFile(fp, r.Body)
 	if err != nil {
-		if err == files.ErrFileAlreadyExists {
+		if err == files.ErrAlreadyExists {
 			http.Error(rw, err.Error(), http.StatusForbidden)
 			return
 		}

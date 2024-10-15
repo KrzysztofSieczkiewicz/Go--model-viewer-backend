@@ -1,6 +1,7 @@
 package files
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -38,9 +39,12 @@ func (l *Local) IfExists(path string) error {
 
 	fp := l.fullPath(path)
 
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Info("File not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
@@ -55,9 +59,12 @@ func (l *Local) ReadFile(path string, w io.Writer) error {
 	fp := l.fullPath(path)
 
 	// check if requested file exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested file not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
@@ -80,96 +87,90 @@ func (l *Local) ReadFile(path string, w io.Writer) error {
     return nil
 }
 
-
 func (l *Local) WriteFile(path string, contents io.Reader) error {
-	l.logger.Info("Writing the file: " + path)
+	l.logger.Info("Saving the file: " + path)
 
 	fp := l.fullPath(path)
 
 	// check if the directory exists
 	dir := filepath.Dir(fp)
-	exists := l.verifyIfExists(dir)
+	exists, err := l.verifyExists(dir)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
-	// create a new file at the path
-	f, err := os.OpenFile(fp, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0666)
+	// check if the file doesn't already exist
+	exists, err = l.verifyExists(fp)
 	if err != nil {
-		if os.IsExist(err) {
-			l.logger.Warn(err.Error())
-			return ErrFileAlreadyExists
-		}
-		l.logger.Error(err.Error())
-		return ErrFileCreate
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error() + fp)
+		return ErrAlreadyExists
 	}
 
-	// close the file when done, delete the file if error occured
+	// create the file
+	writer, err := l.createFile(fp)
+	if err != nil {
+		return err
+	}
 	defer func() {
-        if err != nil {
-            os.Remove(fp)
-        }
-        f.Close()
-    }()
+		writer.Close()
+	}()
 
-	// create a LimitedReader to limit file size
-    limitedReader := &io.LimitedReader{
-        R: contents,
-        N: l.maxFileSize + 1,
-    }
-
-	// write the contents to the new file
-	_, err = io.Copy(f, limitedReader)
+	// write the contents into the file
+	err = l.writeFile(fp, writer, contents)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrFileWrite
+		return err
 	}
 
-	// check if filesize limit was reached
-	if limitedReader.N == 0 {
-		os.Remove(fp)
-		l.logger.Error(err.Error())
-		return ErrFileSizeExceeded
-	}
-
-	l.logger.Info("Done writing the file: " + path)
+	l.logger.Info("Saved the file: " + path)
 	return nil
 }
 
 func (l *Local) OverwriteFile(path string, contents io.Reader) error {
-	l.logger.Info("Overwriting the file: " + path)
+	l.logger.Info("Updating the file: " + path)
 
-	// combine into full paths
 	fp := l.fullPath(path)
 	tfp := l.fullPath(path + "_tmp")
 
 	// check if file exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested file not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
 	// create and write to the temp file
-	err := l.WriteFile(tfp, contents)
+	writer, err := l.createFile(tfp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrFileWrite
+		return err
+	}
+	defer func() {
+		writer.Close()
+		os.Remove(tfp)
+	}()
+	err = l.writeFile(tfp, writer, contents)
+	if err != nil {
+		return err
 	}
 
 	// replace the original file with the temporary file
-	err = os.Rename(tfp, fp)
+	err = l.changeFilepath(tfp, fp)
     if err != nil {
-		os.Remove(tfp)
-		l.logger.Error(err.Error())
-        return ErrFileReplace
+        return err
     }
 
-	l.logger.Info("File overwritten: " + path)
+	l.logger.Info("Updated the file: " + path)
 	return nil
 }
-
 
 func (l *Local) DeleteFile(path string) error {
 	l.logger.Info("Deleting the file: " + path)
@@ -177,17 +178,29 @@ func (l *Local) DeleteFile(path string) error {
 	fp := l.fullPath(path)
 
 	// check if file exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested file not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
-	// remove the file
-	err := os.Remove(fp)
+	// check if filepath is file
+	isFile, err := l.verifyIsFile(fp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrFileDelete
+		return err
+	}
+	if !isFile {
+		l.logger.Warn(ErrNotFile.Error() + fp)
+		return ErrNotFile
+	}
+
+	// remove the file
+	err = l.remove(fp)
+	if err != nil {
+		return err
 	}
 
 	l.logger.Info("Deleted the file: " + path)
@@ -198,15 +211,18 @@ func (l *Local) MakeDirectory(path string) error {
 	l.logger.Info("Creating directory: " + path)
 	fp := l.fullPath(path)
 
-	// check if the directory exists
-	exists := l.verifyIfExists(fp)
+	// check if the directory already exists
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if exists {
-		l.logger.Warn("Requested directory not found: " + path)
-		return ErrFileAlreadyExists
+		l.logger.Warn(ErrAlreadyExists.Error() + fp)
+		return ErrAlreadyExists
 	}
 
 	// create the directory
-	err := os.MkdirAll(fp, 0755)
+	err = os.MkdirAll(fp, 0755)
 	if err != nil {
 		l.logger.Error(err.Error())
 		return ErrDirectoryCreate
@@ -224,14 +240,27 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 	fnp := l.fullPath(newPath)
 
 	// check if the requested directory exists
-	exists := l.verifyIfExists(fop)
+	exists, err := l.verifyExists(fop)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + oldPath)
+		l.logger.Warn(ErrNotFound.Error() + fop)
 		return ErrNotFound
 	}
 
+	// check if the directory doesn't exist
+	exists, err = l.verifyExists(fnp)
+	if err != nil {
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error() + fop)
+		return ErrAlreadyExists
+	}
+
 	// rename the directory
-	err := os.Rename(fop, fnp)
+	err = os.Rename(fop, fnp)
 	if err != nil {
 		l.logger.Error(err.Error())
 		return ErrDirectoryRename
@@ -249,17 +278,23 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 	fnp := l.fullPath(newPath)
 
 	// check if requested directory exists
-	exists := l.verifyIfExists(fop)
+	exists, err := l.verifyExists(fop)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + oldPath)
+		l.logger.Warn(ErrNotFound.Error() + fop)
 		return ErrNotFound
 	}
 
 	// check if the desired directory doesn't already exist
-	exists = l.verifyIfExists(fnp)
+	exists, err = l.verifyExists(fnp)
+	if err != nil {
+		return err
+	}
 	if exists {
-		l.logger.Warn("Requested directory already exists: " + newPath)
-		return ErrNotFound
+		l.logger.Warn(ErrAlreadyExists.Error() + fnp)
+		return ErrAlreadyExists
 	}
 
 	// check if requested directory contains non-directories
@@ -301,9 +336,12 @@ func (l *Local) DeleteFiles(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
@@ -344,9 +382,12 @@ func (l *Local) DeleteSubdirectories(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
@@ -388,9 +429,12 @@ func (l *Local) DeleteDirectory(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return ErrNotFound
 	}
 
@@ -432,9 +476,12 @@ func (l *Local) ListFiles(path string) ([]string, error) {
 	fp := l.fullPath(path)
 
 	// check if the directory exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return nil, err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return nil, ErrNotFound
 	}
 
@@ -478,9 +525,12 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 	fp := l.fullPath(path)
 
 	// check if the directory exists
-	exists := l.verifyIfExists(fp)
+	exists, err := l.verifyExists(fp)
+	if err != nil {
+		return nil, err
+	}
 	if !exists {
-		l.logger.Warn("Requested directory not found: " + path)
+		l.logger.Warn(ErrNotFound.Error() + fp)
 		return nil, ErrNotFound
 	}
 
@@ -518,21 +568,112 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 	return dirs, nil
 }
 
+
 // Returns the absolute path from provided relative path
 func (l *Local) fullPath(path string) string {
 	return filepath.Join(l.basePath, path)
 }
 
 // Verifies if filepath exists in the filesystem
-func (l *Local) verifyIfExists(fullPath string) (bool) {
-	l.logger.Info("Looking for file: " + fullPath)
+func (l *Local) verifyExists(fullpath string) (bool, error) {
+	l.logger.Info("Looking for file: " + fullpath)
 
-	_, err := os.Stat(fullPath)
+	_, err := os.Stat(fullpath)
 	if err != nil {
-		l.logger.Info("Filepath not found: " + fullPath)
-		return false
+		if os.IsNotExist(err) {
+			l.logger.Info("Filepath not found: " + fullpath)
+			return false, nil
+		}
+		l.logger.Error(err.Error())
+		return false, err
 	}
 
-	l.logger.Info("Filepath found: " + fullPath)
-	return true
+	l.logger.Info("Filepath found: " + fullpath)
+	return true, nil
+}
+
+func (l *Local) verifyIsFile(fullpath string) (bool, error) {
+	l.logger.Info("Verifying the file: " + fullpath)
+
+	file, err := os.Stat(fullpath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return false, ErrStat
+	}
+	if file.IsDir() {
+		l.logger.Warn(fmt.Sprintf("Filepath '%s' doesn't point to the file", fullpath))
+		return false, ErrNotFile
+	}
+
+	l.logger.Info("Verified the file: " + fullpath)
+	return true, nil
+}
+
+// Create the file under specified filepath
+func (l *Local) createFile(fullpath string) (io.WriteCloser, error) {
+	l.logger.Info("Creating the file: " + fullpath)
+
+	f, err := os.Create(fullpath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return nil, ErrFileCreate
+	}
+
+	l.logger.Info("Created the file: " + fullpath)
+	return f, nil
+}
+
+// Writes reader contents into provided file writer
+func (l *Local) writeFile(fullpath string, writer io.WriteCloser, contents io.Reader) error {
+	l.logger.Info("Writing into the file: " + fullpath)
+
+	// create a LimitedReader to limit file size
+    limitedReader := &io.LimitedReader{
+        R: contents,
+        N: l.maxFileSize + 1,
+    }
+
+	// write the contents to the new file
+	_, err := io.Copy(writer, limitedReader)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return ErrFileWrite
+	}
+
+	// check if filesize limit was reached
+	if limitedReader.N == 0 {
+		l.logger.Error("File size was exceeded")
+		return ErrFileSizeExceeded
+	}
+
+	l.logger.Info("Finished writing into the file: " + fullpath)
+	return nil
+}
+
+// remove requested filepath
+func (l *Local) remove(fullPath string) error {
+	l.logger.Info("Removing the filepath: " + fullPath)
+
+	err := os.Remove(fullPath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return ErrFileDelete
+	}
+
+	l.logger.Info("Removed the file: " + fullPath)
+	return nil
+}
+
+// change filepath to the new provided string. Doesn't create directories.
+func (l *Local) changeFilepath(old string, new string) error {
+	l.logger.Info(fmt.Sprintf("Modifying filepath from: %s\nto: %s", old, new))
+
+	err := os.Rename(old, new)
+    if err != nil {
+		l.logger.Error(err.Error())
+        return ErrRename
+    }
+
+	l.logger.Info(fmt.Sprintf("Filepath changed from: %s\nto: %s", old, new))
+	return nil
 }

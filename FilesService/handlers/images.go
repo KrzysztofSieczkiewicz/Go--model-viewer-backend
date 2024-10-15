@@ -224,7 +224,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 
 	err = h.store.WriteFile(fp, file)
 	if err != nil {
-		if err == files.ErrFileAlreadyExists {
+		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Image already exists")
 			return
 		}

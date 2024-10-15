@@ -158,7 +158,7 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 
 	err = h.store.MakeDirectory(fp)
 	if err != nil {
-		if err == files.ErrDirectoryAlreadyExists {
+		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
 			return
 		}
@@ -355,7 +355,7 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 
 	err = h.store.MakeDirectory(fp)
 	if err != nil {
-		if err == files.ErrDirectoryAlreadyExists {
+		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
 			return
 		}
@@ -408,7 +408,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
 			return
 		}
-		if err == files.ErrDirectoryAlreadyExists {
+		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusBadRequest, "Category already exists")
 			return
 		}
