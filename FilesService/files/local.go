@@ -39,7 +39,7 @@ func (l *Local) IfExists(path string) error {
 
 	fp := l.fullPath(path)
 
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (l *Local) ReadFile(path string, w io.Writer) error {
 	fp := l.fullPath(path)
 
 	// check if requested file exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (l *Local) WriteFile(path string, contents io.Reader) error {
 
 	// check if the directory exists
 	dir := filepath.Dir(fp)
-	exists, err := l.verifyExists(dir)
+	exists, err := l.exists(dir)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (l *Local) WriteFile(path string, contents io.Reader) error {
 	}
 
 	// check if the file doesn't already exist
-	exists, err = l.verifyExists(fp)
+	exists, err = l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (l *Local) OverwriteFile(path string, contents io.Reader) error {
 	tfp := l.fullPath(path + "_tmp")
 
 	// check if file exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (l *Local) DeleteFile(path string) error {
 	fp := l.fullPath(path)
 
 	// check if file exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (l *Local) DeleteFile(path string) error {
 	}
 
 	// check if filepath is file
-	isFile, err := l.verifyIsFile(fp)
+	isFile, err := l.isFile(fp)
 	if err != nil {
 		return err
 	}
@@ -207,12 +207,12 @@ func (l *Local) DeleteFile(path string) error {
 	return nil
 }
 
-func (l *Local) MakeDirectory(path string) error {
+func (l *Local) CreateDirectory(path string) error {
 	l.logger.Info("Creating directory: " + path)
 	fp := l.fullPath(path)
 
 	// check if the directory already exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -222,10 +222,9 @@ func (l *Local) MakeDirectory(path string) error {
 	}
 
 	// create the directory
-	err = os.MkdirAll(fp, 0755)
+	err = l.createFilepath(fp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryCreate
+		return err
 	}
 
 	l.logger.Info("Created directory: " + path)
@@ -240,7 +239,7 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 	fnp := l.fullPath(newPath)
 
 	// check if the requested directory exists
-	exists, err := l.verifyExists(fop)
+	exists, err := l.exists(fop)
 	if err != nil {
 		return err
 	}
@@ -249,8 +248,8 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 		return ErrNotFound
 	}
 
-	// check if the directory doesn't exist
-	exists, err = l.verifyExists(fnp)
+	// check if the target directory doesn't exist
+	exists, err = l.exists(fnp)
 	if err != nil {
 		return err
 	}
@@ -260,10 +259,9 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 	}
 
 	// rename the directory
-	err = os.Rename(fop, fnp)
+	err = l.changeFilepath(fop, fnp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryRename
+		return err
 	}
 
 	l.logger.Info("Renamed directory: " + oldPath + " to: " + newPath)
@@ -278,7 +276,7 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 	fnp := l.fullPath(newPath)
 
 	// check if requested directory exists
-	exists, err := l.verifyExists(fop)
+	exists, err := l.exists(fop)
 	if err != nil {
 		return err
 	}
@@ -287,8 +285,8 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 		return ErrNotFound
 	}
 
-	// check if the desired directory doesn't already exist
-	exists, err = l.verifyExists(fnp)
+	// check if the target directory doesn't already exist
+	exists, err = l.exists(fnp)
 	if err != nil {
 		return err
 	}
@@ -297,33 +295,20 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 		return ErrAlreadyExists
 	}
 
-	// check if requested directory contains non-directories
-	dir, err := os.Open(fop)
+	// check if target directory doesn't contain files
+	is, err := l.containsOnlyDirectories(fnp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryRead
+		return err
 	}
-	defer dir.Close()
-
-	entries, err := dir.Readdir(-1)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryRead
+	if is {
+		l.logger.Warn(ErrDirContainsFiles.Error())
+		return ErrDirContainsFiles
 	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			l.logger.Warn(ErrDirectoryNonDirectoryFound.Error())
-			return ErrDirectoryNonDirectoryFound
-		}
-	}
-	dir.Close()
 
 	// move requested directory
-	err = os.Rename(fop, fnp)
+	err = l.changeFilepath(fop, fnp)
 	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryMove
+		return err
 	}
 
 	l.logger.Info("Moved directory from: " + oldPath + " to: " + newPath)
@@ -336,7 +321,7 @@ func (l *Local) DeleteFiles(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -382,7 +367,7 @@ func (l *Local) DeleteSubdirectories(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -429,7 +414,7 @@ func (l *Local) DeleteDirectory(path string) error {
 	fp := l.fullPath(path)
 
 	// check if directory exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return err
 	}
@@ -476,7 +461,7 @@ func (l *Local) ListFiles(path string) ([]string, error) {
 	fp := l.fullPath(path)
 
 	// check if the directory exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +510,7 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 	fp := l.fullPath(path)
 
 	// check if the directory exists
-	exists, err := l.verifyExists(fp)
+	exists, err := l.exists(fp)
 	if err != nil {
 		return nil, err
 	}
@@ -556,7 +541,7 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 		return nil, ErrDirectoryRead
 	}
 
-	// save subdirectories
+	// save subdirectories list
 	dirs := make([]string, 0, len(entries))
 	for _, entry := range entries {
 		if entry.IsDir() { // Check if the entry is a file
@@ -569,13 +554,13 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 }
 
 
-// Returns the absolute path from provided relative path
+// Returns the absolute path from the relative path
 func (l *Local) fullPath(path string) string {
 	return filepath.Join(l.basePath, path)
 }
 
 // Verifies if filepath exists in the filesystem
-func (l *Local) verifyExists(fullpath string) (bool, error) {
+func (l *Local) exists(fullpath string) (bool, error) {
 	l.logger.Info("Looking for file: " + fullpath)
 
 	_, err := os.Stat(fullpath)
@@ -592,7 +577,8 @@ func (l *Local) verifyExists(fullpath string) (bool, error) {
 	return true, nil
 }
 
-func (l *Local) verifyIsFile(fullpath string) (bool, error) {
+// Verifies if provided filepath leads to a file
+func (l *Local) isFile(fullpath string) (bool, error) {
 	l.logger.Info("Verifying the file: " + fullpath)
 
 	file, err := os.Stat(fullpath)
@@ -601,7 +587,7 @@ func (l *Local) verifyIsFile(fullpath string) (bool, error) {
 		return false, ErrStat
 	}
 	if file.IsDir() {
-		l.logger.Warn(fmt.Sprintf("Filepath '%s' doesn't point to the file", fullpath))
+		l.logger.Warn(ErrNotFile.Error())
 		return false, ErrNotFile
 	}
 
@@ -609,7 +595,35 @@ func (l *Local) verifyIsFile(fullpath string) (bool, error) {
 	return true, nil
 }
 
-// Create the file under specified filepath
+// Verifies if provided filepath contains only subdirectories
+func (l *Local) containsOnlyDirectories(fullpath string) (bool, error) {
+	l.logger.Info("Verifying the directory: " + fullpath)
+
+	dir, err := os.Open(fullpath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return false, ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return false, ErrDirectoryRead
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			l.logger.Info(ErrDirContainsFiles.Error())
+			return false, nil
+		}
+	}
+
+	l.logger.Info("Verified the directory: " + fullpath)
+	return true, nil
+}
+
+// Creates the file under specified filepath
 func (l *Local) createFile(fullpath string) (io.WriteCloser, error) {
 	l.logger.Info("Creating the file: " + fullpath)
 
@@ -642,7 +656,7 @@ func (l *Local) writeFile(fullpath string, writer io.WriteCloser, contents io.Re
 
 	// check if filesize limit was reached
 	if limitedReader.N == 0 {
-		l.logger.Error("File size was exceeded")
+		l.logger.Error(ErrFileSizeExceeded.Error())
 		return ErrFileSizeExceeded
 	}
 
@@ -675,5 +689,19 @@ func (l *Local) changeFilepath(old string, new string) error {
     }
 
 	l.logger.Info(fmt.Sprintf("Filepath changed from: %s\nto: %s", old, new))
+	return nil
+}
+
+// create directories structure matching requested filepath
+func (l *Local) createFilepath(fullpath string) error {
+	l.logger.Info("Creating filepath: " + fullpath)
+	
+	err := os.MkdirAll(fullpath, 0755)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return ErrDirectoryCreate
+	}
+
+	l.logger.Info("Created filepath: " + fullpath)
 	return nil
 }

@@ -25,9 +25,9 @@ type Storage interface {
 
 
 	// Creates requested directory or dir structure, returns an error if path already exists
-	MakeDirectory(path string) error
+	CreateDirectory(path string) error
 
-	// Changes dir name and path. If old and new paths are in different directories functions as move. Doesn't create directories
+	// Changes dir name and path. If old and new paths are in different directories functions as move. Doesn't create new directories
 	RenameDirectory(oldPath string, newPath string) error
 
 	// Change directory name and path, Creates needed directories

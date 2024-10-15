@@ -44,5 +44,5 @@ var ErrDirectoryMove = errors.New("unable to move directory")
 
 var ErrDirNotEmpty = errors.New("directory is not empty")
 
-var ErrDirectoryNonDirectoryFound = errors.New("directory contains files that are not files")
+var ErrDirContainsFiles = errors.New("directory contains files")
 

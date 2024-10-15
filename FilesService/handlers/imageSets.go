@@ -156,7 +156,7 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 
 	fp := filepath.Join(c, id)
 
-	err = h.store.MakeDirectory(fp)
+	err = h.store.CreateDirectory(fp)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
@@ -353,7 +353,7 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.store.MakeDirectory(fp)
+	err = h.store.CreateDirectory(fp)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
@@ -412,7 +412,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 			response.RespondWithMessage(rw, http.StatusBadRequest, "Category already exists")
 			return
 		}
-		if err == files.ErrDirectoryNonDirectoryFound {
+		if err == files.ErrDirContainsFiles {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Category contains illegal files")
 			return
 		}
