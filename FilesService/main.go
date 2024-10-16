@@ -45,6 +45,7 @@ import (
 // TODO: Write unit tests for storage and data packages
 // TODO: Test all endpoints + fix file write err (access is denied)
 // TODO: Move DeconstructImageNames() from images.go to imageSets.go (data package)
+// TODO: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
 
 func main() {
 	// Initialize logger

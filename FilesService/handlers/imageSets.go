@@ -147,7 +147,6 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
-
 	id, err := url.QueryUnescape( r.PathValue("id") )
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
@@ -193,7 +192,6 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
-
 	id, err := url.QueryUnescape( r.PathValue("id") )
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
@@ -206,6 +204,12 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 	err = utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		return
+	}
+
+	err = i.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image set data")
 		return
 	}
 	nfp := filepath.Join(i.Category, i.ID)

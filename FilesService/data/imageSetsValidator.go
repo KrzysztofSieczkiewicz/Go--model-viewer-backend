@@ -12,7 +12,7 @@ func (is *ImageSet) Validate() error {
 
 	validate.RegisterValidation("filepath", validateID)
 	validate.RegisterValidation("name", validateCategory)
-	validate.RegisterValidation("filepath", validateImages)
+	validate.RegisterValidation("Images", validateImages)
 
 	return validate.Struct(is)
 }
@@ -32,6 +32,22 @@ func validateCategory(fl validator.FieldLevel) bool {
 }
 
 func validateImages(fl validator.FieldLevel) bool {
-	// TODO [URGENT]: finish this one
+	images, err := fl.Field().Interface().([]*Image)
+	if err {
+		return false
+	}
+
+	// Allow empty slice
+	if len(images) == 0 {
+		images = []*Image{}
+	}
+
+	for _, img := range images {
+        err := img.Validate()
+		if err != nil {
+			return false
+		}
+	}
+
 	return true
 }
