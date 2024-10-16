@@ -75,7 +75,6 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
 		return
 	}
-
 	id, err := url.QueryUnescape( r.PathValue("id") )
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
@@ -186,14 +185,18 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Image request")
 
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	if c == "" || id == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+	c, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		return
+	}
+	id, err := url.QueryUnescape( r.PathValue("id") )
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20)
+	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Unable to parse form data")
 		return
@@ -256,10 +259,14 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT Image request")
 
-	c := r.PathValue("category")
-	id := r.PathValue("id")
-	if c == "" || id == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
+	c, err := url.QueryUnescape( r.PathValue("category") )
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		return
+	}
+	id, err := url.QueryUnescape( r.PathValue("id") )
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
 		return
 	}
 
@@ -270,7 +277,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := utils.FromJSONString(i, json)
+	err = utils.FromJSONString(i, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return

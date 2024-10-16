@@ -10,7 +10,6 @@ type Storage interface {
 	// Checks if filepath can be found in the filesystem
 	IfExists(path string) error
 
-
 	// Reads the file at the provided path and returns a reader
 	ReadFile(path string, writer io.Writer) error
 

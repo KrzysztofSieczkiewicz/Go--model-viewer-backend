@@ -106,16 +106,13 @@ func (l *Local) WriteFile(path string, contents io.Reader) error {
 	}
 
 	// create the file
-	writer, err := l.createFile(fp)
+	_, err = l.createFile(fp)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		writer.Close()
-	}()
 
 	// write the contents into the file
-	err = l.writeFile(fp, writer, contents)
+	err = l.writeFile(fp, contents)
 	if err != nil {
 		return err
 	}
@@ -141,15 +138,11 @@ func (l *Local) OverwriteFile(path string, contents io.Reader) error {
 	}
 
 	// create and write to the temp file
-	writer, err := l.createFile(tfp)
+	_, err = l.createFile(tfp)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		writer.Close()
-		os.Remove(tfp)
-	}()
-	err = l.writeFile(tfp, writer, contents)
+	err = l.writeFile(tfp, contents)
 	if err != nil {
 		return err
 	}
@@ -598,6 +591,7 @@ func (l *Local) createFile(fullpath string) (io.WriteCloser, error) {
 		l.logger.Error(err.Error())
 		return nil, ErrFileCreate
 	}
+	defer f.Close()
 
 	l.logger.Info("Created the file: " + fullpath)
 	return f, nil
@@ -627,7 +621,7 @@ func (l *Local) readFile(fullpath string, writer io.Writer) error {
 }
 
 // Writes reader contents into provided file writer
-func (l *Local) writeFile(fullpath string, writer io.WriteCloser, contents io.Reader) error {
+func (l *Local) writeFile(fullpath string, contents io.Reader) error {
 	l.logger.Info("Writing into the file: " + fullpath)
 
 	// create a LimitedReader to limit file size
@@ -636,8 +630,16 @@ func (l *Local) writeFile(fullpath string, writer io.WriteCloser, contents io.Re
         N: l.maxFileSize + 1,
     }
 
+	// open the file
+	f, err := os.Open(fullpath)
+    if err != nil {
+		l.logger.Error(err.Error())
+        return ErrFileRead
+    }
+    defer f.Close()
+
 	// write the contents to the new file
-	_, err := io.Copy(writer, limitedReader)
+	_, err = io.Copy(f, limitedReader)
 	if err != nil {
 		l.logger.Error(err.Error())
 		return ErrFileWrite

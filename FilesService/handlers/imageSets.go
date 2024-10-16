@@ -162,7 +162,7 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 			response.RespondWithMessage(rw, http.StatusForbidden, "ImageSet already exists")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to create ImageSet")
 		return
 	}
 
@@ -216,7 +216,7 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find ImageSet")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to update ImageSet")
 		return
 	}
 
@@ -262,7 +262,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 			response.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove ImageSet")
 		return
 	}
 
@@ -272,7 +272,7 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 			response.RespondWithMessage(rw, http.StatusForbidden, "ImageSet contains subdirectories")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove ImageSet")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove ImageSet")
 		return
 	}
 
@@ -359,7 +359,7 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 			response.RespondWithMessage(rw, http.StatusForbidden, "Directory already exists")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to create Category")
 		return
 	}
 
@@ -416,7 +416,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 			response.RespondWithMessage(rw, http.StatusForbidden, "Category contains illegal files")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to update Category")
 		return
 	}
 
@@ -460,7 +460,7 @@ func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reques
 			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove Category")
 		return
 	}
 
@@ -470,7 +470,7 @@ func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reques
 			response.RespondWithMessage(rw, http.StatusForbidden, "Category contains files")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to remove Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove Category")
 		return
 	}
 
