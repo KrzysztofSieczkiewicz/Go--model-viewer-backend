@@ -3,7 +3,7 @@ package data
 import (
 	"regexp"
 
-	validator "github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
 )
 
 func (t *Texture) Validate() error {

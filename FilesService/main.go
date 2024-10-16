@@ -25,7 +25,7 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/handlers"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/middleware"
-	extMidddleware "github.com/go-openapi/runtime/middleware"
+	swaggerMiddleware "github.com/go-openapi/runtime/middleware"
 
 	"github.com/joho/godotenv"
 )
@@ -39,13 +39,12 @@ import (
 // DONE: Improve logging
 // DONE: Improve swagger annotations (add model annotations, clean up the response annotations)
 // DONE: Clean up models, responses etc
-// TODO: Improve local.go with proper code sharing and new common funcs - too much repetiton + occasional verbose/non-functioning checks
-// continue from Overwrite func (remember to make internal write() func to reduce Write() length)
-// continue from MakeDirectory func - think about proper handling directories creation in a safe way
-// continue from MoveDirectory func
+// DONE: Improve local.go with proper code sharing and new common funcs - too much repetiton + occasional verbose/non-functioning checks
 // continue clearing the code, remember about unused errors.go in the files directory
 // TODO: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
-// TODO: Modify MakeDirectory in local.go and storage.go to create only single layer of directories - TO BE DISCUSSED
+// TODO: Write unit tests for storage and data packages
+// TODO: Test all endpoints + fix file write err (access is denied)
+// TODO: Move DeconstructImageNames() from images.go to imageSets.go (data package)
 
 func main() {
 	// Initialize logger
@@ -103,8 +102,8 @@ func main() {
 	router.HandleFunc("DELETE /imageCategories/{category}", ish.DeleteCategory)
 
 	// Handle OpenAPI doc request
-	opts := extMidddleware.RedocOpts{SpecURL: "/swagger.yaml"}
-	sh := extMidddleware.Redoc(opts, nil)
+	opts := swaggerMiddleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := swaggerMiddleware.Redoc(opts, nil)
 	router.Handle("/docs", sh)
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 

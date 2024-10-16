@@ -65,6 +65,7 @@ func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) 
 //
 // Responses:
 // 	200: fileUrl
+//  400: message
 //	404: message
 //	500: message
 func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
@@ -85,6 +86,12 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	err = utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
+		return
+	}
+
+	err = i.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
 	}
 
@@ -209,6 +216,12 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = i.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		return
+	}
+
 	err = utils.FromJSONString(i, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
@@ -254,6 +267,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 //
 // Responses:
 // 	200: message
+//  400: message
 // 	404: message
 // 	500: message
 func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
@@ -274,6 +288,12 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	json := r.FormValue("metadata")
 	if json == "" {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Missing JSON part of the request")
+		return
+	}
+
+	err = i.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
 	}
 
@@ -318,6 +338,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 //
 // Responses:
 // 	204: empty
+//  400: message
 //	404: message
 //	500: message
 func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
@@ -334,6 +355,12 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	err := utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		return
+	}
+
+	err = i.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
 	}
 
