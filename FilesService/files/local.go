@@ -36,7 +36,7 @@ func NewLocal(basePath string, maxSizeMB int, l *slog.Logger) (*Local, error) {
 
 
 func (l *Local) IfExists(path string) error {
-	l.logger.Info("Looking for file: " + path)
+	l.logger.Info("Looking for the file: " + path)
 
 	fp := l.fullPath(path)
 
@@ -69,20 +69,11 @@ func (l *Local) ReadFile(path string, w io.Writer) error {
 		return ErrNotFound
 	}
 
-	// open the file
-    f, err := os.Open(fp)
-    if err != nil {
-		l.logger.Error(err.Error())
-        return ErrFileRead
-    }
-    defer f.Close()
-
-	// write the file contents into the writer
-	_, err = io.Copy(w, f)
-    if err != nil {
-		l.logger.Error(err.Error())
-        return ErrFileWrite
-    }
+	// read the file contents into the writer
+	err = l.readFile(fp, w)
+	if err != nil {
+		return err
+	}
 
 	l.logger.Info("Done reading the file: " + path)
     return nil
@@ -209,7 +200,7 @@ func (l *Local) DeleteFile(path string) error {
 }
 
 func (l *Local) CreateDirectory(path string) error {
-	l.logger.Info("Creating directory: " + path)
+	l.logger.Info("Creating the directory: " + path)
 	fp := l.fullPath(path)
 
 	// check if the directory already exists
@@ -228,13 +219,13 @@ func (l *Local) CreateDirectory(path string) error {
 		return err
 	}
 
-	l.logger.Info("Created directory: " + path)
+	l.logger.Info("Created the directory: " + path)
 	return nil
 }
 
 
 func (l *Local) RenameDirectory(oldPath string, newPath string) error {
-	l.logger.Info("Renaming directory: " + oldPath + " to: " + newPath)
+	l.logger.Info("Renaming the directory: " + oldPath + " to: " + newPath)
 
 	fop := l.fullPath(oldPath)
 	fnp := l.fullPath(newPath)
@@ -265,13 +256,13 @@ func (l *Local) RenameDirectory(oldPath string, newPath string) error {
 		return err
 	}
 
-	l.logger.Info("Renamed directory: " + oldPath + " to: " + newPath)
+	l.logger.Info("Renamed the directory: " + oldPath + " to: " + newPath)
 	return nil
 }
 
 
 func (l *Local) MoveDirectory(oldPath string, newPath string) error {
-	l.logger.Info("Moving directory from: " + oldPath + " to: " + newPath)
+	l.logger.Info("Moving the directory from: " + oldPath + " to: " + newPath)
 
 	fop := l.fullPath(oldPath)
 	fnp := l.fullPath(newPath)
@@ -312,12 +303,12 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 		return err
 	}
 
-	l.logger.Info("Moved directory from: " + oldPath + " to: " + newPath)
+	l.logger.Info("Moved the directory from: " + oldPath + " to: " + newPath)
 	return nil
 }
 
 func (l *Local) DeleteFiles(path string) error {
-	l.logger.Info("Removing files from directory: " + path)
+	l.logger.Info("Removing files from the directory: " + path)
 
 	fp := l.fullPath(path)
 
@@ -339,14 +330,14 @@ func (l *Local) DeleteFiles(path string) error {
 	}
 	defer dir.Close()
 
-	// Read dir contents
+	// read dir contents
 	entries, err := dir.Readdir(-1)
 	if err != nil {
 		l.logger.Error(err.Error())
 		return ErrDirectoryRead
 	}
 
-	// Remove directory contents
+	// remove directory contents
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -354,16 +345,16 @@ func (l *Local) DeleteFiles(path string) error {
 		err = os.Remove(fp + "/" + entry.Name())
         if err != nil {
 			l.logger.Error(err.Error())
-            return ErrFileDelete
+            return ErrDelete
         }
 	}
 
-	l.logger.Info("Removed files from directory: " + path)
+	l.logger.Info("Removed files from the directory: " + path)
 	return nil
 }
 
 func (l *Local) DeleteSubdirectories(path string) error {
-	l.logger.Info("Removing subdirectories from directory: " + path)
+	l.logger.Info("Removing subdirectories from the directory: " + path)
 
 	fp := l.fullPath(path)
 
@@ -377,13 +368,13 @@ func (l *Local) DeleteSubdirectories(path string) error {
 		return ErrNotFound
 	}
 
-	// Read dir contents
+	// read dir contents
 	entries, err := l.readDirectory(fp)
 	if err != nil {
 		return err
 	}
 
-	// Remove subdirectories
+	// remove subdirectories
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
@@ -391,11 +382,11 @@ func (l *Local) DeleteSubdirectories(path string) error {
 		err = os.Remove(fp + "/" + entry.Name())
         if err != nil {
 			l.logger.Error(err.Error())
-            return ErrFileDelete
+            return ErrDelete
         }
 	}
 	
-	l.logger.Info("Removed subdirectories from directory: " + path)
+	l.logger.Info("Removed subdirectories from the directory: " + path)
 	return nil
 }
 
@@ -415,13 +406,13 @@ func (l *Local) DeleteDirectory(path string) error {
 		return ErrNotFound
 	}
 
-	// Read dir contents
+	// read dir contents
 	entries, err := l.readDirectory(fp)
 	if err != nil {
 		return err
 	}
 	
-	// Check if empty
+	// check if empty
 	if len(entries) > 0 {
 		l.logger.Warn(ErrDirNotEmpty.Error())
 		return ErrDirNotEmpty
@@ -431,7 +422,7 @@ func (l *Local) DeleteDirectory(path string) error {
 	err = os.Remove(fp)
 	if err != nil {
 		l.logger.Error(err.Error())
-		return ErrDirectoryDelete
+		return ErrDelete
 	}
 
 	l.logger.Info("Removed directory: " + path)
@@ -525,10 +516,55 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 }
 
 
+/*
+	FILEPATH
+*/
 
 // Returns the absolute path from the relative path
 func (l *Local) fullPath(path string) string {
 	return filepath.Join(l.basePath, path)
+}
+
+// Creates directories structure matching requested filepath
+func (l *Local) createFilepath(fullpath string) error {
+	l.logger.Info("Creating filepath: " + fullpath)
+	
+	err := os.MkdirAll(fullpath, 0755)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return ErrDirectoryCreate
+	}
+
+	l.logger.Info("Created filepath: " + fullpath)
+	return nil
+}
+
+// Changes filepath to the new provided string. Doesn't create directories.
+func (l *Local) changeFilepath(old string, new string) error {
+	l.logger.Info(fmt.Sprintf("Modifying filepath from: %s\nto: %s", old, new))
+
+	err := os.Rename(old, new)
+    if err != nil {
+		l.logger.Error(err.Error())
+        return ErrRename
+    }
+
+	l.logger.Info(fmt.Sprintf("Filepath changed from: %s\nto: %s", old, new))
+	return nil
+}
+
+// Removes requested filepath
+func (l *Local) remove(fullPath string) error {
+	l.logger.Info("Removing the filepath: " + fullPath)
+
+	err := os.Remove(fullPath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return ErrDelete
+	}
+
+	l.logger.Info("Removed the filepath: " + fullPath)
+	return nil
 }
 
 // Verifies if filepath exists in the filesystem
@@ -549,6 +585,74 @@ func (l *Local) exists(fullpath string) (bool, error) {
 	return true, nil
 }
 
+/*
+	FILE
+*/
+
+// Creates the file under specified filepath
+func (l *Local) createFile(fullpath string) (io.WriteCloser, error) {
+	l.logger.Info("Creating the file: " + fullpath)
+
+	f, err := os.Create(fullpath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return nil, ErrFileCreate
+	}
+
+	l.logger.Info("Created the file: " + fullpath)
+	return f, nil
+}
+
+// Reads file contents into provided reader
+func (l *Local) readFile(fullpath string, writer io.Writer) error {
+	l.logger.Info("Reading the file: " + fullpath)
+
+	// open the file
+    f, err := os.Open(fullpath)
+    if err != nil {
+		l.logger.Error(err.Error())
+        return ErrFileRead
+    }
+    defer f.Close()
+
+	// write the file contents into the writer
+	_, err = io.Copy(writer, f)
+    if err != nil {
+		l.logger.Error(err.Error())
+        return ErrFileRead
+    }
+
+	l.logger.Info("Finished reading the file: " + fullpath)
+	return nil
+}
+
+// Writes reader contents into provided file writer
+func (l *Local) writeFile(fullpath string, writer io.WriteCloser, contents io.Reader) error {
+	l.logger.Info("Writing into the file: " + fullpath)
+
+	// create a LimitedReader to limit file size
+    limitedReader := &io.LimitedReader{
+        R: contents,
+        N: l.maxFileSize + 1,
+    }
+
+	// write the contents to the new file
+	_, err := io.Copy(writer, limitedReader)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return ErrFileWrite
+	}
+
+	// check if filesize limit was reached
+	if limitedReader.N == 0 {
+		l.logger.Error(ErrWriteSizeExceeded.Error())
+		return ErrWriteSizeExceeded
+	}
+
+	l.logger.Info("Finished writing into the file: " + fullpath)
+	return nil
+}
+
 // Verifies if provided filepath leads to a file
 func (l *Local) isFile(fullpath string) (bool, error) {
 	l.logger.Info("Verifying the file: " + fullpath)
@@ -564,6 +668,35 @@ func (l *Local) isFile(fullpath string) (bool, error) {
 
 	l.logger.Info("Verified the file: " + fullpath)
 	return true, nil
+}
+
+
+/*
+	DIRECTORY
+*/
+
+// Reads directory contents
+func (l *Local) readDirectory(fullpath string) ([]fs.FileInfo, error) {
+	l.logger.Info("Reading the directory: " + fullpath)
+
+	// open the dir
+	dir, err := os.Open(fullpath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return nil, ErrDirectoryRead
+	}
+	defer dir.Close()
+
+	// Read directory contents
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return nil, ErrDirectoryRead
+	}
+
+	l.logger.Info("Finished reading the directory: " + fullpath)
+
+	return entries, nil
 }
 
 // Verifies if provided filepath contains only subdirectories
@@ -592,111 +725,4 @@ func (l *Local) containsOnlyDirectories(fullpath string) (bool, error) {
 
 	l.logger.Info("Verified the directory: " + fullpath)
 	return true, nil
-}
-
-// Creates the file under specified filepath
-func (l *Local) createFile(fullpath string) (io.WriteCloser, error) {
-	l.logger.Info("Creating the file: " + fullpath)
-
-	f, err := os.Create(fullpath)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return nil, ErrFileCreate
-	}
-
-	l.logger.Info("Created the file: " + fullpath)
-	return f, nil
-}
-
-// Writes reader contents into provided file writer
-func (l *Local) writeFile(fullpath string, writer io.WriteCloser, contents io.Reader) error {
-	l.logger.Info("Writing into the file: " + fullpath)
-
-	// create a LimitedReader to limit file size
-    limitedReader := &io.LimitedReader{
-        R: contents,
-        N: l.maxFileSize + 1,
-    }
-
-	// write the contents to the new file
-	_, err := io.Copy(writer, limitedReader)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrFileWrite
-	}
-
-	// check if filesize limit was reached
-	if limitedReader.N == 0 {
-		l.logger.Error(ErrFileSizeExceeded.Error())
-		return ErrFileSizeExceeded
-	}
-
-	l.logger.Info("Finished writing into the file: " + fullpath)
-	return nil
-}
-
-// Removes requested filepath
-func (l *Local) remove(fullPath string) error {
-	l.logger.Info("Removing the filepath: " + fullPath)
-
-	err := os.Remove(fullPath)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrFileDelete
-	}
-
-	l.logger.Info("Removed the file: " + fullPath)
-	return nil
-}
-
-// Changes filepath to the new provided string. Doesn't create directories.
-func (l *Local) changeFilepath(old string, new string) error {
-	l.logger.Info(fmt.Sprintf("Modifying filepath from: %s\nto: %s", old, new))
-
-	err := os.Rename(old, new)
-    if err != nil {
-		l.logger.Error(err.Error())
-        return ErrRename
-    }
-
-	l.logger.Info(fmt.Sprintf("Filepath changed from: %s\nto: %s", old, new))
-	return nil
-}
-
-// Creates directories structure matching requested filepath
-func (l *Local) createFilepath(fullpath string) error {
-	l.logger.Info("Creating filepath: " + fullpath)
-	
-	err := os.MkdirAll(fullpath, 0755)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryCreate
-	}
-
-	l.logger.Info("Created filepath: " + fullpath)
-	return nil
-}
-
-// Reads directory contents
-func (l *Local) readDirectory(fullpath string) ([]fs.FileInfo, error) {
-	l.logger.Info("Reading the directory: " + fullpath)
-
-	// open the dir
-	dir, err := os.Open(fullpath)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
-	}
-	defer dir.Close()
-
-	// Read directory contents
-	entries, err := dir.Readdir(-1)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
-	}
-
-	l.logger.Info("Finished reading the directory: " + fullpath)
-
-	return entries, nil
 }

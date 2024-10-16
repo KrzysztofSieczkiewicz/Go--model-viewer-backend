@@ -43,6 +43,7 @@ import (
 // continue from Overwrite func (remember to make internal write() func to reduce Write() length)
 // continue from MakeDirectory func - think about proper handling directories creation in a safe way
 // continue from MoveDirectory func
+// continue clearing the code, remember about unused errors.go in the files directory
 // TODO: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
 // TODO: Modify MakeDirectory in local.go and storage.go to create only single layer of directories - TO BE DISCUSSED
 
