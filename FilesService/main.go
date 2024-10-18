@@ -47,6 +47,11 @@ import (
 // TODO: Move DeconstructImageNames() from images.go to imageSets.go (data package)
 // TODO: Write unit tests for storage and data packages
 // TODO: Revise data validators
+// TODO: For the time being - stay with json request/response -> moving to the grpc soon enough
+
+// TODO: TESTING
+// - PutImageSet -> test if changes only imageset name/location without renaming category
+// -
 
 func main() {
 	// Initialize logger
@@ -94,8 +99,8 @@ func main() {
 	// IMAGE SETS & CATEGORIES
 	ish := handlers.NewImageSets(baseUrl, fs, logger, fc)
 	router.HandleFunc("GET /imageSets", ish.GetImageSet)
-	router.HandleFunc("POST /imageSets/{category}/{id}", ish.PostImageSet)
-	router.HandleFunc("PUT /imageSets/{category}/{id}", ish.PutImageSet)
+	router.HandleFunc("POST /imageSets", ish.PostImageSet)
+	router.HandleFunc("PUT /imageSets", ish.PutImageSet)
 	router.HandleFunc("DELETE /imageSets/{category}/{id}", ish.DeleteImageSet)
 
 	router.HandleFunc("GET /imageCategories/{category}", ish.GetCategory)
