@@ -7,6 +7,11 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
+func RespondWithNoContent(rw http.ResponseWriter) {
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusNoContent)
+}
+
 func RespondWithMessage(rw http.ResponseWriter, statusCode int, message string) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(statusCode)

@@ -41,11 +41,12 @@ import (
 // DONE: Clean up models, responses etc
 // DONE: Improve local.go with proper code sharing and new common funcs - too much repetiton + occasional verbose/non-functioning checks
 // continue clearing the code, remember about unused errors.go in the files directory
-// TODO: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
-// TODO: Write unit tests for storage and data packages
+// DONE: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
+// TODO: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
 // TODO: Test all endpoints + fix file write err (access is denied)
 // TODO: Move DeconstructImageNames() from images.go to imageSets.go (data package)
-// TODO: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
+// TODO: Write unit tests for storage and data packages
+// TODO: Revise data validators
 
 func main() {
 	// Initialize logger
@@ -92,7 +93,7 @@ func main() {
 
 	// IMAGE SETS & CATEGORIES
 	ish := handlers.NewImageSets(baseUrl, fs, logger, fc)
-	router.HandleFunc("GET /imageSets/{category}/{id}", ish.GetImageSet)
+	router.HandleFunc("GET /imageSets", ish.GetImageSet)
 	router.HandleFunc("POST /imageSets/{category}/{id}", ish.PostImageSet)
 	router.HandleFunc("PUT /imageSets/{category}/{id}", ish.PutImageSet)
 	router.HandleFunc("DELETE /imageSets/{category}/{id}", ish.DeleteImageSet)

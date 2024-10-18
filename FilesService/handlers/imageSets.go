@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
-	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
@@ -18,10 +18,10 @@ import (
 /*
 Example curls:
 GET IMAGESET URL:
-curl -v -X GET http://localhost:9090/imageSets/random%2Ftest%2F/1
+curl -v -X GET http://localhost:9090/imageSets -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\"}"
 
 POST IMAGESET:
-curl -v -i -X POST http://localhost:9090/imageSets/random%2Ftest%2F/1
+curl -v -i -X POST http://localhost:9090/imageSets -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\"}"
 
 PUT IMAGESET:
 curl -v -i -X PUT http://localhost:9090/imageSets/random%2Ftest%2F/1 -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"4\"}"
@@ -67,93 +67,89 @@ func NewImageSets(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cach
 	}
 }
 
-// swagger:route GET /imageSets/{category}/{id} imageSets getImageSet
+// swagger:route GET /imageSets imageSets getImageSet
 //
 // Return ImageSet details and available Images
+//
+// consumes:
+//	- application/json
 //
 // produces:
 //	- application/json
 //
 // Responses:
-// 	200: imageSet
+// 	200: getImageSet
 //  400: message
-// 	403: message
 //	404: message
 // 	500: message
 func (h *ImageSetsHandler) GetImageSet(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET ImageSet request")
 
-	c, err := url.QueryUnescape( r.PathValue("category") )
+	is := &models.ImageSet{}
+	err := utils.FromJSON(is, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	id, err := url.QueryUnescape( r.PathValue("id") )
+	err = is.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	fp := filepath.Join(c, id)
+	fp := filepath.Join(is.Category, is.ID)
 
 	f, err := h.store.ListFiles(fp)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "ImageSet doesn't exist")
-			return
-		}
-		if err == files.ErrNotDirectory {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Requested path is not a directory")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Requested image set doesn't exist")
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve ImageSet data")
 		return
 	}
 
-	i := &data.Images{}
+	i := &models.Images{}
 	err = i.DeconstructImageNames(f)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to deconstruct image names:")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve images list")
 		return
 	}
 
-	is := &data.ImageSet{
-		ID: id,
-		Category: c,
-		Images: *i,
-	}
-
-	response.RespondWithJSON(rw, http.StatusOK, is)
+	response.RespondWithJSON(rw, http.StatusOK, i)
 }
 
-// swagger:route POST /imageSets/{category}/{id} imageSets postImageSet
+// swagger:route POST /imageSets imageSets postImageSet
 //
 // Create a new image set
+//
+// consumes:
+//	- application/json
 //
 // produces:
 //	- application/json
 //
 // Responses:
-// 	201: message
+// 	204: message
 //  400: message
 // 	403: message
 // 	500: message
 func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST ImageSet request")
 
-	c, err := url.QueryUnescape( r.PathValue("category") )
+	is := &models.ImageSet{}
+	err := utils.FromJSON(is, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
-		return
-	}
-	id, err := url.QueryUnescape( r.PathValue("id") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
-		return
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 	}
 
-	fp := filepath.Join(c, id)
+	err = is.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+	}
+
+	fp := filepath.Join(is.Category, is.ID)
 
 	err = h.store.CreateDirectory(fp)
 	if err != nil {
@@ -165,7 +161,7 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusCreated, "ImageSet created successfully")
+	response.RespondWithNoContent(rw)
 }
 
 // swagger:route PUT /imageSets/{category}/{id} imageSets putImageSet
@@ -186,21 +182,32 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 // 	500: message
 func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT ImageSet request")
-
-	c, err := url.QueryUnescape( r.PathValue("category") )
+	
+	is := &models.PutImageSetRequest{}
+	err := utils.FromJSON(is, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
-		return
-	}
-	id, err := url.QueryUnescape( r.PathValue("id") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	ofp := filepath.Join(c, id)
+	err = is.Existing.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
 
-	i := &data.ImageSet{}
+	err = is.New.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+	}
+
+	ofp := filepath.Join(is.Existing.Category, is.Existing.ID)
+
+
+
+
+	
+	i := &models.ImageSet{}
 	err = utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
@@ -399,7 +406,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// TODO: replace this with proper request/response structs
-	i := &data.ImageSet{}
+	i := &models.ImageSet{}
 	err = utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")

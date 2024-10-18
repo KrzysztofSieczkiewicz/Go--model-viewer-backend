@@ -1,4 +1,4 @@
-package data
+package models
 
 import (
 	"fmt"
@@ -12,20 +12,18 @@ type Image struct {
 	// required: true
 	// min length: 2
 	// max length: 64
-	ImgType       string `json:"type"`
+	ImgType       string `json:"type" validate:"required"`
 
 	// required: true
 	// min length: 7
 	// max length: 16
-	Resolution    string `json:"resolution"`
+	Resolution    string `json:"resolution" validate:"required"`
 	
 	// required: true
 	// min length: 2
 	// max length: 8
-	FileExtension string `json:"extension"`
+	FileExtension string `json:"extension" validate:"required"`
 }
-
-type Images []*Image
 
 // Returns filename string from image properties
 func (i *Image) ConstructImageName() string {
@@ -57,6 +55,11 @@ func (i *Image) DeconstructImageName(filename string) error {
 
 	return nil
 }
+
+
+
+
+type Images []*Image
 
 // Deconstruct slice of filenames into slice of Images
 func (i *Images) DeconstructImageNames(filenames []string) error {

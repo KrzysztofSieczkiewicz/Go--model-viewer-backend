@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
-	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
@@ -82,7 +82,7 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i := &data.Image{}
+	i := &models.Image{}
 	err = utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
@@ -209,10 +209,10 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i := &data.Image{}
+	i := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Missing JSON part of the request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
@@ -284,10 +284,10 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i := &data.Image{}
+	i := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Missing JSON part of the request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
@@ -351,7 +351,7 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i := &data.Image{}
+	i := &models.Image{}
 	err := utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
