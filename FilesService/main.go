@@ -42,9 +42,9 @@ import (
 // DONE: Improve local.go with proper code sharing and new common funcs - too much repetiton + occasional verbose/non-functioning checks
 // continue clearing the code, remember about unused errors.go in the files directory
 // DONE: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
-// TODO: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
+// DONE: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
+// TODO: Move to gRPC
 // TODO: Test all endpoints + fix file write err (access is denied)
-// TODO: Move DeconstructImageNames() from images.go to imageSets.go (data package)
 // TODO: Write unit tests for storage and data packages
 // TODO: Revise data validators
 // TODO: For the time being - stay with json request/response -> moving to the grpc soon enough

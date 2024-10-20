@@ -24,7 +24,16 @@ definitions:
             - resolution
             - extension
         type: object
-        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
+    category:
+        description: Category defines a filepath of given category
+        properties:
+            filepath:
+                type: string
+                x-go-name: Filepath
+        type: object
+        x-go-name: Category
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
     categoryContents:
         properties:
             directories:
@@ -69,25 +78,15 @@ definitions:
         properties:
             category:
                 description: Category determining storage subdirectory
-                maxLength: 128
-                minLength: 3
                 type: string
                 x-go-name: Category
             id:
                 description: ID as it is stored in the database
-                maxLength: 64
-                minLength: 2
                 type: string
                 x-go-name: ID
-            images:
-                description: List of images contriburing to this particular imageSet
-                items:
-                    $ref: '#/definitions/Image'
-                type: array
-                x-go-name: Images
         type: object
         x-go-name: ImageSet
-        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/data
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
     message:
         properties:
             message:
@@ -96,6 +95,26 @@ definitions:
         type: object
         x-go-name: MessageResponse
         x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    updateCategory:
+        description: PutCategoryRequest defines combination of initial category filepath and the new filepath it should be updated to
+        properties:
+            existing:
+                $ref: '#/definitions/category'
+            new:
+                $ref: '#/definitions/category'
+        type: object
+        x-go-name: PutCategoryRequest
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
+    updateImageSet:
+        description: PutImageSetRequest defines combination of initial imageset and the new properties that it should be updated to
+        properties:
+            existing:
+                $ref: '#/definitions/imageSet'
+            new:
+                $ref: '#/definitions/imageSet'
+        type: object
+        x-go-name: PutImageSetRequest
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
 host: localhost:9090
 info:
     description: Documentation of FilesApi
@@ -199,7 +218,7 @@ paths:
                         $ref: '#/definitions/message'
             tags:
                 - images
-    /imageCategories/{category}:
+    /imageCategories:
         delete:
             consumes:
                 - application/json
@@ -231,6 +250,8 @@ paths:
             tags:
                 - imageSets
         get:
+            consumes:
+                - application/json
             description: List subdirectories available in the category
             operationId: getCategory
             produces:
@@ -241,10 +262,6 @@ paths:
                     schema:
                         $ref: '#/definitions/categoryContents'
                 "400":
-                    description: message
-                    schema:
-                        $ref: '#/definitions/message'
-                "403":
                     description: message
                     schema:
                         $ref: '#/definitions/message'
@@ -259,12 +276,14 @@ paths:
             tags:
                 - imageSets
         post:
+            consumes:
+                - application/json
             description: Creates a requested directory path
             operationId: postCategory
             produces:
                 - application/json
             responses:
-                "200":
+                "204":
                     description: message
                     schema:
                         $ref: '#/definitions/message'
@@ -283,6 +302,8 @@ paths:
             tags:
                 - imageSets
         put:
+            consumes:
+                - application/json
             description: Update existing Category
             operationId: putCategory
             produces:
@@ -296,10 +317,6 @@ paths:
                     description: message
                     schema:
                         $ref: '#/definitions/message'
-                "403":
-                    description: message
-                    schema:
-                        $ref: '#/definitions/message'
                 "404":
                     description: message
                     schema:
@@ -310,7 +327,7 @@ paths:
                         $ref: '#/definitions/message'
             tags:
                 - imageSets
-    /imageSets/{category}/{id}:
+    /imageSets:
         delete:
             consumes:
                 - application/json
@@ -319,15 +336,11 @@ paths:
             produces:
                 - application/json
             responses:
-                "200":
+                "204":
                     description: message
                     schema:
                         $ref: '#/definitions/message'
                 "400":
-                    description: message
-                    schema:
-                        $ref: '#/definitions/message'
-                "403":
                     description: message
                     schema:
                         $ref: '#/definitions/message'
@@ -342,20 +355,16 @@ paths:
             tags:
                 - imageSets
         get:
+            consumes:
+                - application/json
             description: Return ImageSet details and available Images
             operationId: getImageSet
             produces:
                 - application/json
             responses:
                 "200":
-                    description: imageSet
-                    schema:
-                        $ref: '#/definitions/imageSet'
+                    $ref: '#/responses/getImageSet'
                 "400":
-                    description: message
-                    schema:
-                        $ref: '#/definitions/message'
-                "403":
                     description: message
                     schema:
                         $ref: '#/definitions/message'
@@ -370,15 +379,17 @@ paths:
             tags:
                 - imageSets
         post:
+            consumes:
+                - application/json
             description: Create a new image set
             operationId: postImageSet
             produces:
                 - application/json
             responses:
-                "201":
-                    description: message
+                "204":
+                    description: empty
                     schema:
-                        $ref: '#/definitions/message'
+                        $ref: '#/definitions/empty'
                 "400":
                     description: message
                     schema:
@@ -401,15 +412,11 @@ paths:
             produces:
                 - application/json
             responses:
-                "200":
-                    description: message
+                "204":
+                    description: empty
                     schema:
-                        $ref: '#/definitions/message'
+                        $ref: '#/definitions/empty'
                 "400":
-                    description: message
-                    schema:
-                        $ref: '#/definitions/message'
-                "403":
                     description: message
                     schema:
                         $ref: '#/definitions/message'
@@ -436,6 +443,10 @@ paths:
                     description: empty
                     schema:
                         $ref: '#/definitions/empty'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
                     description: message
                     schema:
@@ -458,6 +469,10 @@ paths:
                     description: fileUrl
                     schema:
                         $ref: '#/definitions/fileUrl'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
                 "404":
                     description: message
                     schema:
@@ -503,6 +518,10 @@ paths:
                 - application/json
             responses:
                 "200":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "400":
                     description: message
                     schema:
                         $ref: '#/definitions/message'
