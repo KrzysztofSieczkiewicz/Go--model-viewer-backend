@@ -16,14 +16,14 @@ import (
 
 /*
 Example curls:
-GET IMAGESET URL:
+GET IMAGESET:
 curl -v -X GET http://localhost:9090/imageSets -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\"}"
 
 POST IMAGESET:
 curl -v -i -X POST http://localhost:9090/imageSets -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\"}"
 
 PUT IMAGESET:
-curl -v -i -X PUT http://localhost:9090/imageSets/random%2Ftest%2F/1 -H "Content-Type: application/json" -d "{\"existing\":{\"category\":\"random/test\",\"id\":\"1\"}, \"updated\":{\"category\":\"random/test\",\"id\":\"2\"}}"
+curl -v -i -X PUT http://localhost:9090/imageSets -H "Content-Type: application/json" -d "{\"existing\":{\"category\":\"random/test\",\"id\":\"1\"}, \"new\":{\"category\":\"random/test\",\"id\":\"2\"}}"
 
 DELETE IMAGESET:
 curl -v -i -X DELETE http://localhost:9090/imageSets -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\"}"
@@ -35,7 +35,7 @@ POST CATEGORY:
 curl -v -X POST http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"filepath\":\"random/test\"}"
 
 PUT CATEGORY:
-curl -v -X PUT http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"existing\":{\"filepath\":\"random/test\"}, \"updated\":{\"filepath\":\"random/test3\"}}"
+curl -v -X PUT http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"existing\":{\"filepath\":\"random/test\"}, \"new\":{\"filepath\":\"random/test3\"}}"
 
 DELETE CATEGORY:
 curl -v -i -X DELETE http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"filepath\":\"random/test\"}"
@@ -205,12 +205,13 @@ func (h *ImageSetsHandler) PutImageSet(rw http.ResponseWriter, r *http.Request) 
 	err = is.New.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
 	}
 
 	ofp := filepath.Join(is.Existing.Category, is.Existing.ID)
 	nfp := filepath.Join(is.New.Category, is.New.ID)
 
-	err = h.store.RenameDirectory(ofp, nfp)
+	err = h.store.ChangeDirectory(ofp, nfp)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find ImageSet")
@@ -377,7 +378,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 	}
 
-	err = h.store.MoveDirectory(c.Existing.Filepath, c.Updated.Filepath)
+	err = h.store.ChangeDirectory(c.Existing.Filepath, c.New.Filepath)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")

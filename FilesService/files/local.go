@@ -217,44 +217,7 @@ func (l *Local) CreateDirectory(path string) error {
 }
 
 
-func (l *Local) RenameDirectory(oldPath string, newPath string) error {
-	l.logger.Info("Renaming the directory: " + oldPath + " to: " + newPath)
-
-	fop := l.fullPath(oldPath)
-	fnp := l.fullPath(newPath)
-
-	// check if the requested directory exists
-	exists, err := l.exists(fop)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		l.logger.Warn(ErrNotFound.Error() + fop)
-		return ErrNotFound
-	}
-
-	// check if the target directory doesn't exist
-	exists, err = l.exists(fnp)
-	if err != nil {
-		return err
-	}
-	if exists {
-		l.logger.Warn(ErrAlreadyExists.Error() + fop)
-		return ErrAlreadyExists
-	}
-
-	// rename the directory
-	err = l.changeFilepath(fop, fnp)
-	if err != nil {
-		return err
-	}
-
-	l.logger.Info("Renamed the directory: " + oldPath + " to: " + newPath)
-	return nil
-}
-
-
-func (l *Local) MoveDirectory(oldPath string, newPath string) error {
+func (l *Local) ChangeDirectory(oldPath string, newPath string) error {
 	l.logger.Info("Moving the directory from: " + oldPath + " to: " + newPath)
 
 	fop := l.fullPath(oldPath)
@@ -278,16 +241,6 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 	if exists {
 		l.logger.Warn(ErrAlreadyExists.Error() + fnp)
 		return ErrAlreadyExists
-	}
-
-	// check if desired directory is not a category (must not contain files)
-	onlyDir, err := l.containsOnlyDirectories(fop)
-	if err != nil {
-		return err
-	}
-	if !onlyDir {
-		l.logger.Warn(ErrDirContainsFiles.Error())
-		return ErrDirContainsFiles
 	}
 
 	// move requested directory
@@ -699,32 +652,4 @@ func (l *Local) readDirectory(fullpath string) ([]fs.FileInfo, error) {
 	l.logger.Info("Finished reading the directory: " + fullpath)
 
 	return entries, nil
-}
-
-// Verifies if provided filepath contains only subdirectories
-func (l *Local) containsOnlyDirectories(fullpath string) (bool, error) {
-	l.logger.Info("Verifying the directory: " + fullpath)
-
-	dir, err := os.Open(fullpath)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return false, ErrDirectoryRead
-	}
-	defer dir.Close()
-
-	entries, err := dir.Readdir(-1)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return false, ErrDirectoryRead
-	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			l.logger.Info(ErrDirContainsFiles.Error())
-			return false, nil
-		}
-	}
-
-	l.logger.Info("Verified the directory: " + fullpath)
-	return true, nil
 }

@@ -47,6 +47,7 @@ import (
 // TODO: Test all endpoints + fix file write err (access is denied)
 
 // TODO: Revise data validators
+// TODO: Modify current endpoint structure -> instead of categories -> just manage directories for separate storages with reused handler
 // TODO: Write unit tests for storage and data packages
 
 // TODO: TESTING
