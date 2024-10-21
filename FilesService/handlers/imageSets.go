@@ -35,7 +35,7 @@ POST CATEGORY:
 curl -v -X POST http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"filepath\":\"random/test\"}"
 
 PUT CATEGORY:
-curl -v -X PUT http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"existing\":{\"filepath\":\"random/test\"}, \"updated\":{\"filepath\":\"random/test\"}}"
+curl -v -X PUT http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"existing\":{\"filepath\":\"random/test\"}, \"updated\":{\"filepath\":\"random/test3\"}}"
 
 DELETE CATEGORY:
 curl -v -i -X DELETE http://localhost:9090/imageCategories -H "Content-Type: application/json" -d "{\"filepath\":\"random/test\"}"
@@ -141,11 +141,19 @@ func (h *ImageSetsHandler) PostImageSet(rw http.ResponseWriter, r *http.Request)
 	err := utils.FromJSON(is, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
+		return
 	}
 
 	err = is.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = h.store.IfExists(is.Category)
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid category")
+		return
 	}
 
 	fp := filepath.Join(is.Category, is.ID)
@@ -369,7 +377,7 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 	}
 
-	err = h.store.MoveDirectory(c.Existing.Filepath, c.New.Filepath)
+	err = h.store.MoveDirectory(c.Existing.Filepath, c.Updated.Filepath)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
@@ -409,22 +417,13 @@ func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reques
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
-	}
-
-	err = h.store.DeleteSubdirectories(c.Filepath)
-	if err != nil {
-		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
-			return
-		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove Category")
 		return
 	}
 
 	err = h.store.DeleteDirectory(c.Filepath)
 	if err != nil {
 		if err == files.ErrDirNotEmpty {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Category contains files")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Category is not empty")
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove Category")

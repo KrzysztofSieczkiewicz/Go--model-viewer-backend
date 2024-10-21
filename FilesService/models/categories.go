@@ -13,5 +13,5 @@ type PutCategoryRequest struct {
 	Existing	Category	`json:"existing"`
 
 	// Desired image set properties
-	New			Category 	`json:"new"`
+	Updated			Category 	`json:"updated"`
 }

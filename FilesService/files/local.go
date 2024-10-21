@@ -280,12 +280,12 @@ func (l *Local) MoveDirectory(oldPath string, newPath string) error {
 		return ErrAlreadyExists
 	}
 
-	// check if target directory is not a category (must not contain files)
-	is, err := l.containsOnlyDirectories(fnp)
+	// check if desired directory is not a category (must not contain files)
+	onlyDir, err := l.containsOnlyDirectories(fop)
 	if err != nil {
 		return err
 	}
-	if is {
+	if !onlyDir {
 		l.logger.Warn(ErrDirContainsFiles.Error())
 		return ErrDirContainsFiles
 	}

@@ -4,6 +4,3 @@ swagger-install:
 swagger:
 	@echo Generating Swagger spec for FilesService...
 	swagger generate spec -o ./swagger.yaml --scan-models
-
-proto:
-	protoc -I protos/ --go_out=protos/ --go-grpc_out=protos/ protos/assets.proto

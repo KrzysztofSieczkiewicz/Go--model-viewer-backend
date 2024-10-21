@@ -45,12 +45,12 @@ import (
 // DONE: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
 
 // TODO: Test all endpoints + fix file write err (access is denied)
-// TODO: Write unit tests for storage and data packages
+
 // TODO: Revise data validators
-// TODO: For the time being - stay with json request/response -> moving to the grpc soon enough
+// TODO: Write unit tests for storage and data packages
 
 // TODO: TESTING
-// - PutImageSet -> test if changes only imageset name/location without renaming category
+// - PutImageSet -> test if it changes only imageset name/location without renaming category
 // -
 
 func main() {
@@ -101,12 +101,12 @@ func main() {
 	router.HandleFunc("GET /imageSets", ish.GetImageSet)
 	router.HandleFunc("POST /imageSets", ish.PostImageSet)
 	router.HandleFunc("PUT /imageSets", ish.PutImageSet)
-	router.HandleFunc("DELETE /imageSets/{category}/{id}", ish.DeleteImageSet)
+	router.HandleFunc("DELETE /imageSets", ish.DeleteImageSet)
 
-	router.HandleFunc("GET /imageCategories/{category}", ish.GetCategory)
-	router.HandleFunc("POST /imageCategories/{category}", ish.PostCategory)
-	router.HandleFunc("PUT /imageCategories/{category}", ish.PutCategory)
-	router.HandleFunc("DELETE /imageCategories/{category}", ish.DeleteCategory)
+	router.HandleFunc("GET /imageCategories", ish.GetCategory)
+	router.HandleFunc("POST /imageCategories", ish.PostCategory)
+	router.HandleFunc("PUT /imageCategories", ish.PutCategory)
+	router.HandleFunc("DELETE /imageCategories", ish.DeleteCategory)
 
 	// Handle OpenAPI doc request
 	opts := swaggerMiddleware.RedocOpts{SpecURL: "/swagger.yaml"}
