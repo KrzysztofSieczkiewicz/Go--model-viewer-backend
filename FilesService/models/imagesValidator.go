@@ -16,6 +16,9 @@ var (
 func (i *Image) Validate() error {
 	validate := validator.New()
 
+	validate.RegisterValidation("category", validateFilepath)
+	validate.RegisterValidation("id", validateID)
+
 	validate.RegisterValidation("type", validateImageType)
 	validate.RegisterValidation("resolution", validateImageResolution)
 	validate.RegisterValidation("extension", validateImageExtension)

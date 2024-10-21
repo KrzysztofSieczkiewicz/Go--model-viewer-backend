@@ -44,10 +44,8 @@ import (
 // DONE: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
 // DONE: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
 // DONE: Test all endpoints + fix file write err (access is denied)
-
-// TODO: Revise data validators
-
-// TODO: Update Images models for requests (include category and id in the metadata)
+// DONE: Revise data validators
+// DONE: Update Images models for requests (include category and id in the metadata)
 
 // TODO: Enforce that category name cannot have ID-like structure and
 // enforce specific ID formatting - like containting multiple - or _ or sth so it cannot be mistaken with directory
@@ -95,11 +93,11 @@ func main() {
 
 	// IMAGES
 	ih := handlers.NewImages(baseUrl, fs, logger, fc)
-	router.HandleFunc("GET /images/{category}/{id}", ih.GetUrl)
-	router.HandleFunc("GET /images/", ih.GetImage) // TODO: HANDLE THIS PROPERLY
-	router.HandleFunc("POST /images/{category}/{id}", ih.PostImage)
-	router.HandleFunc("PUT /images/{category}/{id}", ih.PutImage)
-	router.HandleFunc("DELETE /images/{category}/{id}", ih.DeleteImage)
+	router.HandleFunc("GET /images/url", ih.GetUrl)
+	router.HandleFunc("GET /images", ih.GetImage) // TODO: HANDLE THIS PROPERLY - by common file endpoint
+	router.HandleFunc("POST /images", ih.PostImage)
+	router.HandleFunc("PUT /images", ih.PutImage)
+	router.HandleFunc("DELETE /images", ih.DeleteImage)
 
 	// IMAGE SETS & CATEGORIES
 	ish := handlers.NewImageSets(baseUrl, fs, logger, fc)

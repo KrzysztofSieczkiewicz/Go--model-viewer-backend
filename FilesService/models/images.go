@@ -8,20 +8,22 @@ import (
 // Image defines a properties of a image file that are used to construct filename
 // swagger:model Image
 type Image struct {
+	// Category containing image
+	// required: true
+	Category 	  string `json:"category" validate:"required"`
+
+	// ID of the ImageSet in which the image belongs
+	// required: true
+	ID			  string `json:"id" validate:"required"`
+	
 	// Image type determining general image purpose (eg. Albedo, Roughness)
 	// required: true
-	// min length: 2
-	// max length: 64
 	ImgType       string `json:"type" validate:"required"`
 
 	// required: true
-	// min length: 7
-	// max length: 16
 	Resolution    string `json:"resolution" validate:"required"`
 	
 	// required: true
-	// min length: 2
-	// max length: 8
 	FileExtension string `json:"extension" validate:"required"`
 }
 

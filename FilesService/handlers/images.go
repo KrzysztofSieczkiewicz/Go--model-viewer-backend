@@ -3,7 +3,6 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"time"
 
@@ -18,16 +17,16 @@ import (
 /*
 Example curls:
 GET IMAGE URL:
-curl -v -X GET http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+curl -v -X GET http://localhost:9090/images/url -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 
 POST IMAGE:
-curl -v -i -X POST http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+curl -v -i -X POST http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
 
 PUT IMAGE:
-curl -v -i -X PUT http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: multipart/form-data" -F "metadata={\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+curl -v -i -X PUT http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
 
 DELETE IMAGE:
-curl -v -i -X DELETE http://localhost:9090/images/random%2Ftest%2F/1 -H "Content-Type: application/json" -d "{\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+curl -v -i -X DELETE http://localhost:9090/images -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 */
 
 // Handler for reading and writing images into the imageSets in the storage
@@ -53,7 +52,7 @@ func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) 
 	}
 }
 
-// swagger:route GET /images/{category}/{id} images getImageUrl
+// swagger:route GET /images images getImageUrl
 //
 // Return a signed url to requested image
 //
@@ -71,19 +70,8 @@ func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) 
 func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET Image URL request")
 
-	c, err := url.QueryUnescape( r.PathValue("category") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
-		return
-	}
-	id, err := url.QueryUnescape( r.PathValue("id") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
-		return
-	}
-
 	i := &models.Image{}
-	err = utils.FromJSON(i, r.Body)
+	err := utils.FromJSON(i, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
 		return
@@ -96,7 +84,11 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	fn := i.ConstructImageName()
-	fp := filepath.Join(c, id, fn)
+	fp := filepath.Join(
+		i.Category,
+		i.ID,
+		fn,
+	)
 
 	err = h.store.IfExists(fp)
 	if err != nil {
@@ -174,7 +166,7 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 }
 
-// swagger:route POST /images/{category}/{id} images postImage
+// swagger:route POST /images images postImage
 //
 // Add an image to the existing set
 //
@@ -192,18 +184,7 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Image request")
 
-	c, err := url.QueryUnescape( r.PathValue("category") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
-		return
-	}
-	id, err := url.QueryUnescape( r.PathValue("id") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
-		return
-	}
-
-	err = r.ParseMultipartForm(10 << 20)
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Unable to parse form data")
 		return
@@ -235,8 +216,11 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	
-	fn := i.ConstructImageName()
-	fp := filepath.Join(c, id, fn)
+	fp := filepath.Join(
+		i.Category,
+		i.ID,
+		i.ConstructImageName(),
+	)
 
 	err = h.store.WriteFile(fp, file)
 	if err != nil {
@@ -255,7 +239,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	response.RespondWithMessage(rw, http.StatusCreated, "Image uploaded sucessfully")
 }
 
-// swagger:route PUT /images/{category}/{id} images putImage
+// swagger:route PUT /images images putImage
 //
 // Update an image in the image set
 //
@@ -273,17 +257,6 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT Image request")
 
-	c, err := url.QueryUnescape( r.PathValue("category") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the category from url")
-		return
-	}
-	id, err := url.QueryUnescape( r.PathValue("id") )
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Cannot decode the id from url")
-		return
-	}
-
 	i := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
@@ -291,7 +264,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = utils.FromJSONString(i, json)
+	err := utils.FromJSONString(i, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
@@ -311,7 +284,11 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	
 	fn := i.ConstructImageName()
-	fp := filepath.Join(c, id, fn)
+	fp := filepath.Join(
+		i.Category,
+		i.ID,
+		fn,
+	)
 
 	err = h.store.OverwriteFile(fp, file)
 	if err != nil {
@@ -326,7 +303,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	response.RespondWithMessage(rw, http.StatusOK, "Image updated sucessfully")
 }
 
-// swagger:route DELETE /images/{category}/{id} images deleteImage
+// swagger:route DELETE /images images deleteImage
 //
 // Remove image from the image set
 //
@@ -344,13 +321,6 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing DELETE Image request")
 
-	id := r.PathValue("id")
-	c := r.PathValue("category")
-	if c == "" || id == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Category and ID are required")
-		return
-	}
-
 	i := &models.Image{}
 	err := utils.FromJSON(i, r.Body)
 	if err != nil {
@@ -365,7 +335,11 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	fn := i.ConstructImageName()
-	fp := filepath.Join(c, id, fn)
+	fp := filepath.Join(
+		i.Category,
+		i.ID,
+		fn,
+	)
 
 	err = h.store.DeleteFile(fp)
 	if err != nil {

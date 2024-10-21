@@ -4,10 +4,10 @@ package models
 // swagger:model imageSet
 type ImageSet struct {
 	// ID as it is stored in the database
-	ID       string  `json:"id,omitempty" validate:"required"`
+	ID       string  `json:"id," validate:"required"`
 
 	// Category determining storage subdirectory
-	Category string  `json:"category,omitempty" validate:"required"`
+	Category string  `json:"category" validate:"required"`
 }
 
 // PutImageSetRequest defines combination of initial imageset and the new properties that it should be updated to
