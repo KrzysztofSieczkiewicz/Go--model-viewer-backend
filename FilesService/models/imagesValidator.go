@@ -6,6 +6,12 @@ import (
 	"github.com/go-playground/validator"
 )
 
+var (
+	regexType       = regexp.MustCompile(`^[a-zA-Z]+$`)
+	regexResolution = regexp.MustCompile(`^\d{3,4}x\d{3,4}$`)
+	regexExtension  = regexp.MustCompile(`^(jpg|jpeg|png|gif|bmp|tiff)$`)
+)
+
 // Validates Image fields against predefined regexp. Returns error on any field missing
 func (i *Image) Validate() error {
 	validate := validator.New()
@@ -18,22 +24,13 @@ func (i *Image) Validate() error {
 }
 
 func validateImageType(fl validator.FieldLevel) bool {
-	re := regexp.MustCompile(`^[a-zA-Z]+$`)
-	matches := re.FindAllString(fl.Field().String(), -1)
-
-	return len(matches) == 1
+	return regexType.MatchString(fl.Field().String())
 }
 
 func validateImageResolution(fl validator.FieldLevel) bool {
-	re := regexp.MustCompile(`^\d{3,4}x\d{3,4}$`)
-	matches := re.FindAllString(fl.Field().String(), -1)
-
-	return len(matches) == 1
+	return regexResolution.MatchString(fl.Field().String())
 }
 
 func validateImageExtension(fl validator.FieldLevel) bool {
-	re := regexp.MustCompile(`^[a-zA-Z]+$`)
-	matches := re.FindAllString(fl.Field().String(), -1)
-
-	return len(matches) == 1
+	return regexExtension.MatchString(fl.Field().String())
 }

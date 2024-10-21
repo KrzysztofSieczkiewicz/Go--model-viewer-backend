@@ -298,9 +298,14 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
+		return
 	}
 
-	// TODO: PUT VALIDATION HERE
+	err = c.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
 
 	f, err := h.store.ListDirectories(c.Filepath)
 	if err != nil {
@@ -341,6 +346,12 @@ func (h *ImageSetsHandler) PostCategory(rw http.ResponseWriter, r *http.Request)
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 	}
 
+	err = c.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
 	err = h.store.CreateDirectory(c.Filepath)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
@@ -376,6 +387,18 @@ func (h *ImageSetsHandler) PutCategory(rw http.ResponseWriter, r *http.Request) 
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
+	}
+
+	err = c.Existing.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = c.New.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
 	}
 
 	err = h.store.ChangeDirectory(c.Existing.Filepath, c.New.Filepath)
@@ -418,6 +441,12 @@ func (h *ImageSetsHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reques
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
+		return
+	}
+
+	err = c.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 

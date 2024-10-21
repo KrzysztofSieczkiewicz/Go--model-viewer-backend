@@ -43,16 +43,20 @@ import (
 // continue clearing the code, remember about unused errors.go in the files directory
 // DONE: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
 // DONE: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
-
-// TODO: Test all endpoints + fix file write err (access is denied)
+// DONE: Test all endpoints + fix file write err (access is denied)
 
 // TODO: Revise data validators
-// TODO: Modify current endpoint structure -> instead of categories -> just manage directories for separate storages with reused handler
+
+// TODO: Update Images models for requests (include category and id in the metadata)
+
+// TODO: Enforce that category name cannot have ID-like structure and
+// enforce specific ID formatting - like containting multiple - or _ or sth so it cannot be mistaken with directory
+// then modify directory management accordingly
+// then modify current endpoint structure -> instead of categories just manage directories for separate storages with reused handler
+
 // TODO: Write unit tests for storage and data packages
 
-// TODO: TESTING
-// - PutImageSet -> test if it changes only imageset name/location without renaming category
-// -
+// TODO: Add bulk methods
 
 func main() {
 	// Initialize logger
