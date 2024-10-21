@@ -32,7 +32,7 @@ func validateImageResolution(fl validator.FieldLevel) bool {
 }
 
 func validateImageExtension(fl validator.FieldLevel) bool {
-	re := regexp.MustCompile(`^\.[a-zA-Z]{1,5}$`)
+	re := regexp.MustCompile(`^[a-zA-Z]+$`)
 	matches := re.FindAllString(fl.Field().String(), -1)
 
 	return len(matches) == 1

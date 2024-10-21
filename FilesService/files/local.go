@@ -584,7 +584,7 @@ func (l *Local) writeFile(fullpath string, contents io.Reader) error {
     }
 
 	// open the file
-	f, err := os.Open(fullpath)
+	f, err := os.OpenFile(fullpath, os.O_WRONLY, 0)
     if err != nil {
 		l.logger.Error(err.Error())
         return ErrFileRead

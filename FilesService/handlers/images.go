@@ -216,15 +216,15 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = i.Validate()
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
-		return
-	}
-
 	err = utils.FromJSONString(i, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		return
+	}
+
+	err = i.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
 	}
 
@@ -291,15 +291,15 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = i.Validate()
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
-		return
-	}
-
 	err = utils.FromJSONString(i, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		return
+	}
+	
+	err = i.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
 	}
 
