@@ -481,20 +481,6 @@ func (l *Local) changeFilepath(old string, new string) error {
 	return nil
 }
 
-// Removes requested filepath
-func (l *Local) remove(fullPath string) error {
-	l.logger.Info("Removing the filepath: " + fullPath)
-
-	err := os.Remove(fullPath)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDelete
-	}
-
-	l.logger.Info("Removed the filepath: " + fullPath)
-	return nil
-}
-
 /*
 	FILE
 */

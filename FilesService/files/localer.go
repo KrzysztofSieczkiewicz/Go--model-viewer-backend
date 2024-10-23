@@ -21,7 +21,7 @@ func (l *Local) VerifyCategoryPath(path string) error {
 	return nil
 }
 
-func (l *Local) MakeCategory(path string) error {
+func (l *Local) CreateCategory(path string) error {
 	l.logger.Info("Creating the category")
 
 	cp := l.constructCategoryPath(path)
@@ -37,12 +37,92 @@ func (l *Local) MakeCategory(path string) error {
 		return ErrAlreadyExists
 	}
 
+	// create new filepath
 	err = l.createFilepath(fp)
 	if err != nil {
 		return err
 	}
 
 	l.logger.Info("Created the category")
+	return nil
+}
+
+func (l *Local) DeleteCategory(path string) error {
+	l.logger.Info("Removing the category")
+
+	cp := l.constructCategoryPath(path)
+	fp := l.fullPath(cp)
+
+	// check if category exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// read category contents and check if empty
+	entries, err := l.readDirectory(fp)
+	if err != nil {
+		return err
+	}
+	if len(entries) > 0 {
+		l.logger.Warn(ErrDirNotEmpty.Error())
+		return ErrDirNotEmpty
+	}
+
+	// remove the category
+	err = l.remove(fp)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Removed the category")
+	return nil
+}
+
+func (l *Local) RenameCategory(path string, name string) error {
+	l.logger.Info("Renaming the category")
+
+	// construct filepath for the current path
+	ocp := l.constructCategoryPath(path)
+	ofp := l.fullPath(ocp)
+
+	// construct filepath for the new path
+	fn := l.constructCategoryName(name)
+	fp := filepath.Dir(ocp)
+	ncp := filepath.Join(fn, fp)
+	nfp := l.fullPath(ncp)
+
+	// check if requested category exists
+	exists, err := l.exists(ofp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// check if target category already exists
+	exists, err = l.exists(nfp)
+	if err != nil {
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error())
+		return ErrAlreadyExists
+	}
+
+	// rename requested directory
+	err = l.changeFilepath(ofp, nfp)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Renamed the category")
 	return nil
 }
 
@@ -120,7 +200,7 @@ func (l *Local) verifyCategoryPath(path string) bool {
 
 
 /*
-	COMMON
+	FILEPATH
 */
 
 // Returns the absolute path from the relative path
@@ -155,4 +235,17 @@ func (l *Local) exists(fullpath string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// Removes requested filepath
+func (l *Local) remove(fullPath string) error {
+	l.logger.Info("Removing the filepath: " + fullPath)
+
+	err := os.Remove(fullPath)
+	if err != nil {
+		l.logger.Error(err.Error())
+		return ErrDelete
+	}
+
+	return nil
 }
