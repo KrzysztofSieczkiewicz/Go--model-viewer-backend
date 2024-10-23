@@ -49,10 +49,14 @@ import (
 
 // TODO: Enforce that category name cannot have ID-like structure and
 // enforce specific ID formatting - like containting multiple - or _ or sth so it cannot be mistaken with directory
-// then modify directory management accordingly
+// then modify directory management accordingly -> manage categories and IDs separately
 // then modify current endpoint structure -> instead of categories just manage directories for separate storages with reused handler
+// ID: cannot start with '_'
+// Category: starts with '_'
 
 // TODO: Write unit tests for storage and data packages
+
+// TODO: Add 3D assets handling
 
 // TODO: Add bulk methods
 

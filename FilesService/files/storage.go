@@ -7,9 +7,18 @@ import (
 // Defines behavior for file operations.
 // Different implementations might allow for local/cloud storage
 type Storage interface {
+/*
+	GENERAL
+*/
 	// Checks if filepath can be found in the filesystem
 	IfExists(path string) error
 
+	// Checks if filepath is a category
+//	IsCategory(path string) error
+
+/*
+	FILES
+*/
 	// Reads the file at the provided path and returns a reader
 	ReadFile(path string, writer io.Writer) error
 

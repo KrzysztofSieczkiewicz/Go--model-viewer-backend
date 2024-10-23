@@ -38,3 +38,9 @@ var ErrDirectoryRead = errors.New("unable to open directory")
 var ErrDirNotEmpty = errors.New("directory is not empty")
 
 var ErrDirContainsFiles = errors.New("directory contains files")
+
+
+// Categories
+var ErrNotCategory = errors.New("filename is not a category")
+
+var ErrNotCategoryPath = errors.New("filepath contains non-categories")

@@ -34,9 +34,11 @@ func NewLocal(basePath string, maxSizeMB int, l *slog.Logger) (*Local, error) {
 	}, nil
 }
 
-
+/*
+	GENERAL
+*/
 func (l *Local) IfExists(path string) error {
-	l.logger.Info("Looking for the file: " + path)
+	l.logger.Info("Looking for the filepath")
 
 	fp := l.fullPath(path)
 
@@ -49,10 +51,9 @@ func (l *Local) IfExists(path string) error {
 		return ErrNotFound
 	}
 
-	l.logger.Info("File found: " + path)
+	l.logger.Info("Filepath found")
 	return nil
 }
-
 
 func (l *Local) ReadFile(path string, w io.Writer) error {
 	l.logger.Info("Reading the file: " + path)
@@ -466,25 +467,6 @@ func (l *Local) ListDirectories(path string) ([]string, error) {
 	FILEPATH
 */
 
-// Returns the absolute path from the relative path
-func (l *Local) fullPath(path string) string {
-	return filepath.Join(l.basePath, path)
-}
-
-// Creates directories structure matching requested filepath
-func (l *Local) createFilepath(fullpath string) error {
-	l.logger.Info("Creating filepath: " + fullpath)
-	
-	err := os.MkdirAll(fullpath, 0755)
-	if err != nil {
-		l.logger.Error(err.Error())
-		return ErrDirectoryCreate
-	}
-
-	l.logger.Info("Created filepath: " + fullpath)
-	return nil
-}
-
 // Changes filepath to the new provided string. Doesn't create directories.
 func (l *Local) changeFilepath(old string, new string) error {
 	l.logger.Info(fmt.Sprintf("Modifying filepath from: %s\nto: %s", old, new))
@@ -511,24 +493,6 @@ func (l *Local) remove(fullPath string) error {
 
 	l.logger.Info("Removed the filepath: " + fullPath)
 	return nil
-}
-
-// Verifies if filepath exists in the filesystem
-func (l *Local) exists(fullpath string) (bool, error) {
-	l.logger.Info("Looking for file: " + fullpath)
-
-	_, err := os.Stat(fullpath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			l.logger.Info("Filepath not found: " + fullpath)
-			return false, nil
-		}
-		l.logger.Error(err.Error())
-		return false, err
-	}
-
-	l.logger.Info("Filepath found: " + fullpath)
-	return true, nil
 }
 
 /*
