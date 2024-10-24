@@ -1,21 +1,31 @@
 package models
 
+// Collection defines a set of files contributing to the same object/texture
+// swagger:model collection
+type Collection struct {
+	// Collection ID
+	ID string `json:"id" validate:"required"`
+
+	// Category structure describing collection
+	Category string `json:"category" validate:"required"`
+}
+
 // ImageSet defines a properties of a set of images contributing to an entire texture with various resolutions or image types
 // swagger:model imageSet
 type ImageSet struct {
 	// ID as it is stored in the database
-	ID       string  `json:"id," validate:"required"`
+	ID string `json:"id" validate:"required"`
 
 	// Category determining storage subdirectory
-	Category string  `json:"category" validate:"required"`
+	Category string `json:"category" validate:"required"`
 }
 
 // PutImageSetRequest defines combination of initial imageset and the new properties that it should be updated to
 // swagger:model updateImageSet
 type PutImageSetRequest struct {
 	// Current image set properties
-	Existing	ImageSet	`json:"existing" validate:"required"`
+	Existing ImageSet `json:"existing" validate:"required"`
 
 	// Desired image set properties
-	New			ImageSet 	`json:"new" validate:"required"`
+	New ImageSet `json:"new" validate:"required"`
 }

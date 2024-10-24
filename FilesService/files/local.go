@@ -252,7 +252,7 @@ func (l *Local) DeleteFiles(path string) error {
 	dir, err := os.Open(fp)
 	if err != nil {
 		l.logger.Error(err.Error())
-		return ErrDirectoryRead
+		return err
 	}
 	defer dir.Close()
 
@@ -260,7 +260,7 @@ func (l *Local) DeleteFiles(path string) error {
 	entries, err := dir.Readdir(-1)
 	if err != nil {
 		l.logger.Error(err.Error())
-		return ErrDirectoryRead
+		return err
 	}
 
 	// remove directory contents
@@ -567,7 +567,7 @@ func (l *Local) readDirectory(fullpath string) ([]fs.FileInfo, error) {
 	dir, err := os.Open(fullpath)
 	if err != nil {
 		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
+		return nil, err
 	}
 	defer dir.Close()
 
@@ -575,7 +575,7 @@ func (l *Local) readDirectory(fullpath string) ([]fs.FileInfo, error) {
 	entries, err := dir.Readdir(-1)
 	if err != nil {
 		l.logger.Error(err.Error())
-		return nil, ErrDirectoryRead
+		return nil, err
 	}
 
 	l.logger.Info("Finished reading the directory: " + fullpath)

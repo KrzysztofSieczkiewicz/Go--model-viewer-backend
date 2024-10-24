@@ -349,7 +349,7 @@ func (l *Local) DeleteCategory(path string) error {
 		return ErrNotFound
 	}
 
-	// read category contents and check if empty
+	// read category contents and check if it is empty
 	entries, err := l.readDirectory(fp)
 	if err != nil {
 		return err

@@ -63,6 +63,7 @@ import (
 // CONSIDER: After adding all desired models -> update local.go and storage.go to accept objects instead of list of parameters
 // both assets and images should be the same model -> File
 // constructCategoryPath and deconstructCategoryPath -> move to the Category model
+// Image and Asset should just extend File type so they could have different implementations of ConstructFileName/DeconstructFileName func
 // then -> funcs in local.go should receive model objects with data as arguments and they should retrieve data from within by themselves
 // it should clear handler funcs a bit
 

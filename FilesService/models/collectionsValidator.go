@@ -6,6 +6,8 @@ import (
 	"github.com/go-playground/validator"
 )
 
+// TODO: rework
+
 var (
 	regexID = regexp.MustCompile(`^[a-zA-Z0-9]{2,64}$`)
 	regexCategory = regexp.MustCompile(`^(.*)\/([^\/]*)$`)
