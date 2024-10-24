@@ -73,6 +73,49 @@ func (l *Local) CreateCollection(path string, id string) error {
 	return nil
 }
 
+func (l *Local) UpdateCollection(path string, id string, newPath string, newId string) error {
+	l.logger.Info("Renaming the collection")
+
+	// Current path
+	cp := l.constructCategoryPath(path)
+	p := filepath.Join(cp, id)
+	fp := l.fullPath(p)
+
+	// Desired path
+	ncp := l.constructCategoryPath(newPath)
+	np := filepath.Join(ncp, newId)
+	nfp := l.fullPath(np)
+
+	// check if collection exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// check if target collection doesn't exist
+	exists, err = l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error())
+		return ErrAlreadyExists
+	}
+
+	// update the collection
+	err = l.changeFilepath(fp, nfp)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Renamed the collection")
+	return nil
+}
+
 
 /*
 	CATEGORY
@@ -199,7 +242,7 @@ func (l *Local) RenameCategory(path string, name string) error {
 	COLLECTION
 */
 
-//  Verifies if provided filepath leads to the set type directory
+//  Verifies if provided filepath leads to the collection
 func (l *Local) verifyCollectionPath(filename string) bool {
 	base := filepath.Base(filename)
 

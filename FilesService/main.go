@@ -60,6 +60,8 @@ import (
 
 // TODO: Add bulk methods
 
+// CONSIDER: After adding all desired models -> update local.go and storage.go to accept objects instead of list of parameters
+
 func main() {
 	// Initialize logger
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
