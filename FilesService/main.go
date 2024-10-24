@@ -61,6 +61,10 @@ import (
 // TODO: Add bulk methods
 
 // CONSIDER: After adding all desired models -> update local.go and storage.go to accept objects instead of list of parameters
+// both assets and images should be the same model -> File
+// constructCategoryPath and deconstructCategoryPath -> move to the Category model
+// then -> funcs in local.go should receive model objects with data as arguments and they should retrieve data from within by themselves
+// it should clear handler funcs a bit
 
 func main() {
 	// Initialize logger

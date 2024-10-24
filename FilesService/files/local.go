@@ -55,29 +55,8 @@ func (l *Local) IfExists(path string) error {
 	return nil
 }
 
-func (l *Local) ReadFile(path string, w io.Writer) error {
-	l.logger.Info("Reading the file: " + path)
-
-	fp := l.fullPath(path)
-
-	// check if requested file exists
-	exists, err := l.exists(fp)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		l.logger.Warn(ErrNotFound.Error() + fp)
-		return ErrNotFound
-	}
-
-	// read the file contents into the writer
-	err = l.readFile(fp, w)
-	if err != nil {
-		return err
-	}
-
-	l.logger.Info("Done reading the file: " + path)
-    return nil
+func (l *Local) ReadFile(path string, writer io.Writer) error {
+	return nil
 }
 
 func (l *Local) WriteFile(path string, contents io.Reader) error {

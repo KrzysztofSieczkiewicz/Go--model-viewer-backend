@@ -1,18 +1,166 @@
 package files
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 /*
+	FILE
+*/
+func (l *Local) ReadFile_(category string, collection string, filename string, w io.Writer) error {
+	l.logger.Info("Reading the file")
+
+	cp := l.constructCategoryPath(category)
+	p := filepath.Join(cp, collection, filename)
+	fp := l.fullPath(p)
+
+	// check if requested file exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// read the file contents into the writer
+	err = l.readFile(fp, w)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Finished reading the file")
+    return nil
+}
+
+func (l *Local) WriteFile_(category string, collection string, filename string, r io.Reader) error {
+	l.logger.Info("Writing the file")
+
+	cp := l.constructCategoryPath(category)
+	p := filepath.Join(cp, collection, filename)
+	fp := l.fullPath(p)
+
+	// check if the directory exists
+	dir := filepath.Dir(fp)
+	exists, err := l.exists(dir)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// check if requested file doesn't already exist
+	exists, err = l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error())
+		return ErrAlreadyExists
+	}
+
+	// create and write to the file
+	_, err = l.createFile(fp)
+	if err != nil {
+		return err
+	}
+	err = l.writeFile(fp, r)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Finished writing the file")
+	return nil
+}
+
+func (l *Local) OverwriteFile_(category string, collection string, filename string, r io.Reader) error {
+	l.logger.Info("Updating the file")
+
+	cp := l.constructCategoryPath(category)
+	p := filepath.Join(cp, collection, filename)
+	fp := l.fullPath(p)
+	tfp := fp + "_tmp"
+
+	// check if file exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// create and write to the temp file
+	_, err = l.createFile(tfp)
+	if err != nil {
+		return err
+	}
+	err = l.writeFile(tfp, r)
+	if err != nil {
+		return err
+	}
+
+	// replace the original file with the temporary file
+	err = l.changeFilepath(tfp, fp)
+    if err != nil {
+        return err
+    }
+
+	l.logger.Info("Updated the file")
+	return nil
+}
+
+func (l *Local) DeleteFile_(category string, collection string, filename string) error {
+	l.logger.Info("Deleting the file")
+
+	cp := l.constructCategoryPath(category)
+	p := filepath.Join(cp, collection, filename)
+	fp := l.fullPath(p)
+
+	// check if file exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// check if filepath is file
+	isFile, err := l.isFile(fp)
+	if err != nil {
+		return err
+	}
+	if !isFile {
+		l.logger.Warn(ErrNotFile.Error())
+		return ErrNotFile
+	}
+
+	// remove the file
+	err = l.remove(fp)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Deleted the file")
+	return nil
+}
+
+/*
 	COLLECTION
 */
-func (l *Local) VerifyCollection(path string, id string) error {
+func (l *Local) VerifyCollection(category string, id string) error {
 	l.logger.Info("Verifying the collection")
 
-	cp := l.constructCategoryPath(path)
+	cp := l.constructCategoryPath(category)
 	p := filepath.Join(cp, id)
 	fp := l.fullPath(p)
 
@@ -36,10 +184,10 @@ func (l *Local) VerifyCollection(path string, id string) error {
 	return nil
 }
 
-func (l *Local) CreateCollection(path string, id string) error {
+func (l *Local) CreateCollection(category string, id string) error {
 	l.logger.Info("Creating the collection")
 
-	cp := l.constructCategoryPath(path)
+	cp := l.constructCategoryPath(category)
 	cfp := l.fullPath(cp)
 	fp := filepath.Join(cfp, id)
 
@@ -73,16 +221,16 @@ func (l *Local) CreateCollection(path string, id string) error {
 	return nil
 }
 
-func (l *Local) UpdateCollection(path string, id string, newPath string, newId string) error {
+func (l *Local) UpdateCollection(category string, id string, newCategory string, newId string) error {
 	l.logger.Info("Renaming the collection")
 
-	// Current path
-	cp := l.constructCategoryPath(path)
+	// current path
+	cp := l.constructCategoryPath(category)
 	p := filepath.Join(cp, id)
 	fp := l.fullPath(p)
 
-	// Desired path
-	ncp := l.constructCategoryPath(newPath)
+	// desired path
+	ncp := l.constructCategoryPath(newCategory)
 	np := filepath.Join(ncp, newId)
 	nfp := l.fullPath(np)
 
@@ -113,6 +261,33 @@ func (l *Local) UpdateCollection(path string, id string, newPath string, newId s
 	}
 
 	l.logger.Info("Renamed the collection")
+	return nil
+}
+
+func (l *Local) DeleteCollection(category string, id string) error {
+	l.logger.Info("Removing the collection")
+
+	cp := l.constructCategoryPath(category)
+	p := filepath.Join(cp, id)
+	fp := l.fullPath(p)
+
+	// check if collection exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// remove the collection
+	err = l.remove(fp)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Removed the collection")
 	return nil
 }
 
@@ -257,15 +432,6 @@ func (l *Local) verifyCollectionPath(filename string) bool {
 // Converts the filename to the filesystem compliant category name
 func (l *Local) constructCategoryName(name string) string {
 	return "_" + name
-}
-
-// Converts the filesystem compliant category name to the neutral name
-func (l *Local) deconstructCategoryName(name string) (string, error) {
-	if strings.HasPrefix(name, "_") {
-		return name[1:], nil
-	}
-	l.logger.Error(ErrNotCategory.Error())
-	return "", ErrNotCategory
 }
 
 // Converts the provided path to the filesystem compliant category path
