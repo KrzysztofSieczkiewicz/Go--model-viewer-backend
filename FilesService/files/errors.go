@@ -40,6 +40,9 @@ var ErrDirNotEmpty = errors.New("directory is not empty")
 var ErrDirContainsFiles = errors.New("directory contains files")
 
 
+// Collections
+var ErrNotCollection = errors.New("filename doesn't point to the collection")
+
 // Categories
 var ErrNotCategory = errors.New("filename is not a category")
 

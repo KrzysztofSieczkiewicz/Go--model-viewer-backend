@@ -7,6 +7,74 @@ import (
 )
 
 /*
+	COLLECTION
+*/
+func (l *Local) VerifyCollection(path string, id string) error {
+	l.logger.Info("Verifying the collection")
+
+	cp := l.constructCategoryPath(path)
+	p := filepath.Join(cp, id)
+	fp := l.fullPath(p)
+
+	// check if target exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// verify the path is correct
+	is := l.verifyCollectionPath(fp)
+	if !is {
+		return ErrNotCollection
+	}
+
+	l.logger.Info("Verified the collection")
+	return nil
+}
+
+func (l *Local) CreateCollection(path string, id string) error {
+	l.logger.Info("Creating the collection")
+
+	cp := l.constructCategoryPath(path)
+	cfp := l.fullPath(cp)
+	fp := filepath.Join(cfp, id)
+
+	// check if category exists
+	exists, err := l.exists(cfp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// check if target already exists
+	exists, err = l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error())
+		return ErrAlreadyExists
+	}
+
+	// create directory
+	err = l.createFilepath(fp)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Created the collection")
+	return nil
+}
+
+
+/*
 	CATEGORY
 */
 func (l *Local) VerifyCategoryPath(path string) error {
@@ -33,7 +101,7 @@ func (l *Local) CreateCategory(path string) error {
 		return err
 	}
 	if exists {
-		l.logger.Warn(ErrAlreadyExists.Error() + fp)
+		l.logger.Warn(ErrAlreadyExists.Error())
 		return ErrAlreadyExists
 	}
 
@@ -128,6 +196,18 @@ func (l *Local) RenameCategory(path string, name string) error {
 
 
 /*
+	COLLECTION
+*/
+
+//  Verifies if provided filepath leads to the set type directory
+func (l *Local) verifyCollectionPath(filename string) bool {
+	base := filepath.Base(filename)
+
+	return !strings.HasPrefix(base, "_")
+}
+
+
+/*
 	CATEGORY
 */
 
@@ -178,8 +258,7 @@ func (l *Local) deconstructCategoryPath(path string) (string, error) {
 
 // Verifies if provided filename is a category
 func (l *Local) verifyCategory(filename string) bool {
-	cleanPath := filepath.Clean(filename)
-	base := filepath.Base(cleanPath)
+	base := filepath.Base(filename)
 
 	return strings.HasPrefix(base, "_")
 }
