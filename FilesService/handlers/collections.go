@@ -41,7 +41,7 @@ func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Ca
 
 // swagger:route GET /collections collections getCollection
 //
-// Return ImageSet details and available Images
+// Returns Collection contents
 //
 // consumes:
 //	- application/json
@@ -50,7 +50,7 @@ func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Ca
 //	- application/json
 //
 // Responses:
-// 	200: getImageSet
+// 	200: getCollectionResponse
 //  400: message
 //	404: message
 // 	500: message
@@ -64,37 +64,126 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	is := &models.ImageSet{}
-	err = utils.FromJSON(is, r.Body)
-	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
-		return
-	}
-
-	err = is.Validate()
+	err = c.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	fp := filepath.Join(is.Category, is.ID)
-
-	f, err := h.store.ListFiles(fp)
+	f, err := h.store.ListCollectionContents(c.Category, c.ID)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Requested image set doesn't exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Requested collection doesn't exist")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve ImageSet data")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve collection contents")
 		return
 	}
 
-	i := &models.Images{}
-	err = i.DeconstructImageNames(f)
+	cr := &models.GetCollectionResponse{Contents: f}
+
+	response.RespondWithJSON(rw, http.StatusOK, cr)
+}
+
+// swagger:route POST /collections collections postCollection
+//
+// Create a new collection
+//
+// consumes:
+//	- application/json
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	204: empty
+//  400: message
+// 	403: message
+//	404: message
+// 	500: message
+func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing POST Collection request")
+
+	c := &models.Collection{}
+	err := utils.FromJSON(c, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve images list")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	response.RespondWithJSON(rw, http.StatusOK, i)
+	err = c.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = h.store.CreateCollection(c.Category, c.ID)
+	if err != nil {
+		if err == files.ErrNotFound {
+			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
+			return
+		}
+		if err == files.ErrAlreadyExists {
+			response.RespondWithMessage(rw, http.StatusForbidden, "Collection already exists")
+			return
+		}
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to create Collection")
+		return
+	}
+
+	response.RespondWithNoContent(rw)
+}
+
+// swagger:route PUT /collections collections putCollection
+//
+// Update existing Collection id or category. Allows moving to the different category, but it won't create any new categories
+//
+// consumes:
+//	- application/json
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	204: empty
+//  400: message
+//	404: message
+// 	500: message
+func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT Collection request")
+	
+	c := &models.PutCollectionRequest{}
+	err := utils.FromJSON(c, r.Body)
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
+		return
+	}
+
+	err = c.Existing.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = c.New.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	// TODO -> continue from here
+	ofp := filepath.Join(c.Existing.Category, c.Existing.ID)
+	nfp := filepath.Join(c.New.Category, c.New.ID)
+
+	err = h.store.ChangeDirectory(ofp, nfp)
+	if err != nil {
+		if err == files.ErrNotFound {
+			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+			return
+		}
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to update Collection")
+		return
+	}
+
+	response.RespondWithNoContent(rw)
 }

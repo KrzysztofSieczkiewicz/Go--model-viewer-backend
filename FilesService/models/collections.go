@@ -1,6 +1,6 @@
 package models
 
-// Collection defines a set of files contributing to the same object/texture
+// Defines a set of files contributing to the same object/texture
 // swagger:model collection
 type Collection struct {
 	// Collection ID
@@ -9,6 +9,34 @@ type Collection struct {
 	// Category structure describing collection
 	Category string `json:"category" validate:"required"`
 }
+
+// Defines properties of current collection and properties that are to be changed to
+// swagger:model putCollectionRequest
+type PutCollectionRequest struct {
+	// Current properties
+	Existing Collection `json:"existing" validate:"required"`
+
+	// Desired properties
+	New Collection `json:"new" validate:"required"`
+}
+
+// Defines a response to GET collection request
+// swagger:model getCollectionResponse
+type GetCollectionResponse struct {
+	// Collection contents
+	Contents	[]CollectionContent	`json:"contents" validate:"required"`
+}
+
+/*
+func (c *CollectionContent) Validate() error {
+	switch c.FileType {
+	case FileTypeDirectory, FileTypeFile:
+		return nil
+	default:
+		return errors.New("invalid FileType, must be 'directory' or 'file'")
+	}
+}
+*/
 
 // ImageSet defines a properties of a set of images contributing to an entire texture with various resolutions or image types
 // swagger:model imageSet

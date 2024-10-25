@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
 )
 
 /*
@@ -114,6 +116,47 @@ func (l *Local) OverwriteFile_(category string, collection string, filename stri
     }
 
 	l.logger.Info("Updated the file")
+	return nil
+}
+
+func (l *Local) RenameFile_(category string, collection string, filename string, newFilename string) error {
+	l.logger.Info("Rename the file")
+
+	cp := l.constructCategoryPath(category)
+	// current
+	p := filepath.Join(cp, collection, filename)
+	fp := l.fullPath(p)
+	// new
+	np := filepath.Join(cp, collection, newFilename)
+	nfp := l.fullPath(np)
+
+	// check if file exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// check if target file doesn't already exist
+	exists, err = l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error())
+		return ErrAlreadyExists
+	}
+
+	// rename the file
+	err = l.changeFilepath(fp, nfp)
+    if err != nil {
+        return err
+    }
+
+	l.logger.Info("Renamed the file")
 	return nil
 }
 
@@ -291,6 +334,32 @@ func (l *Local) DeleteCollection(category string, id string) error {
 	return nil
 }
 
+func (l *Local) ListCollectionContents(category string, id string) ([]models.CollectionContent, error) {
+	l.logger.Info("Listing the collection contents")
+
+	cp := l.constructCategoryPath(category)
+	p := filepath.Join(cp, id)
+	fp := l.fullPath(p)
+
+	// check if collection exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return nil, ErrNotFound
+	}
+
+	contents, err := l.listContents(fp)
+	if err != nil {
+		return nil, err
+	}
+
+	l.logger.Info("Listed the collection contents")
+	return contents, nil
+}
+
 
 /*
 	CATEGORY
@@ -410,6 +479,32 @@ func (l *Local) RenameCategory(path string, name string) error {
 
 	l.logger.Info("Renamed the category")
 	return nil
+}
+
+func (l *Local) ListCategoryContents(path string) ([]models.CollectionContent, error) {
+	l.logger.Info("Listing the category contents")
+
+	cp := l.constructCategoryPath(path)
+	fp := l.fullPath(cp)
+
+	// check if collection exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return nil, ErrNotFound
+	}
+
+	// list and return contents
+	contents, err := l.listContents(fp)
+	if err != nil {
+		return nil, err
+	}
+
+	l.logger.Info("Listed the category contents")
+	return contents, nil
 }
 
 
@@ -536,4 +631,36 @@ func (l *Local) remove(fullPath string) error {
 	}
 
 	return nil
+}
+
+// Lists directory contents
+func (l *Local) listContents(fullpath string)  ([]models.CollectionContent, error) {
+	l.logger.Info("Listing the contents: " + fullpath) 
+
+	// read the directory
+	entries, err := l.readDirectory(fullpath)
+	if err != nil {
+		return nil, err
+	}
+
+	// check all entries and assign types
+	contents := make([]models.CollectionContent, 0, len(entries))
+	var fileType models.FileType
+	for _, entry := range entries {
+		if entry.IsDir() {
+			fileType = models.FileTypeDirectory
+		} else {
+			fileType = models.FileTypeFile
+		}
+
+		contents = append(
+			contents, 
+			models.CollectionContent{
+				Filename: entry.Name(),
+				FileType: fileType,
+			},
+		)
+	}
+
+	return contents, nil
 }

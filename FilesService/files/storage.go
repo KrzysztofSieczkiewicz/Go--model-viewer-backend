@@ -2,6 +2,8 @@ package files
 
 import (
 	"io"
+
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
 )
 
 // Defines behavior for file operations.
@@ -52,4 +54,14 @@ type Storage interface {
 
 	// List subdirectories in the directory
 	ListDirectories(path string) ([]string, error)
+
+
+	/*
+		NEW
+	*/
+	// Collections
+	
+	CreateCollection(category string, id string) error
+
+	ListCollectionContents(category string, id string) ([]models.CollectionContent, error) 
 }

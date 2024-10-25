@@ -37,3 +37,26 @@ func validateImageResolution(fl validator.FieldLevel) bool {
 func validateImageExtension(fl validator.FieldLevel) bool {
 	return regexExtension.MatchString(fl.Field().String())
 }
+
+/*
+func validateImages(fl validator.FieldLevel) bool {
+	images, err := fl.Field().Interface().([]*Image)
+	if err {
+		return false
+	}
+
+	// Allow empty images slice
+	if len(images) == 0 {
+		images = []*Image{}
+	}
+
+	for _, img := range images {
+        err := img.Validate()
+		if err != nil {
+			return false
+		}
+	}
+
+	return true
+}
+*/
