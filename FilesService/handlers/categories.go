@@ -13,8 +13,8 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
-// Handler for managing collections
-type CollectionsHandler struct {
+// Handler for managing categories
+type CategoriesHandler struct {
 	baseUrl		string
 	logger		*slog.Logger
 	store		files.Storage
@@ -22,10 +22,10 @@ type CollectionsHandler struct {
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *CollectionsHandler {
+func NewCategories(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *CategoriesHandler {
 	logger := l.With(slog.String("handler", "collections")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
 
-	return &CollectionsHandler{
+	return &CategoriesHandler{
 		baseUrl: baseUrl,
 		store:   s,
 		logger:  logger,
@@ -38,9 +38,9 @@ func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Ca
 	}
 }
 
-// swagger:route GET /collections collections getCollection
+// swagger:route GET /categories categories getCategory
 //
-// Returns Collection contents
+// List files available in the category
 //
 // consumes:
 //	- application/json
@@ -49,14 +49,14 @@ func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Ca
 //	- application/json
 //
 // Responses:
-// 	200: getCollectionResponse
+// 	200: directoryContents
 //  400: message
 //	404: message
 // 	500: message
-func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing GET Collection request")
+func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET Category request")
 
-	c := &models.Collection{}
+	c := &models.Category{}
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
@@ -69,13 +69,13 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	f, err := h.store.ListCollectionContents(c.Category, c.ID)
+	f, err := h.store.ListCategoryContents(c.Filepath)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve collection contents")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve Category")
 		return
 	}
 
@@ -84,9 +84,9 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 	response.RespondWithJSON(rw, http.StatusOK, cr)
 }
 
-// swagger:route POST /collections collections postCollection
+// swagger:route POST /categories categories postCategory
 //
-// Create a new collection
+// Creates a category or categories path
 //
 // consumes:
 //	- application/json
@@ -95,19 +95,17 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 //	- application/json
 //
 // Responses:
-// 	204: empty
+// 	204: message
 //  400: message
 // 	403: message
-//	404: message
 // 	500: message
-func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing POST Collection request")
+func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing POST Category request")
 
-	c := &models.Collection{}
+	c := &models.Category{}
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
-		return
 	}
 
 	err = c.Validate()
@@ -116,26 +114,22 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = h.store.CreateCollection(c.Category, c.ID)
+	err = h.store.CreateCategory(c.Filepath)
 	if err != nil {
-		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
-			return
-		}
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Collection already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Category already exists")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to create Collection")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to create Category")
 		return
 	}
 
 	response.RespondWithNoContent(rw)
 }
 
-// swagger:route PUT /collections collections putCollection
+// swagger:route PUT /categories categories putCategory
 //
-// Update existing collection id or category. Allows moving to the different category, but it won't create any new categories
+// Updates existing Category, allows for moving. Doesn't create new filepaths
 //
 // consumes:
 //	- application/json
@@ -144,18 +138,17 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 //	- application/json
 //
 // Responses:
-// 	204: empty
+// 	200: message
 //  400: message
 //	404: message
 // 	500: message
-func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing PUT Collection request")
-	
-	c := &models.PutCollectionRequest{}
+func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT Category request")
+
+	c := &models.PutCategoryRequest{}
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
-		return
 	}
 
 	err = c.Existing.Validate()
@@ -170,25 +163,26 @@ func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = h.store.UpdateCollection(
-		c.Existing.Category, c.Existing.ID, 
-		c.New.Category, c.New.ID,
-	)
+	err = h.store.UpdateCategory(c.Existing.Filepath, c.New.Filepath)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to update Collection")
+		if err == files.ErrAlreadyExists {
+			response.RespondWithMessage(rw, http.StatusBadRequest, "Category already exists")
+			return
+		}
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to update Category")
 		return
 	}
 
-	response.RespondWithNoContent(rw)
+	response.RespondWithMessage(rw, http.StatusOK, "Category updated successfully")
 }
 
-// swagger:route DELETE /collections collections deleteCollection
+// swagger:route DELETE /categories categories deleteCategory
 //
-// Delete existing collection
+// Deletes the Category, requires being empty beforehand
 //
 // consumes:
 //	- application/json
@@ -197,14 +191,15 @@ func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request
 //	- application/json
 //
 // Responses:
-// 	204: message
+// 	200: message
 //  400: message
-//  404: message
+//	403: message
+//	404: message
 // 	500: message
-func (h *CollectionsHandler) DeleteCollection(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing DELETE Collection request")
+func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing DELETE Category request")
 
-	c := &models.Collection{}
+	c := &models.Category{}
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
@@ -217,15 +212,15 @@ func (h *CollectionsHandler) DeleteCollection(rw http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = h.store.DeleteCollection(c.Category, c.ID)
+	err = h.store.DeleteCategory(c.Filepath)
 	if err != nil {
-		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+		if err == files.ErrDirNotEmpty {
+			response.RespondWithMessage(rw, http.StatusForbidden, "Category is not empty")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to delete Collection")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove Category")
 		return
 	}
 
-	response.RespondWithNoContent(rw)
+	response.RespondWithMessage(rw, http.StatusOK, "Category removed successfully")
 }

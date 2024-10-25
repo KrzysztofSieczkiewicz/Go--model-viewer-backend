@@ -287,11 +287,11 @@ func (h *ImageSetsHandler) DeleteImageSet(rw http.ResponseWriter, r *http.Reques
 //	- application/json
 //
 // Responses:
-// 	200: categoryContents
+// 	200: directoryContents
 //  400: message
 //	404: message
 // 	500: message
-func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
+func (h *CategoriesHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET ImageSet Category request")
 
 	c := &models.Category{}
@@ -307,7 +307,7 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f, err := h.store.ListDirectories(c.Filepath)
+	_, err = h.store.ListDirectories(c.Filepath)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
@@ -317,9 +317,9 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	is := &response.CategoryResponse{Directories: f}
+	//is := &response.CategoryResponse{Contents: f}
 
-	response.RespondWithJSON(rw, http.StatusOK, is)
+	//response.RespondWithJSON(rw, http.StatusOK, is)
 }
 
 // swagger:route POST /imageCategories imageSets postCategory

@@ -60,8 +60,20 @@ type Storage interface {
 		NEW
 	*/
 	// Collections
-	
+	ListCollectionContents(category string, id string) ([]models.CollectionContent, error) 
+
 	CreateCollection(category string, id string) error
 
-	ListCollectionContents(category string, id string) ([]models.CollectionContent, error) 
+	UpdateCollection(category string, id string, newCategory string, newId string) error
+
+	DeleteCollection(category string, id string) error
+
+	// Categories
+	ListCategoryContents(path string) ([]models.CollectionContent, error)
+
+	CreateCategory(path string) error
+
+	UpdateCategory(path string, name string) error
+
+	DeleteCategory(path string) error
 }

@@ -200,31 +200,30 @@ func (l *Local) DeleteFile_(category string, collection string, filename string)
 /*
 	COLLECTION
 */
-func (l *Local) VerifyCollection(category string, id string) error {
-	l.logger.Info("Verifying the collection")
+func (l *Local) ListCollectionContents(category string, id string) ([]models.CollectionContent, error) {
+	l.logger.Info("Listing the collection contents")
 
 	cp := l.constructCategoryPath(category)
 	p := filepath.Join(cp, id)
 	fp := l.fullPath(p)
 
-	// check if target exists
+	// check if collection exists
 	exists, err := l.exists(fp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !exists {
 		l.logger.Warn(ErrNotFound.Error())
-		return ErrNotFound
+		return nil, ErrNotFound
 	}
 
-	// verify the path is correct
-	is := l.verifyCollectionPath(fp)
-	if !is {
-		return ErrNotCollection
+	contents, err := l.listContents(fp)
+	if err != nil {
+		return nil, err
 	}
 
-	l.logger.Info("Verified the collection")
-	return nil
+	l.logger.Info("Listed the collection contents")
+	return contents, nil
 }
 
 func (l *Local) CreateCollection(category string, id string) error {
@@ -334,12 +333,15 @@ func (l *Local) DeleteCollection(category string, id string) error {
 	return nil
 }
 
-func (l *Local) ListCollectionContents(category string, id string) ([]models.CollectionContent, error) {
-	l.logger.Info("Listing the collection contents")
 
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, id)
-	fp := l.fullPath(p)
+/*
+	CATEGORY
+*/
+func (l *Local) ListCategoryContents(path string) ([]models.CollectionContent, error) {
+	l.logger.Info("Listing the category contents")
+
+	cp := l.constructCategoryPath(path)
+	fp := l.fullPath(cp)
 
 	// check if collection exists
 	exists, err := l.exists(fp)
@@ -351,29 +353,14 @@ func (l *Local) ListCollectionContents(category string, id string) ([]models.Col
 		return nil, ErrNotFound
 	}
 
+	// list and return contents
 	contents, err := l.listContents(fp)
 	if err != nil {
 		return nil, err
 	}
 
-	l.logger.Info("Listed the collection contents")
+	l.logger.Info("Listed the category contents")
 	return contents, nil
-}
-
-
-/*
-	CATEGORY
-*/
-func (l *Local) VerifyCategoryPath(path string) error {
-	l.logger.Info("Verifying the category")
-
-	is := l.verifyCategoryPath(path)
-	if !is {
-		return ErrNotCategory
-	}
-
-	l.logger.Info("Verified the category")
-	return nil
 }
 
 func (l *Local) CreateCategory(path string) error {
@@ -399,6 +386,49 @@ func (l *Local) CreateCategory(path string) error {
 	}
 
 	l.logger.Info("Created the category")
+	return nil
+}
+
+func (l *Local) UpdateCategory(path string, name string) error {
+	l.logger.Info("Updating the category")
+
+	// construct filepath for the current path
+	ocp := l.constructCategoryPath(path)
+	ofp := l.fullPath(ocp)
+
+	// construct filepath for the new path
+	fn := l.constructCategoryName(name)
+	fp := filepath.Dir(ocp)
+	ncp := filepath.Join(fn, fp)
+	nfp := l.fullPath(ncp)
+
+	// check if requested category exists
+	exists, err := l.exists(ofp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	// check if target category already doesn't already exist
+	exists, err = l.exists(nfp)
+	if err != nil {
+		return err
+	}
+	if exists {
+		l.logger.Warn(ErrAlreadyExists.Error())
+		return ErrAlreadyExists
+	}
+
+	// rename requested directory
+	err = l.changeFilepath(ofp, nfp)
+	if err != nil {
+		return err
+	}
+
+	l.logger.Info("Updated the category")
 	return nil
 }
 
@@ -436,75 +466,6 @@ func (l *Local) DeleteCategory(path string) error {
 
 	l.logger.Info("Removed the category")
 	return nil
-}
-
-func (l *Local) RenameCategory(path string, name string) error {
-	l.logger.Info("Renaming the category")
-
-	// construct filepath for the current path
-	ocp := l.constructCategoryPath(path)
-	ofp := l.fullPath(ocp)
-
-	// construct filepath for the new path
-	fn := l.constructCategoryName(name)
-	fp := filepath.Dir(ocp)
-	ncp := filepath.Join(fn, fp)
-	nfp := l.fullPath(ncp)
-
-	// check if requested category exists
-	exists, err := l.exists(ofp)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		l.logger.Warn(ErrNotFound.Error())
-		return ErrNotFound
-	}
-
-	// check if target category already exists
-	exists, err = l.exists(nfp)
-	if err != nil {
-		return err
-	}
-	if exists {
-		l.logger.Warn(ErrAlreadyExists.Error())
-		return ErrAlreadyExists
-	}
-
-	// rename requested directory
-	err = l.changeFilepath(ofp, nfp)
-	if err != nil {
-		return err
-	}
-
-	l.logger.Info("Renamed the category")
-	return nil
-}
-
-func (l *Local) ListCategoryContents(path string) ([]models.CollectionContent, error) {
-	l.logger.Info("Listing the category contents")
-
-	cp := l.constructCategoryPath(path)
-	fp := l.fullPath(cp)
-
-	// check if collection exists
-	exists, err := l.exists(fp)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		l.logger.Warn(ErrNotFound.Error())
-		return nil, ErrNotFound
-	}
-
-	// list and return contents
-	contents, err := l.listContents(fp)
-	if err != nil {
-		return nil, err
-	}
-
-	l.logger.Info("Listed the category contents")
-	return contents, nil
 }
 
 

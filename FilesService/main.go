@@ -95,12 +95,7 @@ func main() {
 	router := http.NewServeMux();
 
 	// Initialize and register the handlers
-	fh := handlers.NewFiles(baseUrl, fs, logger, fc)
-	router.HandleFunc("GET /files/", fh.GetFile)
-	router.HandleFunc("GET /files/{category}/{id}/{filename}", fh.GetFileUrl)
-	router.HandleFunc("POST /files/{category}/{id}/{filename}", fh.PostFile)
-	router.HandleFunc("PUT /files/{category}/{id}/{filename}", fh.PutFile)
-	router.HandleFunc("DELETE /files/{category}/{id}/{filename}", fh.DeleteFile)
+	_ = handlers.NewFiles(baseUrl, fs, logger, fc)
 
 	// IMAGES
 	ih := handlers.NewImages(baseUrl, fs, logger, fc)

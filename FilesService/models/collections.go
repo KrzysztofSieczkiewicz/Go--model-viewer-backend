@@ -20,13 +20,6 @@ type PutCollectionRequest struct {
 	New Collection `json:"new" validate:"required"`
 }
 
-// Defines a response to GET collection request
-// swagger:model getCollectionResponse
-type GetCollectionResponse struct {
-	// Collection contents
-	Contents	[]CollectionContent	`json:"contents" validate:"required"`
-}
-
 /*
 func (c *CollectionContent) Validate() error {
 	switch c.FileType {
