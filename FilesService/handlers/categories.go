@@ -23,7 +23,7 @@ type CategoriesHandler struct {
 }
 
 func NewCategories(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *CategoriesHandler {
-	logger := l.With(slog.String("handler", "collections")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
+	logger := l.With(slog.String("handler", "categories")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
 
 	return &CategoriesHandler{
 		baseUrl: baseUrl,

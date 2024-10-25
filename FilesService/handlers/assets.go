@@ -14,23 +14,8 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
-/*
-Example curls:
-GET IMAGE URL:
-curl -v -X GET http://localhost:9090/images/url -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
-
-POST IMAGE:
-curl -v -i -X POST http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
-
-PUT IMAGE:
-curl -v -i -X PUT http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
-
-DELETE IMAGE:
-curl -v -i -X DELETE http://localhost:9090/images -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
-*/
-
-// Handler for reading and writing images into the imageSets in the storage
-type ImagesHandler struct {
+// Handler for managing assets
+type AssetsHandler struct {
 	baseUrl		string
 	logger		*slog.Logger
 	store		files.Storage
@@ -38,23 +23,25 @@ type ImagesHandler struct {
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *ImagesHandler {
-	return &ImagesHandler{
+func NewAssets(baseUrl string, storage files.Storage, slogger *slog.Logger, cache caches.Cache) *AssetsHandler {
+	logger := slogger.With(slog.String("handler", "files")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
+
+	return &AssetsHandler{
 		baseUrl: baseUrl,
-		store: s, 
-		logger: l,
-		cache: c,
+		store:   storage,
+		logger:  logger,
+		cache:   cache,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
-			baseUrl + "/images",
-			time.Duration(5 * int(time.Minute)),
+			baseUrl+"/files", // TODO: accept as parameter from main.go
+			time.Duration(5*int(time.Minute)),
 		),
 	}
 }
 
-// swagger:route GET /images images getImageUrl
+// swagger:route GET /assets assets getAssetUrl
 //
-// Return a signed url to requested image
+// Return a signed url pointing to the requested asset
 //
 // consumes:
 //	- application/json
@@ -67,26 +54,26 @@ func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) 
 //  400: message
 //	404: message
 //	500: message
-func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing GET Image URL request")
+func (h *AssetsHandler) GetAssetUrl(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET Asset URL request")
 
-	i := &models.Image{}
-	err := utils.FromJSON(i, r.Body)
+	a := &models.Asset{}
+	err := utils.FromJSON(a, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = i.Validate()
+	err = a.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	fn := i.ConstructName()
+	fn := a.ConstructName()
 	fp := filepath.Join(
-		i.Category,
-		i.ID,
+		a.Category,
+		a.ID,
 		fn,
 	)
 
@@ -111,9 +98,9 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	response.RespondWithJSON(rw, http.StatusOK, urlResponse)
 }
 
-// swagger:route GET /{id}&{expires}&{signature} images getImage
+// swagger:route GET /{id}&{expires}&{signature} assets getAsset
 //
-// Return an image from imageset. Can only be accessed by signed URLs
+// Return an asset from collection. Can only be accessed by signed URLs from getAssetUrl request
 //
 // produces:
 //  - application/octet-stream
@@ -125,8 +112,8 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 //	403: message
 //	404: message
 //	500: message
-func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing GET Image request")
+func (h *AssetsHandler) GetAsset(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET Asset request")
 
 	id := r.URL.Query().Get("id")
 	exp := r.URL.Query().Get("expires")
@@ -166,9 +153,9 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 }
 
-// swagger:route POST /images images postImage
+// swagger:route POST /assets assets postAsset
 //
-// Add an image to the existing set
+// Add an asset file to the existing collection
 //
 // consumes:
 //  - multipart/form-data
@@ -181,8 +168,8 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 //  400: message
 // 	403: message
 // 	500: message
-func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing POST Image request")
+func (h *AssetsHandler) PostAsset(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing POST Asset request")
 
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -190,22 +177,22 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i := &models.Image{}
+	a := &models.Asset{}
 	json := r.FormValue("metadata")
 	if json == "" {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
-	err = utils.FromJSONString(i, json)
+	err = utils.FromJSONString(a, json)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = i.Validate()
+	err = a.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
@@ -217,31 +204,31 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	
 	fp := filepath.Join(
-		i.Category,
-		i.ID,
-		i.ConstructName(),
+		a.Category,
+		a.ID,
+		a.ConstructName(),
 	)
 
 	err = h.store.WriteFile(fp, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Image already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, "Asset already exists")
 			return
 		}
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "ImageSet doesn't exist")
+			response.RespondWithMessage(rw, http.StatusBadRequest, "Collection doesn't exist")
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create the file")
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusCreated, "Image uploaded sucessfully")
+	response.RespondWithMessage(rw, http.StatusCreated, "Asset uploaded sucessfully")
 }
 
-// swagger:route PUT /images images putImage
+// swagger:route PUT /assets assets putAsset
 //
-// Update an image in the image set
+// Update an asset in the collection
 //
 // consumes:
 //  - multipart/form-data
@@ -254,25 +241,25 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 //  400: message
 // 	404: message
 // 	500: message
-func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing PUT Image request")
+func (h *AssetsHandler) PutAsset(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT Asset request")
 
-	i := &models.Image{}
+	a := &models.Asset{}
 	json := r.FormValue("metadata")
 	if json == "" {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
-	err := utils.FromJSONString(i, json)
+	err := utils.FromJSONString(a, json)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 	
-	err = i.Validate()
+	err = a.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
@@ -283,10 +270,10 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	
-	fn := i.ConstructName()
+	fn := a.ConstructName()
 	fp := filepath.Join(
-		i.Category,
-		i.ID,
+		a.Category,
+		a.ID,
 		fn,
 	)
 
@@ -300,12 +287,12 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusOK, "Image updated sucessfully")
+	response.RespondWithMessage(rw, http.StatusOK, "Asset updated sucessfully")
 }
 
-// swagger:route DELETE /images images deleteImage
+// swagger:route DELETE /assets assets deleteAsset
 //
-// Remove image from the image set
+// Remove Asset from the collection
 //
 // consumes:
 //  - application/json
@@ -318,19 +305,19 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 //  400: message
 //	404: message
 //	500: message
-func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing DELETE Image request")
+func (h *AssetsHandler) DeleteAsset(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing DELETE Asset request")
 
-	i := &models.Image{}
+	i := &models.Asset{}
 	err := utils.FromJSON(i, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
 	err = i.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
@@ -344,10 +331,10 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.DeleteFile(fp)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Image was not found")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Asset was not found")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Failed to delete the image")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Failed to delete the asset")
 		return
 	}
 

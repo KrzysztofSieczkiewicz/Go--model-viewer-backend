@@ -95,7 +95,7 @@ func main() {
 	router := http.NewServeMux();
 
 	// Initialize and register the handlers
-	_ = handlers.NewFiles(baseUrl, fs, logger, fc)
+	//_ = handlers.NewFiles(baseUrl, fs, logger, fc)
 
 	// IMAGES
 	ih := handlers.NewImages(baseUrl, fs, logger, fc)
