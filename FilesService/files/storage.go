@@ -21,8 +21,6 @@ type Storage interface {
 /*
 	FILES
 */
-	// Reads the file at the provided path and returns a reader
-	ReadFile(path string, writer io.Writer) error
 
 	// Create and write a file under provided path. Returns an error if file already exists
 	WriteFile(path string, file io.Reader) error
