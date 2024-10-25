@@ -1,17 +1,16 @@
 package models
 
+// Asset represents an interface for asset (model/image) management.
 type Asset interface {
+	// Validate checks if the asset is valid and returns an error if not.
 	Validate() error
 
-	// Combine asset properties into filesystem-friendly filename
+	// ConstructName combines asset properties into a filesystem-friendly filename.
 	ConstructName() string
 
-	// Retrieve asset properties from filename
+	// DeconstructName retrieves asset properties from a given filename.
 	DeconstructName(filename string) error
 
-	// Combine asset and collection properties into filesystem-compliant filepath
+	// ConstructFilepath combines asset and collection properties into a filesystem-compliant filepath.
 	ConstructFilepath() string
-
-	// Get assets parent collection
-	Collection() *AssetsCollection
 }

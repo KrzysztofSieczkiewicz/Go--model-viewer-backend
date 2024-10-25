@@ -10,7 +10,7 @@ import (
 // swagger:model Image
 type Image struct {
 	// Image parent collection
-	AssetsCollection	`json:"collection" validate:"required"`
+	Collection AssetsCollection	`json:"collection" validate:"required"`
 
 	// Image type determining general image purpose (eg. Albedo, Roughness)
 	// required: true
@@ -30,6 +30,14 @@ func (i *Image) ConstructName() string {
 		i.ImgType,
 		i.Resolution,
 		i.FileExtension,
+	)
+}
+
+// Combines image properties into filepath
+func (i *Image) ConstructFilepath() string {
+	return filepath.Join(
+		i.Collection.ConstructCollectionPath(),
+		i.ConstructName(),
 	)
 }
 
@@ -54,20 +62,12 @@ func (i *Image) DeconstructName(filename string) error {
 	return nil
 }
 
-func (i *Image) ConstructFilepath() string {
-	return filepath.Join(
-		i.Collection().ConstructCategoryPath(), 
-		i.Collection().ID, 
-		i.ConstructName(),
-	)
-}
 
 
 
 
 
 // TODO -> should be deleted
-
 
 type Images []*Image
 

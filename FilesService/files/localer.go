@@ -15,7 +15,7 @@ import (
 func (l *Local) CheckAsset(asset models.Asset) error {
 	l.logger.Info("Checking the asset")
 
-	fp := l.fullAssetPath(asset)
+	fp := asset.ConstructFilepath()
 
 	// check if requested file exists
 	exists, err := l.exists(fp)
@@ -58,7 +58,7 @@ func (l *Local) GetAsset(filepath string, w io.Writer) error {
 func (l *Local) AddAsset(asset models.Asset, r io.Reader) error {
 	l.logger.Info("Writing the asset")
 
-	fp := l.fullAssetPath(asset)
+	fp := asset.ConstructFilepath()
 
 	// check if the directory exists
 	dir := filepath.Dir(fp)
@@ -98,7 +98,7 @@ func (l *Local) AddAsset(asset models.Asset, r io.Reader) error {
 func (l *Local) OverwriteAsset(asset models.Asset, r io.Reader) error {
 	l.logger.Info("Updating the asset")
 
-	fp := l.fullAssetPath(asset)
+	fp := asset.ConstructFilepath()
 	tfp := fp + "_tmp"
 
 	// check if file exists
@@ -134,8 +134,8 @@ func (l *Local) OverwriteAsset(asset models.Asset, r io.Reader) error {
 func (l *Local) UpdateAsset(asset models.Asset, newAsset models.Asset) error {
 	l.logger.Info("Rename the asset")
 
-	fp := l.fullAssetPath(asset)
-	nfp := l.fullAssetPath(newAsset)
+	fp := asset.ConstructFilepath()
+	nfp := newAsset.ConstructFilepath()
 
 	// check if file exists
 	exists, err := l.exists(fp)
@@ -170,7 +170,7 @@ func (l *Local) UpdateAsset(asset models.Asset, newAsset models.Asset) error {
 func (l *Local) DeleteAsset(asset models.Asset) error {
 	l.logger.Info("Removing the asset")
 
-	fp := l.fullAssetPath(asset)
+	fp := asset.ConstructFilepath()
 
 	// check if file exists
 	exists, err := l.exists(fp)
@@ -472,21 +472,6 @@ func (l *Local) DeleteCategory(path string) error {
 	l.logger.Info("Removed the category")
 	return nil
 }
-
-/*
-	ASSET
-*/
-
-// Construct a filepath from provided asset
-func (l *Local) fullAssetPath(asset models.Asset) string {
-	p := filepath.Join(
-		asset.Collection().ConstructCategoryPath(), 
-		asset.Collection().ID, 
-		asset.ConstructName(),
-	)
-	return l.fullPath(p)
-}
-
 
 /*
 	COLLECTION

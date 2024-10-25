@@ -69,7 +69,7 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f, err := h.store.ListCategoryContents(c.Filepath)
+	f, err := h.store.ListCategoryContents(c.Path)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
@@ -114,7 +114,7 @@ func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = h.store.CreateCategory(c.Filepath)
+	err = h.store.CreateCategory(c.Path)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Category already exists")
@@ -163,7 +163,7 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.store.UpdateCategory(c.Existing.Filepath, c.New.Filepath)
+	err = h.store.UpdateCategory(c.Existing.Path, c.New.Path)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
@@ -212,7 +212,7 @@ func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = h.store.DeleteCategory(c.Filepath)
+	err = h.store.DeleteCategory(c.Path)
 	if err != nil {
 		if err == files.ErrDirNotEmpty {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Category is not empty")

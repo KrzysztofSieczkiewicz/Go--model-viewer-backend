@@ -10,7 +10,7 @@ import (
 // swagger:model Model
 type Model struct {
 	// Model parent collection
-	AssetsCollection	`json:"collection" validate:"required"`
+	Collection AssetsCollection	`json:"collection" validate:"required"`
 
 	// Type of the model
 	AssetType		string	`json:"type" validate:"required"`
@@ -29,6 +29,13 @@ func (m *Model) ConstructName() string {
 		m.AssetType,
 		m.LOD,
 		m.FileExtension,
+	)
+}
+
+func (m *Model) ConstructFilepath() string {
+	return filepath.Join(
+		m.Collection.ConstructCollectionPath(),
+		m.ConstructName(),
 	)
 }
 
@@ -53,10 +60,6 @@ func (m *Model) DeconstructName(filename string) error {
 	return nil
 }
 
-func (m *Model) ConstructFilepath() string {
-	return filepath.Join(
-		m.Collection().ConstructCategoryPath(), 
-		m.Collection().ID, 
-		m.ConstructName(),
-	)
+func (m *Model) Validate() error {
+	return nil
 }

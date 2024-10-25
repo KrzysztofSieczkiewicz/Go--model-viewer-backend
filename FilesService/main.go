@@ -92,14 +92,16 @@ func main() {
 	fc := caches.NewFreeCache(50, 2)
 
 	// Initialize the ServeMux
-	router := http.NewServeMux();
+	router := http.NewServeMux()
 
-	// Initialize and register the handlers
-	//_ = handlers.NewFiles(baseUrl, fs, logger, fc)
+	// MODELS
+	mh := handlers.NewModels(baseUrl, fs, logger, fc)
+	router.HandleFunc("GET /models/url", mh.GetModelUrl)
+	router.HandleFunc("POST /models", mh.PostModel)
 
 	// IMAGES
 	ih := handlers.NewImages(baseUrl, fs, logger, fc)
-	router.HandleFunc("GET /images/url", ih.GetUrl)
+	router.HandleFunc("GET /images/url", ih.GetImageUrl)
 	router.HandleFunc("GET /images", ih.GetImage) // TODO: HANDLE THIS PROPERLY - by common file endpoint
 	router.HandleFunc("POST /images", ih.PostImage)
 	router.HandleFunc("PUT /images", ih.PutImage)

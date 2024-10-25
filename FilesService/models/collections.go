@@ -1,5 +1,7 @@
 package models
 
+import "path/filepath"
+
 // Defines a set of files contributing to the same object/texture
 // swagger:model collection
 type AssetsCollection struct {
@@ -7,8 +9,17 @@ type AssetsCollection struct {
 	ID string `json:"id" validate:"required"`
 
 	// Category structure describing collection
-	Category `json:"category" validate:"required"`
+	Category Category `json:"category" validate:"required"`
 }
+
+func (c *AssetsCollection) ConstructCollectionPath() string {
+	return filepath.Join(
+		c.Category.ConstructCategoryPath(), 
+		c.ID,
+	)
+}
+
+
 
 // Defines properties of current collection and properties that are to be changed to
 // swagger:model putCollectionRequest

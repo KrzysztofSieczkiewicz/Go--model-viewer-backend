@@ -13,6 +13,10 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
+// curl -v -i -X POST http://localhost:9090/models -H "Content-Type: multipart/form-data" -F "metadata={\"collection\":{\"category\":{\"path\":\"random/test\"},\"id\":\"1\"},\"type\":\"Asset\",\"lod\":\"LOD0\",\"extension\":\"png\"}" -F "file=@FilesService/thumbnail.png;type=image/png"
+
+// curl -v -i -X POST http://localhost:9090/models -H "Content-Type: multipart/form-data" -F "metadata={\"path\":\"random/test\",\"id\":\"1\",\"type\":\"Asset\",\"lod\":\"LOD0\",\"extension\":\"png\"}" -F "file=@FilesService/thumbnail.png;type=image/png"
+
 // Handler for managing models
 type ModelsHandler struct {
 	baseUrl		string
