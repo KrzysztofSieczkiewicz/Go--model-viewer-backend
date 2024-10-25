@@ -3,7 +3,6 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
@@ -70,27 +69,20 @@ func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) 
 func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET Image URL request")
 
-	i := &models.Image{}
-	err := utils.FromJSON(i, r.Body)
+	image := &models.Image{}
+	err := utils.FromJSON(image, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
 		return
 	}
 
-	err = i.Validate()
+	err = image.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
 	}
 
-	fn := i.ConstructName()
-	fp := filepath.Join(
-		i.Category,
-		i.ID,
-		fn,
-	)
-
-	err = h.store.IfExists(fp)
+	err = h.store.CheckAsset(image)
 	if err != nil {
 		if err == files.ErrNotFound {
 			http.Error(rw, err.Error(), http.StatusNotFound)
@@ -100,11 +92,10 @@ func (h *ImagesHandler) GetUrl(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpId := caches.GenerateUUID()
-	h.cache.Set(tmpId, fp)
+	h.cache.Set(tmpId, image)
 	url := h.signedUrl.GenerateSignedUrl(tmpId)
 
     urlResponse := response.FileUrlResponse{
-        Filename: fn,
         URL:      url,
     }
 
@@ -156,7 +147,7 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.ReadFile(fp, rw)
+	err = h.store.GetAsset(fp, rw)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to retrieve requested file")
 		return
@@ -190,20 +181,20 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i := &models.Image{}
+	image := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
-	err = utils.FromJSONString(i, json)
+	err = utils.FromJSONString(image, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
 	}
 
-	err = i.Validate()
+	err = image.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
@@ -215,14 +206,8 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	
-	fp := filepath.Join(
-		i.Category,
-		i.ID,
-		i.ConstructName(),
-	)
 
-	err = h.store.WriteFile(fp, file)
+	err = h.store.AddAsset(image, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Image already exists")
@@ -257,20 +242,20 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT Image request")
 
-	i := &models.Image{}
+	image := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
-	err := utils.FromJSONString(i, json)
+	err := utils.FromJSONString(image, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
 	}
 	
-	err = i.Validate()
+	err = image.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
@@ -282,15 +267,8 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	
-	fn := i.ConstructName()
-	fp := filepath.Join(
-		i.Category,
-		i.ID,
-		fn,
-	)
 
-	err = h.store.OverwriteFile(fp, file)
+	err = h.store.OverwriteAsset(image, file)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
@@ -301,6 +279,56 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	response.RespondWithMessage(rw, http.StatusOK, "Image updated sucessfully")
+}
+
+// swagger:route PUT /images/update images putImageData
+//
+// Updates the image data without changing the file contents
+//
+// consumes:
+//  - application/json
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: message
+//  400: message
+// 	404: message
+// 	500: message
+func (h *ImageSetsHandler) PutImageData(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT Image request")
+
+	request := &models.PutRequest[models.Image]{}
+	err := utils.FromJSON(request, r.Body)
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
+		return
+	}
+
+	err = request.Existing.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = request.New.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = h.store.UpdateAsset(&request.Existing, &request.New)
+	if err != nil {
+		if err == files.ErrNotFound {
+			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
+			return
+		}
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update the file")
+		return
+	}
+
+	response.RespondWithMessage(rw, http.StatusOK, "Asset updated sucessfully")
 }
 
 // swagger:route DELETE /images images deleteImage
@@ -321,27 +349,20 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing DELETE Image request")
 
-	i := &models.Image{}
-	err := utils.FromJSON(i, r.Body)
+	image := &models.Image{}
+	err := utils.FromJSON(image, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
 		return
 	}
 
-	err = i.Validate()
+	err = image.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
 		return
 	}
 
-	fn := i.ConstructName()
-	fp := filepath.Join(
-		i.Category,
-		i.ID,
-		fn,
-	)
-
-	err = h.store.DeleteFile(fp)
+	err = h.store.DeleteAsset(image)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Image was not found")

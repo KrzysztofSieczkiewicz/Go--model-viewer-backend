@@ -1,11 +1,5 @@
 package models
 
-type File interface {
-	Validate() error
-	ConstructName() string
-	DeconstructName() string
-}
-
 type FileType string
 
 const (

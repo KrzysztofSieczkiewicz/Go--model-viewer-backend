@@ -55,10 +55,6 @@ func (l *Local) IfExists(path string) error {
 	return nil
 }
 
-func (l *Local) ReadFile(path string, writer io.Writer) error {
-	return nil
-}
-
 func (l *Local) WriteFile(path string, contents io.Reader) error {
 	l.logger.Info("Saving the file: " + path)
 

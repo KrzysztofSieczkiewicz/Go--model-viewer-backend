@@ -25,8 +25,6 @@ type FileResponse struct {
 
 // swagger:model fileUrl
 type FileUrlResponse struct {
-    // filename
-    Filename   string  `json:"filename"`
     // url pointing to the resource
     URL        string  `json:"url"`
 }

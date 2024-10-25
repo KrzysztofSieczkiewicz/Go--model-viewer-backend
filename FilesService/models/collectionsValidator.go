@@ -12,7 +12,7 @@ var (
 	regexCategory = regexp.MustCompile(`^(.*)\/([^\/]*)$`)
 )
 
-func (c *Collection) Validate() error {
+func (c *AssetsCollection) Validate() error {
 	validate := validator.New()
 
 	validate.RegisterValidation("id", validateID)

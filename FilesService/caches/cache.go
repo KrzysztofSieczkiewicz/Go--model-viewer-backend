@@ -1,9 +1,12 @@
 package caches
 
-import "github.com/google/uuid"
+import (
+	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
+	"github.com/google/uuid"
+)
 
 type Cache interface {
-	Set(key string, value string)
+	Set(key string, asset models.Asset)
 	Get(key string) (string, error)
 }
 

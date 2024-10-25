@@ -2,13 +2,15 @@ package models
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
 // Defines a properties of a image file that are used to construct/deconstruct filename
 // swagger:model Image
 type Image struct {
-	Collection
+	// Image parent collection
+	AssetsCollection	`json:"collection" validate:"required"`
 
 	// Image type determining general image purpose (eg. Albedo, Roughness)
 	// required: true
@@ -52,6 +54,13 @@ func (i *Image) DeconstructName(filename string) error {
 	return nil
 }
 
+func (i *Image) ConstructFilepath() string {
+	return filepath.Join(
+		i.Collection().ConstructCategoryPath(), 
+		i.Collection().ID, 
+		i.ConstructName(),
+	)
+}
 
 
 

@@ -59,6 +59,19 @@ type Storage interface {
 	/*
 		NEW
 	*/
+	// Assets
+	CheckAsset(asset models.Asset) error
+
+	GetAsset(filepath string, w io.Writer) error
+
+	AddAsset(asset models.Asset, r io.Reader) error
+
+	OverwriteAsset(asset models.Asset, r io.Reader) error
+
+	UpdateAsset(asset models.Asset, newAsset models.Asset) error
+
+	DeleteAsset(asset models.Asset) error
+
 	// Collections
 	ListCollectionContents(category string, id string) ([]models.CollectionContent, error) 
 

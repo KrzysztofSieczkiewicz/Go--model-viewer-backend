@@ -10,14 +10,30 @@ import (
 )
 
 /*
-	FILE
+	ASSET
 */
-func (l *Local) ReadFile_(category string, collection string, filename string, w io.Writer) error {
-	l.logger.Info("Reading the file")
+func (l *Local) CheckAsset(asset models.Asset) error {
+	l.logger.Info("Checking the asset")
 
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, collection, filename)
-	fp := l.fullPath(p)
+	fp := l.fullAssetPath(asset)
+
+	// check if requested file exists
+	exists, err := l.exists(fp)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		l.logger.Warn(ErrNotFound.Error())
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (l *Local) GetAsset(filepath string, w io.Writer) error {
+	l.logger.Info("Reading the asset")
+
+	fp := l.fullPath(filepath)
 
 	// check if requested file exists
 	exists, err := l.exists(fp)
@@ -35,16 +51,14 @@ func (l *Local) ReadFile_(category string, collection string, filename string, w
 		return err
 	}
 
-	l.logger.Info("Finished reading the file")
+	l.logger.Info("Finished reading the asset")
     return nil
 }
 
-func (l *Local) WriteFile_(category string, collection string, filename string, r io.Reader) error {
-	l.logger.Info("Writing the file")
+func (l *Local) AddAsset(asset models.Asset, r io.Reader) error {
+	l.logger.Info("Writing the asset")
 
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, collection, filename)
-	fp := l.fullPath(p)
+	fp := l.fullAssetPath(asset)
 
 	// check if the directory exists
 	dir := filepath.Dir(fp)
@@ -77,16 +91,14 @@ func (l *Local) WriteFile_(category string, collection string, filename string, 
 		return err
 	}
 
-	l.logger.Info("Finished writing the file")
+	l.logger.Info("Finished writing the asset")
 	return nil
 }
 
-func (l *Local) OverwriteFile_(category string, collection string, filename string, r io.Reader) error {
-	l.logger.Info("Updating the file")
+func (l *Local) OverwriteAsset(asset models.Asset, r io.Reader) error {
+	l.logger.Info("Updating the asset")
 
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, collection, filename)
-	fp := l.fullPath(p)
+	fp := l.fullAssetPath(asset)
 	tfp := fp + "_tmp"
 
 	// check if file exists
@@ -115,20 +127,15 @@ func (l *Local) OverwriteFile_(category string, collection string, filename stri
         return err
     }
 
-	l.logger.Info("Updated the file")
+	l.logger.Info("Updated the asset")
 	return nil
 }
 
-func (l *Local) RenameFile_(category string, collection string, filename string, newFilename string) error {
-	l.logger.Info("Rename the file")
+func (l *Local) UpdateAsset(asset models.Asset, newAsset models.Asset) error {
+	l.logger.Info("Rename the asset")
 
-	cp := l.constructCategoryPath(category)
-	// current
-	p := filepath.Join(cp, collection, filename)
-	fp := l.fullPath(p)
-	// new
-	np := filepath.Join(cp, collection, newFilename)
-	nfp := l.fullPath(np)
+	fp := l.fullAssetPath(asset)
+	nfp := l.fullAssetPath(newAsset)
 
 	// check if file exists
 	exists, err := l.exists(fp)
@@ -156,16 +163,14 @@ func (l *Local) RenameFile_(category string, collection string, filename string,
         return err
     }
 
-	l.logger.Info("Renamed the file")
+	l.logger.Info("Renamed the asset")
 	return nil
 }
 
-func (l *Local) DeleteFile_(category string, collection string, filename string) error {
-	l.logger.Info("Deleting the file")
+func (l *Local) DeleteAsset(asset models.Asset) error {
+	l.logger.Info("Removing the asset")
 
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, collection, filename)
-	fp := l.fullPath(p)
+	fp := l.fullAssetPath(asset)
 
 	// check if file exists
 	exists, err := l.exists(fp)
@@ -193,7 +198,7 @@ func (l *Local) DeleteFile_(category string, collection string, filename string)
 		return err
 	}
 
-	l.logger.Info("Deleted the file")
+	l.logger.Info("Removed the file")
 	return nil
 }
 
@@ -466,6 +471,20 @@ func (l *Local) DeleteCategory(path string) error {
 
 	l.logger.Info("Removed the category")
 	return nil
+}
+
+/*
+	ASSET
+*/
+
+// Construct a filepath from provided asset
+func (l *Local) fullAssetPath(asset models.Asset) string {
+	p := filepath.Join(
+		asset.Collection().ConstructCategoryPath(), 
+		asset.Collection().ID, 
+		asset.ConstructName(),
+	)
+	return l.fullPath(p)
 }
 
 

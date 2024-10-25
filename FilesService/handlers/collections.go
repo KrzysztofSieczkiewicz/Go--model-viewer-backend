@@ -56,7 +56,7 @@ func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Ca
 func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET Collection request")
 
-	c := &models.Collection{}
+	c := &models.AssetsCollection{}
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
@@ -69,7 +69,7 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	f, err := h.store.ListCollectionContents(c.Category, c.ID)
+	f, err := h.store.ListCollectionContents(c.Category.Filepath, c.ID)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
@@ -103,7 +103,7 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Collection request")
 
-	c := &models.Collection{}
+	c := &models.AssetsCollection{}
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
@@ -116,7 +116,7 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = h.store.CreateCollection(c.Category, c.ID)
+	err = h.store.CreateCollection(c.Category.Filepath, c.ID)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
@@ -171,8 +171,8 @@ func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request
 	}
 
 	err = h.store.UpdateCollection(
-		c.Existing.Category, c.Existing.ID, 
-		c.New.Category, c.New.ID,
+		c.Existing.Category.Filepath, c.Existing.ID, 
+		c.New.Category.Filepath, c.New.ID,
 	)
 	if err != nil {
 		if err == files.ErrNotFound {
@@ -204,7 +204,7 @@ func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request
 func (h *CollectionsHandler) DeleteCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing DELETE Collection request")
 
-	c := &models.Collection{}
+	c := &models.AssetsCollection{}
 	err := utils.FromJSON(c, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
@@ -217,7 +217,7 @@ func (h *CollectionsHandler) DeleteCollection(rw http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = h.store.DeleteCollection(c.Category, c.ID)
+	err = h.store.DeleteCollection(c.Category.Filepath, c.ID)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")

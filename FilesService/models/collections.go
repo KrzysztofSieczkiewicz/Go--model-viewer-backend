@@ -2,22 +2,26 @@ package models
 
 // Defines a set of files contributing to the same object/texture
 // swagger:model collection
-type Collection struct {
+type AssetsCollection struct {
 	// Collection ID
 	ID string `json:"id" validate:"required"`
 
 	// Category structure describing collection
-	Category string `json:"category" validate:"required"`
+	Category `json:"category" validate:"required"`
 }
 
 // Defines properties of current collection and properties that are to be changed to
 // swagger:model putCollectionRequest
 type PutCollectionRequest struct {
 	// Current properties
-	Existing Collection `json:"existing" validate:"required"`
+	Existing AssetsCollection `json:"existing" validate:"required"`
 
 	// Desired properties
-	New Collection `json:"new" validate:"required"`
+	New AssetsCollection `json:"new" validate:"required"`
+}
+
+func (c *AssetsCollection) Collection() *AssetsCollection {
+	return c
 }
 
 /*

@@ -3,7 +3,6 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
@@ -14,8 +13,8 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
-// Handler for managing assets
-type AssetsHandler struct {
+// Handler for managing models
+type ModelsHandler struct {
 	baseUrl		string
 	logger		*slog.Logger
 	store		files.Storage
@@ -23,10 +22,10 @@ type AssetsHandler struct {
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewAssets(baseUrl string, storage files.Storage, slogger *slog.Logger, cache caches.Cache) *AssetsHandler {
+func NewModels(baseUrl string, storage files.Storage, slogger *slog.Logger, cache caches.Cache) *ModelsHandler {
 	logger := slogger.With(slog.String("handler", "files")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
 
-	return &AssetsHandler{
+	return &ModelsHandler{
 		baseUrl: baseUrl,
 		store:   storage,
 		logger:  logger,
@@ -39,9 +38,9 @@ func NewAssets(baseUrl string, storage files.Storage, slogger *slog.Logger, cach
 	}
 }
 
-// swagger:route GET /assets assets getAssetUrl
+// swagger:route GET /models models getModelUrl
 //
-// Return a signed url pointing to the requested asset
+// Return a signed url pointing to the requested model
 //
 // consumes:
 //	- application/json
@@ -54,30 +53,23 @@ func NewAssets(baseUrl string, storage files.Storage, slogger *slog.Logger, cach
 //  400: message
 //	404: message
 //	500: message
-func (h *AssetsHandler) GetAssetUrl(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing GET Asset URL request")
+func (h *ModelsHandler) GetModelUrl(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET Model URL request")
 
-	a := &models.Asset{}
-	err := utils.FromJSON(a, r.Body)
+	model := &models.Model{}
+	err := utils.FromJSON(model, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = a.Validate()
+	err = model.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	fn := a.ConstructName()
-	fp := filepath.Join(
-		a.Category,
-		a.ID,
-		fn,
-	)
-
-	err = h.store.IfExists(fp)
+	err = h.store.CheckAsset(model)
 	if err != nil {
 		if err == files.ErrNotFound {
 			http.Error(rw, err.Error(), http.StatusNotFound)
@@ -87,20 +79,16 @@ func (h *AssetsHandler) GetAssetUrl(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpId := caches.GenerateUUID()
-	h.cache.Set(tmpId, fp)
+	h.cache.Set(tmpId, model)
 	url := h.signedUrl.GenerateSignedUrl(tmpId)
 
-    urlResponse := response.FileUrlResponse{
-        Filename: fn,
-        URL:      url,
-    }
-
+    urlResponse := response.FileUrlResponse{URL: url}
 	response.RespondWithJSON(rw, http.StatusOK, urlResponse)
 }
 
-// swagger:route GET /{id}&{expires}&{signature} assets getAsset
+// swagger:route GET /{id}&{expires}&{signature} models getModel
 //
-// Return an asset from collection. Can only be accessed by signed URLs from getAssetUrl request
+// Returns a model from collection. Can only be accessed by signed URLs from getModelUrl request
 //
 // produces:
 //  - application/octet-stream
@@ -112,8 +100,8 @@ func (h *AssetsHandler) GetAssetUrl(rw http.ResponseWriter, r *http.Request) {
 //	403: message
 //	404: message
 //	500: message
-func (h *AssetsHandler) GetAsset(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing GET Asset request")
+func (h *ModelsHandler) GetModel(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing GET Model request")
 
 	id := r.URL.Query().Get("id")
 	exp := r.URL.Query().Get("expires")
@@ -143,7 +131,7 @@ func (h *AssetsHandler) GetAsset(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.store.ReadFile(fp, rw)
+	err = h.store.GetAsset(fp, rw)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to retrieve requested file")
 		return
@@ -153,9 +141,9 @@ func (h *AssetsHandler) GetAsset(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 }
 
-// swagger:route POST /assets assets postAsset
+// swagger:route POST /models models postModel
 //
-// Add an asset file to the existing collection
+// Add an model file to the existing collection
 //
 // consumes:
 //  - multipart/form-data
@@ -168,8 +156,8 @@ func (h *AssetsHandler) GetAsset(rw http.ResponseWriter, r *http.Request) {
 //  400: message
 // 	403: message
 // 	500: message
-func (h *AssetsHandler) PostAsset(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing POST Asset request")
+func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing POST Model request")
 
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -177,20 +165,20 @@ func (h *AssetsHandler) PostAsset(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a := &models.Asset{}
+	model := &models.Model{}
 	json := r.FormValue("metadata")
 	if json == "" {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
-	err = utils.FromJSONString(a, json)
+	err = utils.FromJSONString(model, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = a.Validate()
+	err = model.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
@@ -202,14 +190,8 @@ func (h *AssetsHandler) PostAsset(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	
-	fp := filepath.Join(
-		a.Category,
-		a.ID,
-		a.ConstructName(),
-	)
 
-	err = h.store.WriteFile(fp, file)
+	err = h.store.AddAsset(model, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, "Asset already exists")
@@ -226,9 +208,9 @@ func (h *AssetsHandler) PostAsset(rw http.ResponseWriter, r *http.Request) {
 	response.RespondWithMessage(rw, http.StatusCreated, "Asset uploaded sucessfully")
 }
 
-// swagger:route PUT /assets assets putAsset
+// swagger:route PUT /models models putModel
 //
-// Update an asset in the collection
+// Overwrites the model file in the collection
 //
 // consumes:
 //  - multipart/form-data
@@ -241,23 +223,23 @@ func (h *AssetsHandler) PostAsset(rw http.ResponseWriter, r *http.Request) {
 //  400: message
 // 	404: message
 // 	500: message
-func (h *AssetsHandler) PutAsset(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing PUT Asset request")
+func (h *ModelsHandler) PutModel(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT Model request")
 
-	a := &models.Asset{}
+	model := &models.Model{}
 	json := r.FormValue("metadata")
 	if json == "" {
 		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
 		return
 	}
 
-	err := utils.FromJSONString(a, json)
+	err := utils.FromJSONString(model, json)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 	
-	err = a.Validate()
+	err = model.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
@@ -269,15 +251,8 @@ func (h *AssetsHandler) PutAsset(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	
-	fn := a.ConstructName()
-	fp := filepath.Join(
-		a.Category,
-		a.ID,
-		fn,
-	)
 
-	err = h.store.OverwriteFile(fp, file)
+	err = h.store.OverwriteAsset(model, file)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
@@ -290,9 +265,59 @@ func (h *AssetsHandler) PutAsset(rw http.ResponseWriter, r *http.Request) {
 	response.RespondWithMessage(rw, http.StatusOK, "Asset updated sucessfully")
 }
 
-// swagger:route DELETE /assets assets deleteAsset
+// swagger:route PUT /models/update models putModelData
 //
-// Remove Asset from the collection
+// Updates the model data without changing the file contents
+//
+// consumes:
+//  - application/json
+//
+// produces:
+//	- application/json
+//
+// Responses:
+// 	200: message
+//  400: message
+// 	404: message
+// 	500: message
+func (h *ModelsHandler) PutModelData(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing PUT Model request")
+
+	request := &models.PutRequest[models.Model]{}
+	err := utils.FromJSON(request, r.Body)
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
+		return
+	}
+
+	err = request.Existing.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = request.New.Validate()
+	if err != nil {
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		return
+	}
+
+	err = h.store.UpdateAsset(&request.Existing, &request.New)
+	if err != nil {
+		if err == files.ErrNotFound {
+			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
+			return
+		}
+		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update the file")
+		return
+	}
+
+	response.RespondWithMessage(rw, http.StatusOK, "Asset updated sucessfully")
+}
+
+// swagger:route DELETE /models models deleteModel
+//
+// Remove model from the collection
 //
 // consumes:
 //  - application/json
@@ -305,36 +330,29 @@ func (h *AssetsHandler) PutAsset(rw http.ResponseWriter, r *http.Request) {
 //  400: message
 //	404: message
 //	500: message
-func (h *AssetsHandler) DeleteAsset(rw http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Processing DELETE Asset request")
+func (h *ModelsHandler) DeleteModel(rw http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Processing DELETE Model request")
 
-	i := &models.Asset{}
-	err := utils.FromJSON(i, r.Body)
+	model := &models.Model{}
+	err := utils.FromJSON(model, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = i.Validate()
+	err = model.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	fn := i.ConstructName()
-	fp := filepath.Join(
-		i.Category,
-		i.ID,
-		fn,
-	)
-
-	err = h.store.DeleteFile(fp)
+	err = h.store.DeleteAsset(model)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Asset was not found")
+			response.RespondWithMessage(rw, http.StatusNotFound, "Model was not found")
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Failed to delete the asset")
+		response.RespondWithMessage(rw, http.StatusBadRequest, "Failed to delete the model")
 		return
 	}
 
