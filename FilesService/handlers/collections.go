@@ -69,13 +69,13 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	f, err := h.store.ListCollectionContents(c.Category.Path, c.ID)
+	f, err := h.store.ListCollectionContents(c)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve collection contents")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedRead)
 		return
 	}
 
@@ -116,17 +116,17 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = h.store.CreateCollection(c.Category.Path, c.ID)
+	err = h.store.CreateCollection(c)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Collection already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to create Collection")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 //  400: message
 //	404: message
 // 	500: message
-func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request) {
+func (h *CollectionsHandler) PutCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT Collection request")
 	
 	c := &models.PutCollectionRequest{}
@@ -170,16 +170,13 @@ func (h *ImageSetsHandler) PutCollection(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = h.store.UpdateCollection(
-		c.Existing.Category.Path, c.Existing.ID, 
-		c.New.Category.Path, c.New.ID,
-	)
+	err = h.store.UpdateCollection(&c.Existing, &c.New)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to update Collection")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
 		return
 	}
 
@@ -217,13 +214,13 @@ func (h *CollectionsHandler) DeleteCollection(rw http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = h.store.DeleteCollection(c.Category.Path, c.ID)
+	err = h.store.DeleteCollection(c)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Collection")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to delete Collection")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedDelete)
 		return
 	}
 

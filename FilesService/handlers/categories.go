@@ -53,7 +53,7 @@ func NewCategories(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cac
 //  400: message
 //	404: message
 // 	500: message
-func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
+func (h *CategoriesHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET Category request")
 
 	c := &models.Category{}
@@ -72,7 +72,7 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 	f, err := h.store.ListCategoryContents(c)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedRead)
@@ -166,7 +166,7 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 	err = h.store.UpdateCategory(&c.Existing, &c.New)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		if err == files.ErrAlreadyExists {

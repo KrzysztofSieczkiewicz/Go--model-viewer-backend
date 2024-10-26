@@ -23,7 +23,7 @@ var MessageFailedUpdate = "Unable to update the resource in the filesystem"
 var MessageFailedDelete = "Unable to delete the resource in the filesystem"
 
 var MessageAlreadyExists = "Resource already exists"
-var MessageNotExist = "Resource doesn't exist"
+var MessageNotFound = "Resource doesn't exist"
 
 var MessageDirectoryNotEmpty = "Directory is not empty"
 

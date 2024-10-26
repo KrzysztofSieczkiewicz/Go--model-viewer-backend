@@ -200,7 +200,7 @@ func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageNotExist)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageNotFound)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
@@ -257,7 +257,7 @@ func (h *ModelsHandler) PutModel(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.OverwriteAsset(model, file)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
@@ -307,7 +307,7 @@ func (h *ModelsHandler) PutModelData(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.UpdateAsset(&request.Existing, &request.New)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
@@ -351,7 +351,7 @@ func (h *ModelsHandler) DeleteModel(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.DeleteAsset(model)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDelete)

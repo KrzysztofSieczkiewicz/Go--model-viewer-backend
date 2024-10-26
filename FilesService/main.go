@@ -46,26 +46,11 @@ import (
 // DONE: Test all endpoints + fix file write err (access is denied)
 // DONE: Revise data validators
 // DONE: Update Images models for requests (include category and id in the metadata)
-
-// TODO: Enforce that category name cannot have ID-like structure and
-// enforce specific ID formatting - like containting multiple - or _ or sth so it cannot be mistaken with directory
-// then modify directory management accordingly -> manage categories and IDs separately
-// then modify current endpoint structure -> instead of categories just manage directories for separate storages with reused handler
-// ID: cannot start with '_'
-// Category: starts with '_'
-
-// TODO: Write unit tests for storage and data packages
-
-// TODO: Add 3D assets handling
+// DONE: Enforce that category name cannot have ID-like structure and enforce specific ID formatting
+// DONE: Add 3D assets handling
 
 // TODO: Add bulk methods
-
-// CONSIDER: After adding all desired models -> update local.go and storage.go to accept objects instead of list of parameters
-// both assets and images should be the same model -> File
-// constructCategoryPath and deconstructCategoryPath -> move to the Category model
-// Image and Asset should just extend File type so they could have different implementations of ConstructFileName/DeconstructFileName func
-// then -> funcs in local.go should receive model objects with data as arguments and they should retrieve data from within by themselves
-// it should clear handler funcs a bit
+// TODO: Write unit tests for storage and data packages
 
 func main() {
 	// Initialize logger
@@ -106,18 +91,6 @@ func main() {
 	router.HandleFunc("POST /images", ih.PostImage)
 	router.HandleFunc("PUT /images", ih.PutImage)
 	router.HandleFunc("DELETE /images", ih.DeleteImage)
-
-	// IMAGE SETS & CATEGORIES
-	ish := handlers.NewImageSets(baseUrl, fs, logger, fc)
-	router.HandleFunc("GET /imageSets", ish.GetImageSet)
-	router.HandleFunc("POST /imageSets", ish.PostImageSet)
-	router.HandleFunc("PUT /imageSets", ish.PutImageSet)
-	router.HandleFunc("DELETE /imageSets", ish.DeleteImageSet)
-
-	router.HandleFunc("GET /imageCategories", ish.GetCategory)
-	router.HandleFunc("POST /imageCategories", ish.PostCategory)
-	router.HandleFunc("PUT /imageCategories", ish.PutCategory)
-	router.HandleFunc("DELETE /imageCategories", ish.DeleteCategory)
 
 	// Handle OpenAPI doc request
 	opts := swaggerMiddleware.RedocOpts{SpecURL: "/swagger.yaml"}

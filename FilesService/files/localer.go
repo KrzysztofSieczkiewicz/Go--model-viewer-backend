@@ -4,7 +4,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
 )
@@ -15,7 +14,8 @@ import (
 func (l *Local) CheckAsset(asset models.Asset) error {
 	l.logger.Info("Checking the asset")
 
-	fp := asset.ConstructFilepath()
+	p := asset.ConstructFilepath()
+	fp := l.fullPath(p)
 
 	// check if requested file exists
 	exists, err := l.exists(fp)
@@ -58,7 +58,8 @@ func (l *Local) GetAsset(filepath string, w io.Writer) error {
 func (l *Local) AddAsset(asset models.Asset, r io.Reader) error {
 	l.logger.Info("Writing the asset")
 
-	fp := asset.ConstructFilepath()
+	p := asset.ConstructFilepath()
+	fp := l.fullPath(p)
 
 	// check if the directory exists
 	dir := filepath.Dir(fp)
@@ -98,7 +99,8 @@ func (l *Local) AddAsset(asset models.Asset, r io.Reader) error {
 func (l *Local) OverwriteAsset(asset models.Asset, r io.Reader) error {
 	l.logger.Info("Updating the asset")
 
-	fp := asset.ConstructFilepath()
+	p := asset.ConstructFilepath()
+	fp := l.fullPath(p)
 	tfp := fp + "_tmp"
 
 	// check if file exists
@@ -134,8 +136,10 @@ func (l *Local) OverwriteAsset(asset models.Asset, r io.Reader) error {
 func (l *Local) UpdateAsset(asset models.Asset, newAsset models.Asset) error {
 	l.logger.Info("Rename the asset")
 
-	fp := asset.ConstructFilepath()
-	nfp := newAsset.ConstructFilepath()
+	p := asset.ConstructFilepath()
+	fp := l.fullPath(p)
+	np := newAsset.ConstructFilepath()
+	nfp := l.fullPath(np)
 
 	// check if file exists
 	exists, err := l.exists(fp)
@@ -170,7 +174,8 @@ func (l *Local) UpdateAsset(asset models.Asset, newAsset models.Asset) error {
 func (l *Local) DeleteAsset(asset models.Asset) error {
 	l.logger.Info("Removing the asset")
 
-	fp := asset.ConstructFilepath()
+	p := asset.ConstructFilepath()
+	fp := l.fullPath(p)
 
 	// check if file exists
 	exists, err := l.exists(fp)
@@ -205,12 +210,11 @@ func (l *Local) DeleteAsset(asset models.Asset) error {
 /*
 	COLLECTION
 */
-func (l *Local) ListCollectionContents(category string, id string) ([]models.CollectionContent, error) {
+func (l *Local) ListCollectionContents(collection *models.AssetsCollection) ([]models.CollectionContent, error) {
 	l.logger.Info("Listing the collection contents")
 
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, id)
-	fp := l.fullPath(p)
+	cp := collection.ConstructCollectionPath()
+	fp := l.fullPath(cp)
 
 	// check if collection exists
 	exists, err := l.exists(fp)
@@ -231,15 +235,15 @@ func (l *Local) ListCollectionContents(category string, id string) ([]models.Col
 	return contents, nil
 }
 
-func (l *Local) CreateCollection(category string, id string) error {
+func (l *Local) CreateCollection(collection *models.AssetsCollection) error {
 	l.logger.Info("Creating the collection")
 
-	cp := l.constructCategoryPath(category)
-	cfp := l.fullPath(cp)
-	fp := filepath.Join(cfp, id)
+	// full path
+	p := collection.ConstructCollectionPath()
+	fp := l.fullPath(p)
 
 	// check if category exists
-	exists, err := l.exists(cfp)
+	exists, err := l.exists(filepath.Dir(fp))
 	if err != nil {
 		return err
 	}
@@ -268,17 +272,15 @@ func (l *Local) CreateCollection(category string, id string) error {
 	return nil
 }
 
-func (l *Local) UpdateCollection(category string, id string, newCategory string, newId string) error {
+func (l *Local) UpdateCollection(collection *models.AssetsCollection, newCollection *models.AssetsCollection) error {
 	l.logger.Info("Renaming the collection")
 
 	// current path
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, id)
-	fp := l.fullPath(p)
+	cp := collection.ConstructCollectionPath()
+	fp := l.fullPath(cp)
 
 	// desired path
-	ncp := l.constructCategoryPath(newCategory)
-	np := filepath.Join(ncp, newId)
+	np := newCollection.ConstructCollectionPath()
 	nfp := l.fullPath(np)
 
 	// check if collection exists
@@ -311,12 +313,11 @@ func (l *Local) UpdateCollection(category string, id string, newCategory string,
 	return nil
 }
 
-func (l *Local) DeleteCollection(category string, id string) error {
+func (l *Local) DeleteCollection(collection *models.AssetsCollection) error {
 	l.logger.Info("Removing the collection")
 
-	cp := l.constructCategoryPath(category)
-	p := filepath.Join(cp, id)
-	fp := l.fullPath(p)
+	cp := collection.ConstructCollectionPath()
+	fp := l.fullPath(cp)
 
 	// check if collection exists
 	exists, err := l.exists(fp)
@@ -471,82 +472,9 @@ func (l *Local) DeleteCategory(category *models.Category) error {
 	return nil
 }
 
-/*
-	COLLECTION
-*/
-
-//  Verifies if provided filepath leads to the collection
-func (l *Local) verifyCollectionPath(filename string) bool {
-	base := filepath.Base(filename)
-
-	return !strings.HasPrefix(base, "_")
-}
-
 
 /*
-	CATEGORY
-*/
-
-// Converts the filename to the filesystem compliant category name
-func (l *Local) constructCategoryName(name string) string {
-	return "_" + name
-}
-
-// Converts the provided path to the filesystem compliant category path
-func (l *Local) constructCategoryPath(path string) string {
-	dirs := strings.Split(path, string(filepath.Separator))
-
-	for i, dir := range dirs {
-		dirs[i] = "_" + dir
-	}
-
-	newPath := strings.Join(dirs, string(filepath.Separator))
-
-	return newPath
-}
-
-// Converts the provided filesystem compliant category path to the neutral path
-func (l *Local) deconstructCategoryPath(path string) (string, error) {
-	dirs := strings.Split(path, string(filepath.Separator))
-
-	for i, dir := range dirs {
-		if strings.HasPrefix(dir, "_") {
-			dirs[i] = dir[1:]
-		} else {
-			l.logger.Error(ErrNotCategoryPath.Error())
-			return "", ErrNotCategoryPath
-		}
-	}
-
-	newPath := strings.Join(dirs, string(filepath.Separator))
-
-	return newPath, nil
-}
-
-// Verifies if provided filename is a category
-func (l *Local) verifyCategory(filename string) bool {
-	base := filepath.Base(filename)
-
-	return strings.HasPrefix(base, "_")
-}
-
-// Verifies if provided filepath contains only categories
-func (l *Local) verifyCategoryPath(path string) bool {
-	dirs := strings.Split(path, string(filepath.Separator))
-
-	for _, dir := range dirs {
-		if !strings.HasPrefix(dir, "_") {
-			l.logger.Warn("Path contains non-categories")
-			return false
-		}
-	}
-
-	return true
-}
-
-
-/*
-	FILEPATH
+	INTERNAL HELPERS
 */
 
 // Returns the absolute path from the relative path
