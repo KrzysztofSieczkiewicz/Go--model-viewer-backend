@@ -13,8 +13,6 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
-// curl -v -i -X POST http://localhost:9090/models -H "Content-Type: multipart/form-data" -F "metadata={\"collection\":{\"category\":{\"path\":\"random/test\"},\"id\":\"1\"},\"type\":\"Asset\",\"lod\":\"LOD0\",\"extension\":\"png\"}" -F "file=@FilesService/thumbnail.png;type=image/png"
-
 // curl -v -i -X POST http://localhost:9090/models -H "Content-Type: multipart/form-data" -F "metadata={\"path\":\"random/test\",\"id\":\"1\",\"type\":\"Asset\",\"lod\":\"LOD0\",\"extension\":\"png\"}" -F "file=@FilesService/thumbnail.png;type=image/png"
 
 // Handler for managing models
@@ -44,7 +42,7 @@ func NewModels(baseUrl string, storage files.Storage, slogger *slog.Logger, cach
 
 // swagger:route GET /models models getModelUrl
 //
-// Return a signed url pointing to the requested model
+// Returns a signed url pointing to the requested model
 //
 // consumes:
 //	- application/json
@@ -114,30 +112,30 @@ func (h *ModelsHandler) GetModel(rw http.ResponseWriter, r *http.Request) {
 	err := h.signedUrl.ValidateSignedUrl(id, exp, sign)
 	if err != nil {
 		if err == signedurl.ErrUrlExpired {
-			response.RespondWithMessage(rw, http.StatusForbidden, "URL has expired")
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageExpiredUrl)
 			return
 		}
 		if err == signedurl.ErrInvalidSignature {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid signature")
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidSignature)
 			return
 		}
 		if err == signedurl.ErrInvalidTimestamp {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid timestamp")
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidTimestamp)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidUrl)
 		return
 	}
 
 	fp, err := h.cache.Get(id)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Request doesn't match cache")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCacheGet)
 		return
 	}
 
 	err = h.store.GetAsset(fp, rw)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to retrieve requested file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetRead)
 		return
 	}
 
@@ -147,7 +145,7 @@ func (h *ModelsHandler) GetModel(rw http.ResponseWriter, r *http.Request) {
 
 // swagger:route POST /models models postModel
 //
-// Add an model file to the existing collection
+// Adds a model file to the existing collection
 //
 // consumes:
 //  - multipart/form-data
@@ -165,14 +163,14 @@ func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Unable to parse form data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDataParsing)
 		return
 	}
 
 	model := &models.Model{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartJson)
 		return
 	}
 
@@ -190,7 +188,7 @@ func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Error reading file from request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartFile)
 		return
 	}
 	defer file.Close()
@@ -198,18 +196,18 @@ func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.AddAsset(model, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Asset already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAssetAlreadyExists)
 			return
 		}
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "Collection doesn't exist")
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageCollectionNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create the file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetCreate)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusCreated, "Asset uploaded sucessfully")
+	response.RespondWithMessage(rw, http.StatusCreated, response.MessageUploadSuccessful)
 }
 
 // swagger:route PUT /models models putModel
@@ -233,7 +231,7 @@ func (h *ModelsHandler) PutModel(rw http.ResponseWriter, r *http.Request) {
 	model := &models.Model{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDataParsing)
 		return
 	}
 
@@ -251,7 +249,7 @@ func (h *ModelsHandler) PutModel(rw http.ResponseWriter, r *http.Request) {
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Error reading file from request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartFile)
 		return
 	}
 	defer file.Close()
@@ -259,14 +257,14 @@ func (h *ModelsHandler) PutModel(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.OverwriteAsset(model, file)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update the file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetUpdate)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusOK, "Asset updated sucessfully")
+	response.RespondWithMessage(rw, http.StatusOK, response.MessageUpdateSuccessful)
 }
 
 // swagger:route PUT /models/update models putModelData
@@ -309,19 +307,19 @@ func (h *ModelsHandler) PutModelData(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.UpdateAsset(&request.Existing, &request.New)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update the file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetUpdate)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusOK, "Asset updated sucessfully")
+	response.RespondWithMessage(rw, http.StatusOK, response.MessageUpdateSuccessful)
 }
 
 // swagger:route DELETE /models models deleteModel
 //
-// Remove model from the collection
+// Removes model from the collection
 //
 // consumes:
 //  - application/json
@@ -353,10 +351,10 @@ func (h *ModelsHandler) DeleteModel(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.DeleteAsset(model)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Model was not found")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Failed to delete the model")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedAssetDelete)
 		return
 	}
 

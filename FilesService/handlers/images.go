@@ -72,13 +72,13 @@ func (h *ImagesHandler) GetImageUrl(rw http.ResponseWriter, r *http.Request) {
 	image := &models.Image{}
 	err := utils.FromJSON(image, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
@@ -126,30 +126,30 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 	err := h.signedUrl.ValidateSignedUrl(id, exp, sign)
 	if err != nil {
 		if err == signedurl.ErrUrlExpired {
-			response.RespondWithMessage(rw, http.StatusForbidden, "URL has expired")
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageExpiredUrl)
 			return
 		}
 		if err == signedurl.ErrInvalidSignature {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid signature")
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidSignature)
 			return
 		}
 		if err == signedurl.ErrInvalidTimestamp {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid timestamp")
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidTimestamp)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidUrl)
 		return
 	}
 
 	fp, err := h.cache.Get(id)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Request doesn't match cache")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCacheGet)
 		return
 	}
 
 	err = h.store.GetAsset(fp, rw)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to retrieve requested file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetRead)
 		return
 	}
 
@@ -177,32 +177,32 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Unable to parse form data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDataParsing)
 		return
 	}
 
 	image := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartJson)
 		return
 	}
 
 	err = utils.FromJSONString(image, json)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Error reading file from request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartFile)
 		return
 	}
 	defer file.Close()
@@ -210,18 +210,18 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.AddAsset(image, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Image already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAssetAlreadyExists)
 			return
 		}
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "ImageSet doesn't exist")
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageCollectionNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to create the file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetCreate)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusCreated, "Image uploaded sucessfully")
+	response.RespondWithMessage(rw, http.StatusCreated, response.MessageUploadSuccessful)
 }
 
 // swagger:route PUT /images images putImage
@@ -245,25 +245,25 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	image := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid JSON part of the request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDataParsing)
 		return
 	}
 
 	err := utils.FromJSONString(image, json)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 	
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Error reading file from request")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartFile)
 		return
 	}
 	defer file.Close()
@@ -271,14 +271,14 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.OverwriteAsset(image, file)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update the file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetUpdate)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusOK, "Image updated sucessfully")
+	response.RespondWithMessage(rw, http.StatusOK, response.MessageUpdateSuccessful)
 }
 
 // swagger:route PUT /images/update images putImageData
@@ -321,14 +321,14 @@ func (h *ImagesHandler) PutImageData(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.UpdateAsset(&request.Existing, &request.New)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "File does not exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Failed to update the file")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetUpdate)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusOK, "Asset updated sucessfully")
+	response.RespondWithMessage(rw, http.StatusOK, response.MessageUpdateSuccessful)
 }
 
 // swagger:route DELETE /images images deleteImage
@@ -352,23 +352,23 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	image := &models.Image{}
 	err := utils.FromJSON(image, r.Body)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid data format")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Invalid image data")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
 	err = h.store.DeleteAsset(image)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Image was not found")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusBadRequest, "Failed to delete the image")
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedAssetDelete)
 		return
 	}
 
