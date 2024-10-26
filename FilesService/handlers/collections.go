@@ -56,20 +56,20 @@ func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Ca
 func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET Collection request")
 
-	c := &models.AssetsCollection{}
-	err := utils.FromJSON(c, r.Body)
+	collection := &models.AssetsCollection{}
+	err := utils.FromJSON(collection, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = c.Validate()
+	err = collection.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	f, err := h.store.ListCollectionContents(c)
+	f, err := h.store.ListCollectionContents(collection)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
@@ -103,20 +103,20 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Collection request")
 
-	c := &models.AssetsCollection{}
-	err := utils.FromJSON(c, r.Body)
+	collection := &models.AssetsCollection{}
+	err := utils.FromJSON(collection, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = c.Validate()
+	err = collection.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = h.store.CreateCollection(c)
+	err = h.store.CreateCollection(collection)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
@@ -151,26 +151,26 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 func (h *CollectionsHandler) PutCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT Collection request")
 	
-	c := &models.PutCollectionRequest{}
-	err := utils.FromJSON(c, r.Body)
+	collection := &models.PutRequest[models.AssetsCollection]{}
+	err := utils.FromJSON(collection, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = c.Existing.Validate()
+	err = collection.Existing.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = c.New.Validate()
+	err = collection.New.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = h.store.UpdateCollection(&c.Existing, &c.New)
+	err = h.store.UpdateCollection(&collection.Existing, &collection.New)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
@@ -201,20 +201,20 @@ func (h *CollectionsHandler) PutCollection(rw http.ResponseWriter, r *http.Reque
 func (h *CollectionsHandler) DeleteCollection(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing DELETE Collection request")
 
-	c := &models.AssetsCollection{}
-	err := utils.FromJSON(c, r.Body)
+	collection := &models.AssetsCollection{}
+	err := utils.FromJSON(collection, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = c.Validate()
+	err = collection.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = h.store.DeleteCollection(c)
+	err = h.store.DeleteCollection(collection)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)

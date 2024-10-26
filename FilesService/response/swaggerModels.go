@@ -14,7 +14,7 @@ type MessageResponse struct {
 // swagger:model directoryContents
 type DirectoryContentsResponse struct {
     // List of directories stored inside given category
-    Contents    []models.CollectionContent  `json:"contents"`
+    Contents    []models.DirContent  `json:"contents"`
 }
 
 // swagger:model fileByteStream

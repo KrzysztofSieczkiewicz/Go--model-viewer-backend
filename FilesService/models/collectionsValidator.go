@@ -15,12 +15,12 @@ var (
 func (c *AssetsCollection) Validate() error {
 	validate := validator.New()
 
-	validate.RegisterValidation("id", validateID)
-	validate.RegisterValidation("category", validateCategory)
+	//validate.RegisterValidation("id", validateID)
+	//validate.RegisterValidation("category", validateCategory)
 
 	return validate.Struct(c)
 }
-
+/*
 // DELETE
 func (is *ImageSet) Validate() error {
 	validate := validator.New()
@@ -39,3 +39,4 @@ func validateID(fl validator.FieldLevel) bool {
 func validateCategory(fl validator.FieldLevel) bool {
 	return regexCategory.MatchString(fl.Field().String())
 }
+*/

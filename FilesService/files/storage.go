@@ -24,7 +24,7 @@ type Storage interface {
 	DeleteAsset(asset models.Asset) error
 
 	// Collections
-	ListCollectionContents(collection *models.AssetsCollection) ([]models.CollectionContent, error)
+	ListCollectionContents(collection *models.AssetsCollection) ([]models.DirContent, error)
 
 	CreateCollection(collection *models.AssetsCollection) error
 
@@ -33,7 +33,7 @@ type Storage interface {
 	DeleteCollection(collection *models.AssetsCollection) error
 
 	// Categories
-	ListCategoryContents(category *models.Category) ([]models.CollectionContent, error)
+	ListCategoryContents(category *models.Category) ([]models.DirContent, error)
 
 	CreateCategory(category *models.Category) error
 

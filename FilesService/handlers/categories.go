@@ -56,20 +56,20 @@ func NewCategories(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cac
 func (h *CategoriesHandler) GetCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing GET Category request")
 
-	c := &models.Category{}
-	err := utils.FromJSON(c, r.Body)
+	category := &models.Category{}
+	err := utils.FromJSON(category, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = c.Validate()
+	err = category.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	f, err := h.store.ListCategoryContents(c)
+	f, err := h.store.ListCategoryContents(category)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
@@ -102,19 +102,19 @@ func (h *CategoriesHandler) GetCategory(rw http.ResponseWriter, r *http.Request)
 func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Category request")
 
-	c := &models.Category{}
-	err := utils.FromJSON(c, r.Body)
+	category := &models.Category{}
+	err := utils.FromJSON(category, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 	}
 
-	err = c.Validate()
+	err = category.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = h.store.CreateCategory(c)
+	err = h.store.CreateCategory(category)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
@@ -145,25 +145,25 @@ func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request
 func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing PUT Category request")
 
-	c := &models.PutCategoryRequest{}
-	err := utils.FromJSON(c, r.Body)
+	category := &models.PutRequest[models.Category]{}
+	err := utils.FromJSON(category, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 	}
 
-	err = c.Existing.Validate()
+	err = category.Existing.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = c.New.Validate()
+	err = category.New.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = h.store.UpdateCategory(&c.Existing, &c.New)
+	err = h.store.UpdateCategory(&category.Existing, &category.New)
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
@@ -199,20 +199,20 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing DELETE Category request")
 
-	c := &models.Category{}
-	err := utils.FromJSON(c, r.Body)
+	category := &models.Category{}
+	err := utils.FromJSON(category, r.Body)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidJsonFormat)
 		return
 	}
 
-	err = c.Validate()
+	err = category.Validate()
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
 		return
 	}
 
-	err = h.store.DeleteCategory(c)
+	err = h.store.DeleteCategory(category)
 	if err != nil {
 		if err == files.ErrDirNotEmpty {
 			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageDirectoryNotEmpty)

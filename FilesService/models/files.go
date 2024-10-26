@@ -7,7 +7,7 @@ const (
 	FileTypeFile      FileType = "file"
 )
 
-type CollectionContent struct {
+type DirContent struct {
 	Filename string   `json:"filename" validate:"required"`
 	FileType FileType `json:"type" validate:"required"`
 }

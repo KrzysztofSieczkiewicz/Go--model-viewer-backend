@@ -210,7 +210,7 @@ func (l *Local) DeleteAsset(asset models.Asset) error {
 /*
 	COLLECTION
 */
-func (l *Local) ListCollectionContents(collection *models.AssetsCollection) ([]models.CollectionContent, error) {
+func (l *Local) ListCollectionContents(collection *models.AssetsCollection) ([]models.DirContent, error) {
 	l.logger.Info("Listing the collection contents")
 
 	cp := collection.ConstructCollectionPath()
@@ -343,7 +343,7 @@ func (l *Local) DeleteCollection(collection *models.AssetsCollection) error {
 /*
 	CATEGORY
 */
-func (l *Local) ListCategoryContents(category *models.Category) ([]models.CollectionContent, error) {
+func (l *Local) ListCategoryContents(category *models.Category) ([]models.DirContent, error) {
 	l.logger.Info("Listing the category contents")
 
 	cp := category.ConstructCategoryPath()
@@ -525,7 +525,7 @@ func (l *Local) remove(fullPath string) error {
 }
 
 // Lists directory contents
-func (l *Local) listContents(fullpath string)  ([]models.CollectionContent, error) {
+func (l *Local) listContents(fullpath string)  ([]models.DirContent, error) {
 	l.logger.Info("Listing the contents: " + fullpath) 
 
 	// read the directory
@@ -535,7 +535,7 @@ func (l *Local) listContents(fullpath string)  ([]models.CollectionContent, erro
 	}
 
 	// check all entries and assign types
-	contents := make([]models.CollectionContent, 0, len(entries))
+	contents := make([]models.DirContent, 0, len(entries))
 	var fileType models.FileType
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -546,7 +546,7 @@ func (l *Local) listContents(fullpath string)  ([]models.CollectionContent, erro
 
 		contents = append(
 			contents, 
-			models.CollectionContent{
+			models.DirContent{
 				Filename: entry.Name(),
 				FileType: fileType,
 			},

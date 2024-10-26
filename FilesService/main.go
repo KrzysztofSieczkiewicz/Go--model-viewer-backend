@@ -49,8 +49,10 @@ import (
 // DONE: Enforce that category name cannot have ID-like structure and enforce specific ID formatting
 // DONE: Add 3D assets handling
 
+// TODO: Clean and fix validators
 // TODO: Add bulk methods
 // TODO: Write unit tests for storage and data packages
+// TODO: Retest all endpoints with test data
 
 func main() {
 	// Initialize logger
