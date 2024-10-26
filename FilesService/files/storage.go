@@ -80,11 +80,11 @@ type Storage interface {
 	DeleteCollection(category string, id string) error
 
 	// Categories
-	ListCategoryContents(path string) ([]models.CollectionContent, error)
+	ListCategoryContents(category *models.Category) ([]models.CollectionContent, error)
 
-	CreateCategory(path string) error
+	CreateCategory(category *models.Category) error
 
-	UpdateCategory(path string, name string) error
+	UpdateCategory(category *models.Category, newCategory *models.Category) error
 
-	DeleteCategory(path string) error
+	DeleteCategory(category *models.Category) error
 }

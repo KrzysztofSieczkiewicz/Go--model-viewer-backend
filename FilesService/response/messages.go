@@ -17,15 +17,15 @@ var MessageInvalidUrl = "Invalid URL"
 var MessageFailedCacheGet = "Unable to read from cache"
 
 // Storage
-var MessageFailedAssetRead = "Unable to retrieve the file in the filesystem"
-var MessageFailedAssetCreate = "Unable to create the file in the filesystem"
-var MessageFailedAssetUpdate = "Unable to update the file in the filesystem"
-var MessageFailedAssetDelete = "Unable to delete the file in the filesystem"
+var MessageFailedRead = "Unable to retrieve the resource in the filesystem"
+var MessageFailedCreate = "Unable to create the resource in the filesystem"
+var MessageFailedUpdate = "Unable to update the resource in the filesystem"
+var MessageFailedDelete = "Unable to delete the resource in the filesystem"
 
-var MessageCollectionNotExist = "Collection doesn't exist"
+var MessageAlreadyExists = "Resource already exists"
+var MessageNotExist = "Resource doesn't exist"
 
-var MessageAssetAlreadyExists = "Asset already exists"
-var MessageAssetNotExist = "Asset doesn't exist"
+var MessageDirectoryNotEmpty = "Directory is not empty"
 
 // Response
 var MessageUploadSuccessful = "Resource uploaded successfully"

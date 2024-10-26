@@ -149,7 +149,7 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 
 	err = h.store.GetAsset(fp, rw)
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetRead)
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedRead)
 		return
 	}
 
@@ -210,14 +210,14 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.AddAsset(image, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAssetAlreadyExists)
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
 			return
 		}
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageCollectionNotExist)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetCreate)
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
 		return
 	}
 
@@ -271,10 +271,10 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.OverwriteAsset(image, file)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetUpdate)
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
 		return
 	}
 
@@ -321,10 +321,10 @@ func (h *ImagesHandler) PutImageData(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.UpdateAsset(&request.Existing, &request.New)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedAssetUpdate)
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
 		return
 	}
 
@@ -365,10 +365,10 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.DeleteAsset(image)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageAssetNotExist)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedAssetDelete)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDelete)
 		return
 	}
 

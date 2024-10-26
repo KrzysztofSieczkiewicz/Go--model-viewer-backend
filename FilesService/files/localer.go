@@ -342,10 +342,10 @@ func (l *Local) DeleteCollection(category string, id string) error {
 /*
 	CATEGORY
 */
-func (l *Local) ListCategoryContents(path string) ([]models.CollectionContent, error) {
+func (l *Local) ListCategoryContents(category *models.Category) ([]models.CollectionContent, error) {
 	l.logger.Info("Listing the category contents")
 
-	cp := l.constructCategoryPath(path)
+	cp := category.ConstructCategoryPath()
 	fp := l.fullPath(cp)
 
 	// check if collection exists
@@ -368,10 +368,10 @@ func (l *Local) ListCategoryContents(path string) ([]models.CollectionContent, e
 	return contents, nil
 }
 
-func (l *Local) CreateCategory(path string) error {
+func (l *Local) CreateCategory(category *models.Category) error {
 	l.logger.Info("Creating the category")
 
-	cp := l.constructCategoryPath(path)
+	cp := category.ConstructCategoryPath()
 	fp := l.fullPath(cp)
 
 	// check if the directory already exists
@@ -394,17 +394,15 @@ func (l *Local) CreateCategory(path string) error {
 	return nil
 }
 
-func (l *Local) UpdateCategory(path string, name string) error {
+func (l *Local) UpdateCategory(category *models.Category, newCategory *models.Category) error {
 	l.logger.Info("Updating the category")
 
 	// construct filepath for the current path
-	ocp := l.constructCategoryPath(path)
+	ocp := category.ConstructCategoryPath()
 	ofp := l.fullPath(ocp)
 
 	// construct filepath for the new path
-	fn := l.constructCategoryName(name)
-	fp := filepath.Dir(ocp)
-	ncp := filepath.Join(fn, fp)
+	ncp := newCategory.ConstructCategoryPath()
 	nfp := l.fullPath(ncp)
 
 	// check if requested category exists
@@ -437,10 +435,10 @@ func (l *Local) UpdateCategory(path string, name string) error {
 	return nil
 }
 
-func (l *Local) DeleteCategory(path string) error {
+func (l *Local) DeleteCategory(category *models.Category) error {
 	l.logger.Info("Removing the category")
 
-	cp := l.constructCategoryPath(path)
+	cp := category.ConstructCategoryPath()
 	fp := l.fullPath(cp)
 
 	// check if category exists

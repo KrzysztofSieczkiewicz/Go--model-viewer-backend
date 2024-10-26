@@ -69,13 +69,13 @@ func (h *ImageSetsHandler) GetCategory(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f, err := h.store.ListCategoryContents(c.Path)
+	f, err := h.store.ListCategoryContents(c)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Category doesn't exist")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to retrieve Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedRead)
 		return
 	}
 
@@ -114,13 +114,13 @@ func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = h.store.CreateCategory(c.Path)
+	err = h.store.CreateCategory(c)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Category already exists")
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to create Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
 		return
 	}
 
@@ -163,21 +163,21 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.store.UpdateCategory(c.Existing.Path, c.New.Path)
+	err = h.store.UpdateCategory(&c.Existing, &c.New)
 	if err != nil {
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusNotFound, "Unable to find Category")
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotExist)
 			return
 		}
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusBadRequest, "Category already exists")
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to update Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusOK, "Category updated successfully")
+	response.RespondWithMessage(rw, http.StatusOK, response.MessageUpdateSuccessful)
 }
 
 // swagger:route DELETE /categories categories deleteCategory
@@ -191,7 +191,7 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 //	- application/json
 //
 // Responses:
-// 	200: message
+// 	204: message
 //  400: message
 //	403: message
 //	404: message
@@ -212,15 +212,15 @@ func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = h.store.DeleteCategory(c.Path)
+	err = h.store.DeleteCategory(c)
 	if err != nil {
 		if err == files.ErrDirNotEmpty {
-			response.RespondWithMessage(rw, http.StatusForbidden, "Category is not empty")
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageDirectoryNotEmpty)
 			return
 		}
-		response.RespondWithMessage(rw, http.StatusInternalServerError, "Unable to remove Category")
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedDelete)
 		return
 	}
 
-	response.RespondWithMessage(rw, http.StatusOK, "Category removed successfully")
+	response.RespondWithNoContent(rw)
 }
