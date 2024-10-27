@@ -24,13 +24,13 @@ type Storage interface {
 	DeleteAsset(asset models.Asset) error
 
 	// Collections
-	ListCollectionContents(collection *models.AssetsCollection) ([]models.DirContent, error)
+	ListCollectionContents(collection *models.Collection) ([]models.DirContent, error)
 
-	CreateCollection(collection *models.AssetsCollection) error
+	CreateCollection(collection *models.Collection) error
 
-	UpdateCollection(collection *models.AssetsCollection, newCollection *models.AssetsCollection) error
+	UpdateCollection(collection *models.Collection, newCollection *models.Collection) error
 
-	DeleteCollection(collection *models.AssetsCollection) error
+	DeleteCollection(collection *models.Collection) error
 
 	// Categories
 	ListCategoryContents(category *models.Category) ([]models.DirContent, error)

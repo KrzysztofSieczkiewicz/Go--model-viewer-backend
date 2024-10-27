@@ -10,7 +10,7 @@ import (
 // swagger:model Image
 type Image struct {
 	// Image parent collection
-	Collection AssetsCollection	`json:"collection" validate:"required"`
+	Collection Collection	`json:"collection" validate:"required"`
 
 	// Image type determining general image purpose (eg. Albedo, Roughness)
 	// required: true

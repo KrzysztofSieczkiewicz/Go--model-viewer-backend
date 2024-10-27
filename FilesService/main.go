@@ -48,8 +48,8 @@ import (
 // DONE: Update Images models for requests (include category and id in the metadata)
 // DONE: Enforce that category name cannot have ID-like structure and enforce specific ID formatting
 // DONE: Add 3D assets handling
+// DONE: Clean and fix validators
 
-// TODO: Clean and fix validators
 // TODO: Add bulk methods
 // TODO: Write unit tests for storage and data packages
 // TODO: Retest all endpoints with test data

@@ -210,7 +210,7 @@ func (l *Local) DeleteAsset(asset models.Asset) error {
 /*
 	COLLECTION
 */
-func (l *Local) ListCollectionContents(collection *models.AssetsCollection) ([]models.DirContent, error) {
+func (l *Local) ListCollectionContents(collection *models.Collection) ([]models.DirContent, error) {
 	l.logger.Info("Listing the collection contents")
 
 	cp := collection.ConstructCollectionPath()
@@ -235,7 +235,7 @@ func (l *Local) ListCollectionContents(collection *models.AssetsCollection) ([]m
 	return contents, nil
 }
 
-func (l *Local) CreateCollection(collection *models.AssetsCollection) error {
+func (l *Local) CreateCollection(collection *models.Collection) error {
 	l.logger.Info("Creating the collection")
 
 	// full path
@@ -272,7 +272,7 @@ func (l *Local) CreateCollection(collection *models.AssetsCollection) error {
 	return nil
 }
 
-func (l *Local) UpdateCollection(collection *models.AssetsCollection, newCollection *models.AssetsCollection) error {
+func (l *Local) UpdateCollection(collection *models.Collection, newCollection *models.Collection) error {
 	l.logger.Info("Renaming the collection")
 
 	// current path
@@ -313,7 +313,7 @@ func (l *Local) UpdateCollection(collection *models.AssetsCollection, newCollect
 	return nil
 }
 
-func (l *Local) DeleteCollection(collection *models.AssetsCollection) error {
+func (l *Local) DeleteCollection(collection *models.Collection) error {
 	l.logger.Info("Removing the collection")
 
 	cp := collection.ConstructCollectionPath()

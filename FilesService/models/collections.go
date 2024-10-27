@@ -4,7 +4,7 @@ import "path/filepath"
 
 // Defines a set of files contributing to the same object/texture
 // swagger:model collection
-type AssetsCollection struct {
+type Collection struct {
 	// Collection ID
 	ID string `json:"id" validate:"required"`
 
@@ -12,20 +12,10 @@ type AssetsCollection struct {
 	Category Category `json:"category" validate:"required"`
 }
 
-func (c *AssetsCollection) ConstructCollectionPath() string {
+// Returns filename string from collection properties
+func (c *Collection) ConstructCollectionPath() string {
 	return filepath.Join(
 		c.Category.ConstructCategoryPath(), 
 		c.ID,
 	)
 }
-
-/*
-func (c *CollectionContent) Validate() error {
-	switch c.FileType {
-	case FileTypeDirectory, FileTypeFile:
-		return nil
-	default:
-		return errors.New("invalid FileType, must be 'directory' or 'file'")
-	}
-}
-*/

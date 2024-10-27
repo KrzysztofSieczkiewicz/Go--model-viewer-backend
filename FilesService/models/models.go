@@ -10,7 +10,7 @@ import (
 // swagger:model Model
 type Model struct {
 	// Model parent collection
-	Collection AssetsCollection	`json:"collection" validate:"required"`
+	Collection Collection	`json:"collection" validate:"required"`
 
 	// Type of the model
 	AssetType		string	`json:"type" validate:"required"`
@@ -57,9 +57,5 @@ func (m *Model) DeconstructName(filename string) error {
 	m.LOD = typeAndLOD[1]
 	m.FileExtension = parts[1]
 
-	return nil
-}
-
-func (m *Model) Validate() error {
 	return nil
 }

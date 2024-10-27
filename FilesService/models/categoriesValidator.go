@@ -13,11 +13,11 @@ var (
 func (i *Category) Validate() error {
 	validate := validator.New()
 
-	validate.RegisterValidation("filepath", validateFilepath)
+	validate.RegisterValidation("filepath", validateCategoryFilepath)
 
 	return validate.Struct(i)
 }
 
-func validateFilepath(fl validator.FieldLevel) bool {
+func validateCategoryFilepath(fl validator.FieldLevel) bool {
 	return regexFilepath.MatchString(fl.Field().String())
 }

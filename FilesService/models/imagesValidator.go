@@ -7,17 +7,16 @@ import (
 )
 
 var (
-	regexType       = regexp.MustCompile(`^[a-zA-Z]+$`)
-	regexResolution = regexp.MustCompile(`^\d{3,4}x\d{3,4}$`)
-	regexExtension  = regexp.MustCompile(`^(jpg|jpeg|png|gif|bmp|tiff)$`)
+	regexImageType       = regexp.MustCompile(`^[a-zA-Z]+$`)
+	regexImageResolution = regexp.MustCompile(`^\d{3,4}x\d{3,4}$`)
+	regexImageExtension  = regexp.MustCompile(`^(jpg|jpeg|png|gif|bmp|tiff)$`)
 )
 
 // Validates Image fields against predefined regexp. Returns error on any field missing
 func (i *Image) Validate() error {
 	validate := validator.New()
 
-	validate.RegisterValidation("category", validateFilepath)
-	//validate.RegisterValidation("id", validateID)
+	validate.RegisterValidation("collection", validateCollection)
 
 	validate.RegisterValidation("type", validateImageType)
 	validate.RegisterValidation("resolution", validateImageResolution)
@@ -27,36 +26,20 @@ func (i *Image) Validate() error {
 }
 
 func validateImageType(fl validator.FieldLevel) bool {
-	return regexType.MatchString(fl.Field().String())
+	return regexImageType.MatchString(fl.Field().String())
 }
 
 func validateImageResolution(fl validator.FieldLevel) bool {
-	return regexResolution.MatchString(fl.Field().String())
+	return regexImageResolution.MatchString(fl.Field().String())
 }
 
 func validateImageExtension(fl validator.FieldLevel) bool {
-	return regexExtension.MatchString(fl.Field().String())
+	return regexImageExtension.MatchString(fl.Field().String())
 }
 
-/*
-func validateImages(fl validator.FieldLevel) bool {
-	images, err := fl.Field().Interface().([]*Image)
-	if err {
-		return false
-	}
+func validateCollection(fl validator.FieldLevel) bool {
+	collection := fl.Field().Interface().(*Collection)
 
-	// Allow empty images slice
-	if len(images) == 0 {
-		images = []*Image{}
-	}
-
-	for _, img := range images {
-        err := img.Validate()
-		if err != nil {
-			return false
-		}
-	}
-
-	return true
+	err := collection.Validate()
+	return err == nil
 }
-*/
