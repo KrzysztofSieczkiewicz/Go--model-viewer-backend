@@ -207,7 +207,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	err = h.store.AddAsset(image, file)
+	err = h.store.CreateAsset(image, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
 			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)

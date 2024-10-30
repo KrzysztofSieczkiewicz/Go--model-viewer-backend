@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"path/filepath"
 	"strings"
 )
@@ -29,20 +28,4 @@ func (c *Category) ConstructCategoryPath() string {
 	newPath := strings.Join(dirs, string(filepath.Separator))
 
 	return newPath
-}
-
-// Converts the provided filesystem compliant category path to the collection properties
-func (c *Category) DeconstructCategoryPath() error {
-	dirs := strings.Split(c.Path, string(filepath.Separator))
-
-	for i, dir := range dirs {
-		if strings.HasPrefix(dir, "_") {
-			dirs[i] = dir[1:]
-		} else {
-			return errors.New("unable to decostruct category path")
-		}
-	}
-
-	c.Path = strings.Join(dirs, string(filepath.Separator))
-	return nil
 }

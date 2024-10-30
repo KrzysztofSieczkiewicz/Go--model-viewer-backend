@@ -50,7 +50,6 @@ import (
 // DONE: Add 3D assets handling
 // DONE: Clean and fix validators
 
-// TODO: Add bulk methods
 // TODO: Write unit tests for storage and data packages
 // TODO: Retest all endpoints with test data
 

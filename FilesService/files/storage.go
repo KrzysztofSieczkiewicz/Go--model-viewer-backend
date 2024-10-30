@@ -15,7 +15,7 @@ type Storage interface {
 
 	GetAsset(filepath string, w io.Writer) error
 
-	AddAsset(asset models.Asset, r io.Reader) error
+	CreateAsset(asset models.Asset, r io.Reader) error
 
 	OverwriteAsset(asset models.Asset, r io.Reader) error
 

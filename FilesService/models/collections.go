@@ -12,6 +12,7 @@ type Collection struct {
 	Category Category `json:"category" validate:"required"`
 }
 
+
 // Returns filename string from collection properties
 func (c *Collection) ConstructCollectionPath() string {
 	return filepath.Join(
