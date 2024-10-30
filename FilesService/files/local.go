@@ -334,8 +334,8 @@ func (l *Local) UpdateCollection(collection *models.Collection, newCollection *m
 		return ErrNotFound
 	}
 
-	// check if target collection doesn't exist
-	exists, err = l.exists(fp)
+	// check if target collection doesn't already exist
+	exists, err = l.exists(nfp)
 	if err != nil {
 		return err
 	}
