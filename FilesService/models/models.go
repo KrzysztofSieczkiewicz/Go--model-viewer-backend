@@ -10,7 +10,7 @@ import (
 // swagger:model Model
 type Model struct {
 	// Model parent collection
-	Collection Collection	`json:"collection" validate:"required"`
+	Collection *Collection	`json:"collection" validate:"required"`
 
 	// Type of the model
 	AssetType		string	`json:"type" validate:"required"`

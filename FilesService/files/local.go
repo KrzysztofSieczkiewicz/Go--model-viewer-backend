@@ -193,7 +193,7 @@ func (l *Local) UpdateAsset(asset models.Asset, newAsset models.Asset) error {
 	}
 
 	// check if target file doesn't already exist
-	exists, err = l.exists(fp)
+	exists, err = l.exists(nfp)
 	if err != nil {
 		return err
 	}
