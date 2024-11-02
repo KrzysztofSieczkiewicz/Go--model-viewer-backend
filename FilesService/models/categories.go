@@ -8,7 +8,7 @@ import (
 // Category defines a filepath of given category
 // swagger:model category
 type Category struct {
-	Path	string	`json:"path" validate:"required"`
+	Path	string	`json:"path" validate:"required,categoryPath"`
 }
 
 // Converts the collection properties to the filesystem compliant category path

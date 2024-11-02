@@ -7,13 +7,13 @@ import (
 )
 
 var (
-	regexFilepath = regexp.MustCompile(`^(.*)\/([^\/]*)$`)
+	regexFilepath = regexp.MustCompile(`^([a-zA-Z ]+)(\/[a-zA-Z ]+)*$`)
 )
 
 func (i *Category) Validate() error {
 	validate := validator.New()
 
-	validate.RegisterValidation("filepath", validateCategoryFilepath)
+	validate.RegisterValidation("categoryPath", validateCategoryFilepath)
 
 	return validate.Struct(i)
 }
