@@ -39,7 +39,7 @@ func setupStorage(t *testing.T, maxFileSizeMB int) (*files.Local) {
 
 func setupCategory(t *testing.T, storage *files.Local) *models.Category {
 	category := &models.Category{
-		Path: "/test/category",
+		Path: "test/category",
 	}
 	err := storage.CreateCategory(category)
     require.NoError(t, err)
@@ -67,7 +67,6 @@ func TestGetCategory_Success(t *testing.T) {
 	_ = setupCollection(t, storage, category, "FirstCollection")
 	_ = setupCollection(t, storage, category, "SecondCollection")
 
-	// Simulate request and response
 	reqBody, _ := json.Marshal(category)
 	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
@@ -93,10 +92,9 @@ func TestGetCategory_BadRequest(t *testing.T) {
 	_ = setupCollection(t, storage, category, "FirstCollection")
 	_ = setupCollection(t, storage, category, "SecondCollection")
 
-	// Malform category before marshalling
+	// Malform the category before marshalling
 	category.Path = "/./"
 
-	// Simulate request and response
 	reqBody, _ := json.Marshal(category)
 	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
@@ -115,7 +113,6 @@ func TestGetCategory_BadRequest(t *testing.T) {
 	// Repeat check with empty path
 	category.Path = ""
 
-	// Simulate request and response
 	reqBody, _ = json.Marshal(category)
 	req = httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
@@ -144,4 +141,128 @@ func TestGetCategory_BadRequest(t *testing.T) {
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+}
+
+func TestGetCategory_NotFound(t *testing.T) {
+	storage := setupStorage(t, 1)
+	handler := setupHandler(storage)
+	category := setupCategory(t, storage)
+
+	// Malform the category
+	category.Path = "NonExistingCategory"
+
+	reqBody, _ := json.Marshal(category)
+	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.GetCategory(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageNotFound, responseData.Message)
+}
+
+func TestPostCategory_Success(t *testing.T) {
+	storage := setupStorage(t, 1)
+	handler := setupHandler(storage)
+
+	category := &models.Category{
+		Path: "example/category/path",
+	}
+
+	reqBody, _ := json.Marshal(category)
+	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.PostCategory(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	assert.Empty(t, string(body))
+}
+
+func TestPostCategory_BadRequest(t *testing.T) {
+	storage := setupStorage(t, 1)
+	handler := setupHandler(storage)
+
+	category := &models.Category{
+		Path: "/./",
+	}
+
+	reqBody, _ := json.Marshal(category)
+	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.PostCategory(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+
+	// Repeat check with empty path
+	category.Path = ""
+
+	reqBody, _ = json.Marshal(category)
+	req = httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+	rec = httptest.NewRecorder()
+
+	handler.PostCategory(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+
+	// Repeat check with wrong model data
+	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
+	req = httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+	rec = httptest.NewRecorder()
+
+	handler.PostCategory(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+}
+
+func TestPostCategory_Forbidden(t *testing.T) {
+	storage := setupStorage(t, 1)
+	handler := setupHandler(storage)
+	category := setupCategory(t, storage)
+
+	reqBody, _ := json.Marshal(category)
+	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.PostCategory(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
 }
