@@ -1,15 +1,7 @@
 package models
 
 import (
-	"regexp"
-
 	"github.com/go-playground/validator"
-)
-
-var (
-	regexModelType       = regexp.MustCompile(`^[a-zA-Z]+$`)
-	regexLOD 			 = regexp.MustCompile(`^LOD[0-9]$`)
-	regexModelExtension  = regexp.MustCompile(`^(obj|glTF)$`)
 )
 
 // Validates Image fields against predefined regexp. Returns error on any field missing

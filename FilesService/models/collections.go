@@ -6,10 +6,10 @@ import "path/filepath"
 // swagger:model collection
 type Collection struct {
 	// Collection ID
-	ID string `json:"id" validate:"required"`
+	ID string `json:"id" validate:"required,collectionID"`
 
 	// Category structure describing collection
-	Category Category `json:"category" validate:"required"`
+	Category Category `json:"category" validate:"required,category"`
 }
 
 

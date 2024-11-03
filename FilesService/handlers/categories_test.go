@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupHandler(storage files.Storage) (*handlers.CategoriesHandler) {
+func setupCategoriesHandler(storage files.Storage) (*handlers.CategoriesHandler) {
 	return handlers.NewCategories(
 		"http://localhost:3001",
 		storage,
@@ -60,7 +60,7 @@ func setupCollection(t *testing.T, storage *files.Local, category *models.Catego
 
 func TestGetCategory_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	// Add two collections to the category
@@ -85,7 +85,7 @@ func TestGetCategory_Success(t *testing.T) {
 
 func TestGetCategory_BadRequest(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	// Add two collections to the category
@@ -145,7 +145,7 @@ func TestGetCategory_BadRequest(t *testing.T) {
 
 func TestGetCategory_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	// Malform the category
@@ -169,7 +169,7 @@ func TestGetCategory_NotFound(t *testing.T) {
 
 func TestPostCategory_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 
 	category := &models.Category{
 		Path: "example/category/path",
@@ -192,7 +192,7 @@ func TestPostCategory_Success(t *testing.T) {
 
 func TestPostCategory_BadRequest(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 
 	category := &models.Category{
 		Path: "/./",
@@ -248,7 +248,7 @@ func TestPostCategory_BadRequest(t *testing.T) {
 
 func TestPostCategory_Forbidden(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	reqBody, _ := json.Marshal(category)
@@ -269,7 +269,7 @@ func TestPostCategory_Forbidden(t *testing.T) {
 
 func TestPutCategory_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	putCategory := &models.PutRequest[models.Category]{
@@ -295,7 +295,7 @@ func TestPutCategory_Success(t *testing.T) {
 
 func TestPutCategory_BadRequest(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	putCategory := &models.PutRequest[models.Category]{
@@ -352,7 +352,7 @@ func TestPutCategory_BadRequest(t *testing.T) {
 
 func TestPutCategory_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 
 	putCategory := &models.PutRequest[models.Category]{
 		Existing: models.Category{Path: "test/nonExisting/path"},
@@ -377,7 +377,7 @@ func TestPutCategory_NotFound(t *testing.T) {
 
 func TestPutCategory_AlreadyExists(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 	newCategory := setupCategory(t, storage, "category/new")
 
@@ -404,7 +404,7 @@ func TestPutCategory_AlreadyExists(t *testing.T) {
 
 func TestPutCategory_UpdateFailed(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	putCategory := &models.PutRequest[models.Category]{
@@ -430,7 +430,7 @@ func TestPutCategory_UpdateFailed(t *testing.T) {
 
 func TestDeleteCategory_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	reqBody, _ := json.Marshal(category)
@@ -446,7 +446,7 @@ func TestDeleteCategory_Success(t *testing.T) {
 
 func TestDeleteCategory_BadRequest(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
 	category.Path = "/category/path"
@@ -501,7 +501,7 @@ func TestDeleteCategory_BadRequest(t *testing.T) {
 
 func TestDeleteCategory_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	
 	category := &models.Category{
 		Path: "random/path",
@@ -525,7 +525,7 @@ func TestDeleteCategory_NotFound(t *testing.T) {
 
 func TestDeleteCategory_NotEmpty(t *testing.T) {
 	storage := setupStorage(t, 1)
-	handler := setupHandler(storage)
+	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 	_ = setupCategory(t, storage, "category/path/contents")
 
