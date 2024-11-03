@@ -215,6 +215,10 @@ func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reque
 
 	err = h.store.DeleteCategory(category)
 	if err != nil {
+		if err == files.ErrNotFound {
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
+			return
+		}
 		if err == files.ErrDirNotEmpty {
 			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageDirectoryNotEmpty)
 			return
