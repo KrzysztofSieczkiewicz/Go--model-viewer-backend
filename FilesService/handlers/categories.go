@@ -140,6 +140,7 @@ func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request
 // Responses:
 // 	200: message
 //  400: message
+//	403: message
 //	404: message
 // 	500: message
 func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request) {
@@ -170,7 +171,7 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 			return
 		}
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
+			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
