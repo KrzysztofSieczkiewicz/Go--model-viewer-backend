@@ -5,7 +5,7 @@ var MessageFailedDataParsing = "Unable to parse form data"
 var MessageInvalidMultipartJson = "Invalid JSON part of the request"
 var MessageInvalidMultipartFile = "Invalid file part of the request"
 var MessageInvalidJsonFormat = "Invalid JSON data"
-var MessaggeInvalidData = "Invalid data"
+var MessageInvalidData = "Invalid data"
 
 // SignedURL
 var MessageExpiredUrl = "URL has expired"

@@ -67,7 +67,7 @@ func (h *ModelsHandler) GetModelUrl(rw http.ResponseWriter, r *http.Request) {
 
 	err = model.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -182,7 +182,7 @@ func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 
 	err = model.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -243,7 +243,7 @@ func (h *ModelsHandler) PutModel(rw http.ResponseWriter, r *http.Request) {
 	
 	err = model.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -294,13 +294,13 @@ func (h *ModelsHandler) PutModelData(rw http.ResponseWriter, r *http.Request) {
 
 	err = request.Existing.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
 	err = request.New.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -344,7 +344,7 @@ func (h *ModelsHandler) DeleteModel(rw http.ResponseWriter, r *http.Request) {
 
 	err = model.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 

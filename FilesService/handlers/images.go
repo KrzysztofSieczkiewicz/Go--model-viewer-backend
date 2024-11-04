@@ -78,7 +78,7 @@ func (h *ImagesHandler) GetImageUrl(rw http.ResponseWriter, r *http.Request) {
 
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -196,7 +196,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -257,7 +257,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -308,13 +308,13 @@ func (h *ImagesHandler) PutImageData(rw http.ResponseWriter, r *http.Request) {
 
 	err = request.Existing.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
 	err = request.New.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -358,7 +358,7 @@ func (h *ImagesHandler) DeleteImage(rw http.ResponseWriter, r *http.Request) {
 
 	err = image.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 

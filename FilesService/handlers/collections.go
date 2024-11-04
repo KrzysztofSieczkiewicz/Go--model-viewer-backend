@@ -65,7 +65,7 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 
 	err = collection.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -97,7 +97,6 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 // Responses:
 // 	204: empty
 //  400: message
-// 	403: message
 //	404: message
 // 	500: message
 func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Request) {
@@ -112,7 +111,7 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 
 	err = collection.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -123,7 +122,7 @@ func (h *CollectionsHandler) PostCollection(rw http.ResponseWriter, r *http.Requ
 			return
 		}
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
@@ -160,13 +159,13 @@ func (h *CollectionsHandler) PutCollection(rw http.ResponseWriter, r *http.Reque
 
 	err = collection.Existing.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
 	err = collection.New.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -174,6 +173,10 @@ func (h *CollectionsHandler) PutCollection(rw http.ResponseWriter, r *http.Reque
 	if err != nil {
 		if err == files.ErrNotFound {
 			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
+			return
+		}
+		if err == files.ErrAlreadyExists {
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
@@ -210,7 +213,7 @@ func (h *CollectionsHandler) DeleteCollection(rw http.ResponseWriter, r *http.Re
 
 	err = collection.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 

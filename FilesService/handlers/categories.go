@@ -65,7 +65,7 @@ func (h *CategoriesHandler) GetCategory(rw http.ResponseWriter, r *http.Request)
 
 	err = category.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -97,7 +97,6 @@ func (h *CategoriesHandler) GetCategory(rw http.ResponseWriter, r *http.Request)
 // Responses:
 // 	204: message
 //  400: message
-// 	403: message
 // 	500: message
 func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Category request")
@@ -110,14 +109,14 @@ func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request
 
 	err = category.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
 	err = h.store.CreateCategory(category)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
@@ -140,7 +139,6 @@ func (h *CategoriesHandler) PostCategory(rw http.ResponseWriter, r *http.Request
 // Responses:
 // 	200: message
 //  400: message
-//	403: message
 //	404: message
 // 	500: message
 func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request) {
@@ -154,13 +152,13 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 
 	err = category.Existing.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
 	err = category.New.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -171,7 +169,7 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 			return
 		}
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedUpdate)
@@ -194,7 +192,6 @@ func (h *CategoriesHandler) PutCategory(rw http.ResponseWriter, r *http.Request)
 // Responses:
 // 	204: message
 //  400: message
-//	403: message
 //	404: message
 // 	500: message
 func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Request) {
@@ -209,7 +206,7 @@ func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reque
 
 	err = category.Validate()
 	if err != nil {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessaggeInvalidData)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidData)
 		return
 	}
 
@@ -220,7 +217,7 @@ func (h *CategoriesHandler) DeleteCategory(rw http.ResponseWriter, r *http.Reque
 			return
 		}
 		if err == files.ErrDirNotEmpty {
-			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageDirectoryNotEmpty)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageDirectoryNotEmpty)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedDelete)

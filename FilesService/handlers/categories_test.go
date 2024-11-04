@@ -108,7 +108,7 @@ func TestGetCategory_BadRequest(t *testing.T) {
 	var responseData response.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with empty path
 	category.Path = ""
@@ -125,7 +125,7 @@ func TestGetCategory_BadRequest(t *testing.T) {
 
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with wrong model data
 	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
@@ -211,7 +211,7 @@ func TestPostCategory_BadRequest(t *testing.T) {
 	var responseData response.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with empty path
 	category.Path = ""
@@ -228,7 +228,7 @@ func TestPostCategory_BadRequest(t *testing.T) {
 
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with wrong model data
 	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
@@ -246,7 +246,7 @@ func TestPostCategory_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
 }
 
-func TestPostCategory_Forbidden(t *testing.T) {
+func TestPostCategory_AlreadyExists(t *testing.T) {
 	storage := setupStorage(t, 1)
 	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
@@ -259,7 +259,7 @@ func TestPostCategory_Forbidden(t *testing.T) {
 
 	res := rec.Result()
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 	var responseData response.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
@@ -315,7 +315,7 @@ func TestPutCategory_BadRequest(t *testing.T) {
 	var responseData response.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with empty path
 	putCategory.New.Path = ""
@@ -332,7 +332,7 @@ func TestPutCategory_BadRequest(t *testing.T) {
 
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with wrong model data
 	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
@@ -394,7 +394,7 @@ func TestPutCategory_AlreadyExists(t *testing.T) {
 
 	res := rec.Result()
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 	var responseData response.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
@@ -464,7 +464,7 @@ func TestDeleteCategory_BadRequest(t *testing.T) {
 	var responseData response.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with empty path
 	category.Path = ""
@@ -481,7 +481,7 @@ func TestDeleteCategory_BadRequest(t *testing.T) {
 
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
-	assert.Equal(t, response.MessaggeInvalidData, responseData.Message)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Repeat check with wrong model data
 	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
@@ -537,7 +537,7 @@ func TestDeleteCategory_NotEmpty(t *testing.T) {
 
 	res := rec.Result()
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 	var responseData response.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
