@@ -10,17 +10,17 @@ import (
 // swagger:model Image
 type Image struct {
 	// Image parent collection
-	Collection *Collection	`json:"collection" validate:"required"`
+	Collection *Collection	`json:"collection" validate:"required,collection"`
 
 	// Image type determining general image purpose (eg. Albedo, Roughness)
 	// required: true
-	ImgType string `json:"type" validate:"required"`
+	ImgType string `json:"type" validate:"required,imgType"`
 
 	// required: true
-	Resolution string `json:"resolution" validate:"required"`
+	Resolution string `json:"resolution" validate:"required,resolution"`
 
 	// required: true
-	FileExtension string `json:"extension" validate:"required"`
+	FileExtension string `json:"extension" validate:"required,imgExtension"`
 }
 
 // Returns filename string from image properties

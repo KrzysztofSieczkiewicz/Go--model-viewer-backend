@@ -26,38 +26,6 @@ func setupCategoriesHandler(storage files.Storage) (*handlers.CategoriesHandler)
 	)
 }
 
-// Helper function to create Local instance for testing
-func setupStorage(t *testing.T, maxFileSizeMB int) (*files.Local) {
-	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
-
-	tempDir := t.TempDir()
-
-	local, err := files.NewLocal(tempDir, maxFileSizeMB, logger)
-	require.NoError(t, err)
-	return local
-}
-
-func setupCategory(t *testing.T, storage *files.Local, path string) *models.Category {
-	category := &models.Category{
-		Path: path,
-	}
-	err := storage.CreateCategory(category)
-    require.NoError(t, err)
-
-	return category
-}
-
-func setupCollection(t *testing.T, storage *files.Local, category *models.Category, id string) *models.Collection {
-	collection := &models.Collection{
-		Category: *category,
-		ID: id,
-	}
-	err := storage.CreateCollection(collection)
-	require.NoError(t, err)
-
-	return collection
-}
-
 func TestGetCategory_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	handler := setupCategoriesHandler(storage)

@@ -85,10 +85,11 @@ func (h *ImagesHandler) GetImageUrl(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.CheckAsset(image)
 	if err != nil {
 		if err == files.ErrNotFound {
-			http.Error(rw, err.Error(), http.StatusNotFound)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedRead)
+		return
 	}
 
 	tmpId := caches.GenerateUUID()

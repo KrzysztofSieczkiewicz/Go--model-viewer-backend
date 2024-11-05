@@ -22,7 +22,15 @@ var (
 
 func init() {
 	validate = validator.New()
+
+	// CATEGORY AND COLLECTION
 	validate.RegisterValidation("categoryPath", validateCategoryFilepath)
 	validate.RegisterValidation("collectionID", validateID)
 	validate.RegisterValidation("category", validateCategory)
+
+	// IMAGE
+	validate.RegisterValidation("imgType", validateImageType)
+	validate.RegisterValidation("resolution", validateImageResolution)
+	validate.RegisterValidation("imgExtension", validateImageExtension)
+	validate.RegisterValidation("collection", validateCollection)
 }

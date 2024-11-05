@@ -6,14 +6,6 @@ import (
 
 // Validates Image fields against predefined regexp. Returns error on any field missing
 func (i *Image) Validate() error {
-	validate := validator.New()
-
-	validate.RegisterValidation("collection", validateCollection)
-
-	validate.RegisterValidation("type", validateImageType)
-	validate.RegisterValidation("resolution", validateImageResolution)
-	validate.RegisterValidation("extension", validateImageExtension)
-
 	return validate.Struct(i)
 }
 
