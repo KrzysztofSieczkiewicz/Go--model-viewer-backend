@@ -148,13 +148,14 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rw.Header().Set("Content-Type", "application/octet-stream")
+
 	err = h.store.GetAsset(fp, rw)
 	if err != nil {
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedRead)
 		return
 	}
 
-	rw.Header().Set("Content-Type", "application/octet-stream")
 	rw.WriteHeader(http.StatusOK)
 }
 
