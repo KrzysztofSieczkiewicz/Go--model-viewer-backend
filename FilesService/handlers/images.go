@@ -226,7 +226,7 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	response.RespondWithMessage(rw, http.StatusCreated, response.MessageUploadSuccessful)
 }
 
-// swagger:route PUT /images images putImage
+// swagger:route PUT /images/update images putImage
 //
 // Update an image in the image set
 //

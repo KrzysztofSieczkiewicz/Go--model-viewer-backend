@@ -35,12 +35,12 @@ import (
 // DONE: Give response body to 200 responses (?)
 // DONE: Register content type for GetUrl
 // DONE: Create separate handlers for different file types
-// NO NEED: Update gitignore
+// DONE: Update gitignore
 // DONE: Improve logging
 // DONE: Improve swagger annotations (add model annotations, clean up the response annotations)
 // DONE: Clean up models, responses etc
 // DONE: Improve local.go with proper code sharing and new common funcs - too much repetiton + occasional verbose/non-functioning checks
-// continue clearing the code, remember about unused errors.go in the files directory
+// 		 continue clearing the code, remember about unused errors.go in the files directory
 // DONE: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
 // DONE: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
 // DONE: Test all endpoints + fix file write err (access is denied)
@@ -49,9 +49,13 @@ import (
 // DONE: Enforce that category name cannot have ID-like structure and enforce specific ID formatting
 // DONE: Add 3D assets handling
 // DONE: Clean and fix validators
+// DONE: Write unit tests for storage and data packages
+// DONE: Register all endpoints and funcs
 
-// TODO: Write unit tests for storage and data packages
 // TODO: Retest all endpoints with test data
+// TODO: Resolve singular TODOs
+// TODO: Last iteration through swagger annotations
+// TODO: Pop a champagne
 
 func main() {
 	// Initialize logger
@@ -69,29 +73,64 @@ func main() {
 	baseUrl := hostUrl + bindAddress
 
 	// Initialize the local files storage with Max file size: 5MB
-	fs, err := files.NewLocal(baseFilePath, 5, logger)
+	modStorage, err := files.NewLocal(baseFilePath + "models", 5, logger)
 	if err != nil {
-		logger.Error("Unable to initialize local storage")
+		logger.Error("Failed to initialize models storage")
+	}
+	imgStorage, err := files.NewLocal(baseFilePath + "images", 5, logger)
+	if err != nil {
+		logger.Error("Failed to initialize images storage")
 	}
 
 	// Initialize a cache
-	fc := caches.NewFreeCache(50, 2)
+	imgCache := caches.NewFreeCache(64, 2)
+	modCache := caches.NewFreeCache(128, 5)
 
 	// Initialize the ServeMux
 	router := http.NewServeMux()
 
 	// MODELS
-	mh := handlers.NewModels(baseUrl, fs, logger, fc)
-	router.HandleFunc("GET /models/url", mh.GetModelUrl)
-	router.HandleFunc("POST /models", mh.PostModel)
+	modh := handlers.NewModels(baseUrl, modStorage, logger, modCache)
+	router.HandleFunc("GET /models/url", modh.GetModelUrl)
+	router.HandleFunc("GET /models/{id}/{expires}/{signature}", modh.GetModel)
+	router.HandleFunc("POST /models", modh.PostModel)
+	router.HandleFunc("PUT /models/overwrite", modh.PutModel)
+	router.HandleFunc("PUT /models/update", modh.PutModelData)
+	router.HandleFunc("DELETE /models", modh.DeleteModel)
+
+	modColh := handlers.NewCollections(baseUrl, modStorage, logger)
+	router.HandleFunc("GET /models/collections", modColh.GetCollection)
+	router.HandleFunc("POST /models/collections", modColh.PostCollection)
+	router.HandleFunc("PUT /models/collections", modColh.PutCollection)
+	router.HandleFunc("DELETE /models/collections", modColh.DeleteCollection)
+
+	modCath := handlers.NewCategories(baseUrl, modStorage, logger)
+	router.HandleFunc("GET /models/categories", modCath.GetCategory)
+	router.HandleFunc("POST /models/categories", modCath.PostCategory)
+	router.HandleFunc("PUT /models/categories", modCath.PutCategory)
+	router.HandleFunc("DELETE /models/categories", modCath.DeleteCategory)
 
 	// IMAGES
-	ih := handlers.NewImages(baseUrl, fs, logger, fc)
-	router.HandleFunc("GET /images/url", ih.GetImageUrl)
-	router.HandleFunc("GET /images", ih.GetImage) // TODO: HANDLE THIS PROPERLY - by common file endpoint
-	router.HandleFunc("POST /images", ih.PostImage)
-	router.HandleFunc("PUT /images", ih.PutImage)
-	router.HandleFunc("DELETE /images", ih.DeleteImage)
+	imgh := handlers.NewImages(baseUrl, imgStorage, logger, imgCache)
+	router.HandleFunc("GET /images/url", imgh.GetImageUrl)
+	router.HandleFunc("GET /images/{id}/{expires}/{signature}", imgh.GetImage)
+	router.HandleFunc("POST /images", imgh.PostImage)
+	router.HandleFunc("PUT /images/overwrite", imgh.PutImage)
+	router.HandleFunc("PUT /images/update", imgh.PutImageData)
+	router.HandleFunc("DELETE /images", imgh.DeleteImage)
+
+	imgColh := handlers.NewCollections(baseUrl, imgStorage, logger)
+	router.HandleFunc("GET /images/collections", imgColh.GetCollection)
+	router.HandleFunc("POST /images/collections", imgColh.PostCollection)
+	router.HandleFunc("PUT /images/collections", imgColh.PutCollection)
+	router.HandleFunc("DELETE /images/collections", imgColh.DeleteCollection)
+
+	imgCath := handlers.NewCategories(baseUrl, imgStorage, logger)
+	router.HandleFunc("GET /images/categories", imgCath.GetCategory)
+	router.HandleFunc("POST /images/categories", imgCath.PostCategory)
+	router.HandleFunc("PUT /images/categories", imgCath.PutCategory)
+	router.HandleFunc("DELETE /images/categories", imgCath.DeleteCategory)
+
 
 	// Handle OpenAPI doc request
 	opts := swaggerMiddleware.RedocOpts{SpecURL: "/swagger.yaml"}

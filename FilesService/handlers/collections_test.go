@@ -22,7 +22,6 @@ func setupCollectionsHandler(storage files.Storage) *handlers.CollectionsHandler
 		"http://localhost:3001",
 		storage,
 		slog.New(slog.NewJSONHandler(io.Discard, nil)),
-		nil,
 	)
 }
 

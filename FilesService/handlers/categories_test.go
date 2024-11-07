@@ -22,7 +22,6 @@ func setupCategoriesHandler(storage files.Storage) (*handlers.CategoriesHandler)
 		"http://localhost:3001",
 		storage,
 		slog.New(slog.NewJSONHandler(io.Discard, nil)),
-		nil,
 	)
 }
 

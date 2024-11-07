@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/caches"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response"
@@ -18,18 +17,16 @@ type CollectionsHandler struct {
 	baseUrl		string
 	logger		*slog.Logger
 	store		files.Storage
-	cache		caches.Cache
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewCollections(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *CollectionsHandler {
+func NewCollections(baseUrl string, s files.Storage, l *slog.Logger) *CollectionsHandler {
 	logger := l.With(slog.String("handler", "collections")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
 
 	return &CollectionsHandler{
 		baseUrl: baseUrl,
 		store:   s,
 		logger:  logger,
-		cache:   c,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
 			baseUrl+"/files", // TODO: accept as parameter from main.go

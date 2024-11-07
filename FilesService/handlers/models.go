@@ -34,7 +34,7 @@ func NewModels(baseUrl string, storage files.Storage, slogger *slog.Logger, cach
 		cache:   cache,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
-			baseUrl+"/files", // TODO: accept as parameter from main.go
+			baseUrl+"/models", // TODO: accept as parameter from main.go
 			time.Duration(5*int(time.Minute)),
 		),
 	}
@@ -212,7 +212,7 @@ func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 	response.RespondWithMessage(rw, http.StatusCreated, response.MessageUploadSuccessful)
 }
 
-// swagger:route PUT /models models putModel
+// swagger:route PUT /models/overwrite models putModel
 //
 // Overwrites the model file in the collection
 //
