@@ -10,23 +10,23 @@ import (
 // swagger:model Model
 type Model struct {
 	// Model parent collection
-	Collection *Collection	`json:"collection" validate:"required"`
+	Collection *Collection	`json:"collection" validate:"required,collection"`
 
 	// Type of the model
-	AssetType		string	`json:"type" validate:"required"`
+	ModelType		string	`json:"type" validate:"required,modelType"`
 
 	// Level of Detail of the model
-	LOD				string	`json:"lod" validate:"required"`
+	LOD				string	`json:"lod" validate:"required,lod"`
 
 	// file extension
-	FileExtension 	string	`json:"extension" validate:"required"` 
+	FileExtension 	string	`json:"extension" validate:"required,modelExtension"` 
 }
 
 // Returns filename string from asset properties
 func (m *Model) ConstructName() string {
 	return fmt.Sprintf(
 		"%s_%s.%s",
-		m.AssetType,
+		m.ModelType,
 		m.LOD,
 		m.FileExtension,
 	)
@@ -53,7 +53,7 @@ func (m *Model) DeconstructName(filename string) error {
 		return fmt.Errorf("invalid filename - unable to retrieve image type and resolution: %s", parts[1])
 	}
 
-	m.AssetType = typeAndLOD[0]
+	m.ModelType = typeAndLOD[0]
 	m.LOD = typeAndLOD[1]
 	m.FileExtension = parts[1]
 

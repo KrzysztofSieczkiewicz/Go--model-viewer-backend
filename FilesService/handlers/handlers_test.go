@@ -62,6 +62,24 @@ func setupImage(t *testing.T, storage *files.Local, collection *models.Collectio
 	return image
 }
 
+func setupModel(t *testing.T, storage *files.Local, collection *models.Collection, modelType string, lod string, extension string) *models.Model{
+	require.NotNil(t, collection)
+	require.NotNil(t, storage)
+	
+	mockReader := bytes.NewReader([]byte("mock file content"))
+
+	model := &models.Model{
+		Collection: collection,
+		ModelType: modelType,
+		LOD: lod,
+		FileExtension: extension,
+	}
+	err := storage.CreateAsset(model, mockReader)
+	require.NoError(t, err)
+
+	return model
+}
+
 type MockCache struct {
 	mock.Mock
 }

@@ -435,7 +435,7 @@ func TestCreateAsset_Model(t *testing.T) {
 
 	asset := &models.Model{
 		Collection: collection,
-		AssetType: "scan",
+		ModelType: "scan",
 		LOD: "LOD0",
 		FileExtension: "gltf",
 	}
@@ -457,7 +457,7 @@ func TestOverwriteAsset(t *testing.T) {
 
 	asset := &models.Model{
 		Collection: collection,
-		AssetType: "scan",
+		ModelType: "scan",
 		LOD: "LOD0",
 		FileExtension: "gltf",
 	}
@@ -481,14 +481,14 @@ func TestUpdateAsset(t *testing.T) {
 
 	asset := &models.Model{
 		Collection: collection,
-		AssetType: "scan",
+		ModelType: "scan",
 		LOD: "LOD0",
 		FileExtension: "gltf",
 	}
 
 	newAsset := &models.Model{
 		Collection: collection,
-		AssetType: "model",
+		ModelType: "model",
 		LOD: "LOD1",
 		FileExtension: "stl",
 	}

@@ -74,10 +74,11 @@ func (h *ModelsHandler) GetModelUrl(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.CheckAsset(model)
 	if err != nil {
 		if err == files.ErrNotFound {
-			http.Error(rw, err.Error(), http.StatusNotFound)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedRead)
+		return
 	}
 
 	tmpId := caches.GenerateUUID()
@@ -157,7 +158,7 @@ func (h *ModelsHandler) GetModel(rw http.ResponseWriter, r *http.Request) {
 // Responses:
 // 	201: message
 //  400: message
-// 	403: message
+// 	404: message
 // 	500: message
 func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Model request")
@@ -197,11 +198,11 @@ func (h *ModelsHandler) PostModel(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.CreateAsset(model, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
 			return
 		}
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageNotFound)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
@@ -232,7 +233,7 @@ func (h *ModelsHandler) PutModel(rw http.ResponseWriter, r *http.Request) {
 	model := &models.Model{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDataParsing)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartJson)
 		return
 	}
 

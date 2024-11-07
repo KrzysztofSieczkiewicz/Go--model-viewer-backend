@@ -21,8 +21,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupImagesHandler(storage files.Storage, mockCache *MockCache) *handlers.ImagesHandler {
-	return handlers.NewImages(
+func setupModelHandler(storage files.Storage, mockCache *MockCache) *handlers.ModelsHandler {
+	return handlers.NewModels(
 		"http://localhost:3001",
 		storage,
 		slog.New(slog.NewJSONHandler(io.Discard, nil)),
@@ -31,24 +31,24 @@ func setupImagesHandler(storage files.Storage, mockCache *MockCache) *handlers.I
 
 }
 
-func TestGetImageUrl_Success(t *testing.T) {
+func TestGetModelUrl_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 
-	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Image")).Return()
+	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Model")).Return()
 	mockCache.On("Get", mock.Anything).Return("mocked_file_path", nil)
 	
-	reqBody, err := json.Marshal(image)
+	reqBody, err := json.Marshal(model)
 	require.NoError(t, err)
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.GetImageUrl(rec, req)
+	handler.GetModelUrl(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -59,29 +59,29 @@ func TestGetImageUrl_Success(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestGetImageUrl_BadRequest(t *testing.T) {
+func TestGetModelUrl_BadRequest(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 
 	// Malform image type
-	image.ImgType = "Image12"
+	model.ModelType = "unwrapped12"
 
-	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Image")).Return()
+	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Model")).Return()
 	mockCache.On("Get", mock.Anything).Return("mocked_file_path", nil)
 	
-	reqBody, err := json.Marshal(image)
+	reqBody, err := json.Marshal(model)
 	require.NoError(t, err)
 	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.GetImageUrl(rec, req)
+	handler.GetModelUrl(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -92,14 +92,14 @@ func TestGetImageUrl_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Retry with malformed image resolution
-	image.Resolution = "25x25"
+	model.LOD = "NOT_LOD1"
 	
-	reqBody, err = json.Marshal(image)
+	reqBody, err = json.Marshal(model)
 	require.NoError(t, err)
-	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req = httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
 
-	handler.GetImageUrl(rec, req)
+	handler.GetModelUrl(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -110,14 +110,14 @@ func TestGetImageUrl_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Retry with malformed image resolution 2
-	image.Resolution = "25000x25000"
+	model.LOD = "LOD1234"
 	
-	reqBody, err = json.Marshal(image)
+	reqBody, err = json.Marshal(model)
 	require.NoError(t, err)
-	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req = httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
 
-	handler.GetImageUrl(rec, req)
+	handler.GetModelUrl(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -128,14 +128,14 @@ func TestGetImageUrl_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Retry with invalid image extension
-	image.FileExtension = ".png"
-
-	reqBody, err = json.Marshal(image)
+	model.FileExtension = ".gltf"
+	
+	reqBody, err = json.Marshal(model)
 	require.NoError(t, err)
-	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req = httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
 
-	handler.GetImageUrl(rec, req)
+	handler.GetModelUrl(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -146,14 +146,14 @@ func TestGetImageUrl_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// Retry with malformed image extension 2
-	image.FileExtension = "random"
+	model.FileExtension = "random"
 	
-	reqBody, err = json.Marshal(image)
+	reqBody, err = json.Marshal(model)
 	require.NoError(t, err)
-	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req = httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
 
-	handler.GetImageUrl(rec, req)
+	handler.GetModelUrl(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -164,30 +164,30 @@ func TestGetImageUrl_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 }
 
-func TestGetImageUrl_NotFound(t *testing.T) {
+func TestGetModelUrl_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
 	
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
 	
-	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Image")).Return()
+	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Model")).Return()
 	mockCache.On("Get", mock.Anything).Return("mocked_file_path", nil)
 	
-	reqBody, err := json.Marshal(image)
+	reqBody, err := json.Marshal(model)
 	require.NoError(t, err)
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.GetImageUrl(rec, req)
+	handler.GetModelUrl(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -199,19 +199,19 @@ func TestGetImageUrl_NotFound(t *testing.T) {
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
 }
 
-func TestGetImage_Success(t *testing.T) {
+func TestGetModel_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 
-	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Image")).Return()
-	mockCache.On("Get", mock.Anything).Return(image.ConstructFilepath(), nil)
+	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Model")).Return()
+	mockCache.On("Get", mock.Anything).Return(model.ConstructFilepath(), nil)
 
-	mockCache.Set("tempId", image)
+	mockCache.Set("tempId", model)
 
 	signedUrl := signedurl.NewSignedUrl(
         "Secret key my boy",
@@ -223,7 +223,7 @@ func TestGetImage_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	rec := httptest.NewRecorder()
 
-	handler.GetImage(rec, req)
+	handler.GetModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -232,16 +232,16 @@ func TestGetImage_Success(t *testing.T) {
 	assert.Equal(t, "application/octet-stream", res.Header.Get("Content-Type"))
 }
 
-func TestGetImage_InvalidUrl(t *testing.T) {
+func TestGetModel_InvalidUrl(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	_ = setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	_ = setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 
 	// Create signed url with invalid secret
 	signedUrl := signedurl.NewSignedUrl(
@@ -254,7 +254,7 @@ func TestGetImage_InvalidUrl(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	rec := httptest.NewRecorder()
 
-	handler.GetImage(rec, req)
+	handler.GetModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -280,7 +280,7 @@ func TestGetImage_InvalidUrl(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, url, nil)
 	rec = httptest.NewRecorder()
 
-	handler.GetImage(rec, req)
+	handler.GetModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -291,17 +291,17 @@ func TestGetImage_InvalidUrl(t *testing.T) {
 	assert.Equal(t, response.MessageExpiredUrl, responseData.Message)
 }
 
-func TestGetImage_NoFile(t *testing.T) {
+func TestGetModel_NoFile(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	_ = setupCollection(t, storage, category, "collection")
 
-	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Image")).Return()
+	mockCache.On("Set", mock.Anything, mock.AnythingOfType("*models.Model")).Return()
 	mockCache.On("Get", mock.Anything).Return("filepath", nil)
 
 	// Create signed url with invalid secret
@@ -315,7 +315,7 @@ func TestGetImage_NoFile(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	rec := httptest.NewRecorder()
 
-	handler.GetImage(rec, req)
+	handler.GetModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -326,21 +326,21 @@ func TestGetImage_NoFile(t *testing.T) {
 	assert.Equal(t, response.MessageFailedRead, responseData.Message)
 }
 
-func TestPostImage_Success(t *testing.T) {
+func TestPostModel_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 
 	collection := setupCollection(t, storage, category, "collection")
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
-	imageJson, err := json.Marshal(image)
+	imageJson, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
@@ -351,7 +351,7 @@ func TestPostImage_Success(t *testing.T) {
 
 	// Create file part
 	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", image.ConstructName())
+	part, err := writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -359,11 +359,11 @@ func TestPostImage_Success(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -375,33 +375,33 @@ func TestPostImage_Success(t *testing.T) {
 	assert.Equal(t, response.MessageUploadSuccessful, responseData.Message)
 }
 
-func TestPostImage_InvalidMetadataPart(t *testing.T) {
+func TestPostModel_InvalidMetadataPart(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
-	imageJson, err := json.Marshal(image)
+	modelJson, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("data", string(imageJson))
+	err = writer.WriteField("data", string(modelJson))
 	require.NoError(t, err)
 
 	// Provide invalid file tag
 	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", image.ConstructName())
+	part, err := writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -409,11 +409,11 @@ func TestPostImage_InvalidMetadataPart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -430,7 +430,7 @@ func TestPostImage_InvalidMetadataPart(t *testing.T) {
 
 	// Provide invalid file tag
 	file = []byte("dummy image data")
-	part, err = writer.CreateFormFile("file", image.ConstructName())
+	part, err = writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 	_, err = part.Write(file)
 	require.NoError(t, err)
@@ -438,11 +438,11 @@ func TestPostImage_InvalidMetadataPart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req = httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec = httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -461,7 +461,7 @@ func TestPostImage_InvalidMetadataPart(t *testing.T) {
 
 	// Create file part
 	file = []byte("dummy image data")
-	part, err = writer.CreateFormFile("file", image.ConstructName())
+	part, err = writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -469,11 +469,11 @@ func TestPostImage_InvalidMetadataPart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req = httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec = httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -484,33 +484,33 @@ func TestPostImage_InvalidMetadataPart(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
 }
 
-func TestPostImage_InvalidFilePart(t *testing.T) {
+func TestPostModel_InvalidFilePart(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
-	imageJson, err := json.Marshal(image)
+	imageModel, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(imageModel))
 	require.NoError(t, err)
 
 	// Provide invalid file tag
 	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("files", image.ConstructName())
+	part, err := writer.CreateFormFile("files", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -518,11 +518,11 @@ func TestPostImage_InvalidFilePart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -536,17 +536,17 @@ func TestPostImage_InvalidFilePart(t *testing.T) {
 	// Create image metadata part
 	body = new(bytes.Buffer)
 	writer = multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(imageModel))
 	require.NoError(t, err)
 
 	writer.Close()
 
 	// Send the request
-	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req = httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec = httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -557,29 +557,29 @@ func TestPostImage_InvalidFilePart(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidMultipartFile, responseData.Message)
 }
 
-func TestPostImage_AlreadyExists(t *testing.T) {
+func TestPostModel_AlreadyExists(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	models := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 
-	mockCache.On("Get", mock.Anything).Return(image.ConstructFilepath(), nil)
+	mockCache.On("Get", mock.Anything).Return(models.ConstructFilepath(), nil)
 
-	imageJson, err := json.Marshal(image)
+	modelsJson, err := json.Marshal(models)
 	require.NoError(t, err)
 
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(modelsJson))
 	require.NoError(t, err)
 
 	// Create file part
 	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", image.ConstructName())
+	part, err := writer.CreateFormFile("file", models.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -587,11 +587,11 @@ func TestPostImage_AlreadyExists(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -603,10 +603,10 @@ func TestPostImage_AlreadyExists(t *testing.T) {
 	assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
 }
 
-func TestPostImage_NotFound(t *testing.T) {
+func TestPostModel_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 
@@ -614,27 +614,26 @@ func TestPostImage_NotFound(t *testing.T) {
 		Category: *category,
 		ID: "collection",
 	}
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
+	mockCache.On("Get", mock.Anything).Return(model.ConstructFilepath(), nil)
 
-	mockCache.On("Get", mock.Anything).Return(image.ConstructFilepath(), nil)
-
-	imageJson, err := json.Marshal(image)
+	modelJson, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(modelJson))
 	require.NoError(t, err)
 
 	// Create file part
-	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", image.ConstructName())
+	file := []byte("dummy model data")
+	part, err := writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -642,11 +641,11 @@ func TestPostImage_NotFound(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PostImage(rec, req)
+	handler.PostModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -658,26 +657,26 @@ func TestPostImage_NotFound(t *testing.T) {
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
 }
 
-func TestPutImage_Success(t *testing.T) {
+func TestPutModel_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
-	imageJson, err := json.Marshal(image)
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
+	modelJson, err := json.Marshal(model)
 	require.NoError(t, err)
 	
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(modelJson))
 	require.NoError(t, err)
 
 	// Create file part
 	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", image.ConstructName())
+	part, err := writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -685,11 +684,11 @@ func TestPutImage_Success(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PutImage(rec, req)
+	handler.PutModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -701,33 +700,33 @@ func TestPutImage_Success(t *testing.T) {
 	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
 }
 
-func TestPutImage_InvalidFilePart(t *testing.T) {
+func TestPutModel_InvalidFilePart(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
-	imageJson, err := json.Marshal(image)
+	modelJson, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(modelJson))
 	require.NoError(t, err)
 
 	// Provide invalid file tag
-	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("files", image.ConstructName())
+	file := []byte("dummy model data")
+	part, err := writer.CreateFormFile("files", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -735,11 +734,11 @@ func TestPutImage_InvalidFilePart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PutImage(rec, req)
+	handler.PutModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -753,17 +752,17 @@ func TestPutImage_InvalidFilePart(t *testing.T) {
 	// Create image metadata part
 	body = new(bytes.Buffer)
 	writer = multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(modelJson))
 	require.NoError(t, err)
 
 	writer.Close()
 
 	// Send the request
-	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req = httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec = httptest.NewRecorder()
 
-	handler.PutImage(rec, req)
+	handler.PutModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -774,32 +773,32 @@ func TestPutImage_InvalidFilePart(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidMultipartFile, responseData.Message)
 }
 
-func TestPutImage_InvalidMetadataPart(t *testing.T) {
+func TestPutModel_InvalidMetadataPart(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
-	imageJson, err := json.Marshal(image)
+	modelJson, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("data", string(imageJson))
+	err = writer.WriteField("data", string(modelJson))
 	require.NoError(t, err)
 
 	// Provide invalid file tag
-	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", image.ConstructName())
+	file := []byte("dummy model data")
+	part, err := writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -807,11 +806,11 @@ func TestPutImage_InvalidMetadataPart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PutImage(rec, req)
+	handler.PutModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -827,8 +826,8 @@ func TestPutImage_InvalidMetadataPart(t *testing.T) {
 	writer = multipart.NewWriter(body)
 
 	// Provide invalid file tag
-	file = []byte("dummy image data")
-	part, err = writer.CreateFormFile("file", image.ConstructName())
+	file = []byte("dummy model data")
+	part, err = writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 	_, err = part.Write(file)
 	require.NoError(t, err)
@@ -836,11 +835,11 @@ func TestPutImage_InvalidMetadataPart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req = httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec = httptest.NewRecorder()
 
-	handler.PutImage(rec, req)
+	handler.PutModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -858,8 +857,8 @@ func TestPutImage_InvalidMetadataPart(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create file part
-	file = []byte("dummy image data")
-	part, err = writer.CreateFormFile("file", image.ConstructName())
+	file = []byte("dummy model data")
+	part, err = writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -867,11 +866,11 @@ func TestPutImage_InvalidMetadataPart(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req = httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec = httptest.NewRecorder()
 
-	handler.PutImage(rec, req)
+	handler.PutModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -882,10 +881,10 @@ func TestPutImage_InvalidMetadataPart(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
 }
 
-func TestPutImage_NotFound(t *testing.T) {
+func TestPutModel_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 
@@ -893,27 +892,27 @@ func TestPutImage_NotFound(t *testing.T) {
 		Category: *category,
 		ID: "collection",
 	}
-	image := &models.Image{
+	model := &models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD2",
+		FileExtension: "gltf",
 	}
 
-	mockCache.On("Get", mock.Anything).Return(image.ConstructFilepath(), nil)
+	mockCache.On("Get", mock.Anything).Return(model.ConstructFilepath(), nil)
 
-	imageJson, err := json.Marshal(image)
+	modelJson, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	err = writer.WriteField("metadata", string(imageJson))
+	err = writer.WriteField("metadata", string(modelJson))
 	require.NoError(t, err)
 
 	// Create file part
-	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", image.ConstructName())
+	file := []byte("dummy model data")
+	part, err := writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -921,11 +920,11 @@ func TestPutImage_NotFound(t *testing.T) {
 	writer.Close()
 
 	// Send the request
-	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req := httptest.NewRequest(http.MethodPost, "/models", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rec := httptest.NewRecorder()
 
-	handler.PutImage(rec, req)
+	handler.PutModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -937,30 +936,30 @@ func TestPutImage_NotFound(t *testing.T) {
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
 }
 
-func TestPutImageData_Success(t *testing.T) {
+func TestPutModelData_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 	
-	putImage := &models.PutRequest[models.Image]{
-		Existing: *image,
-		New: models.Image{
+	putModel := &models.PutRequest[models.Model]{
+		Existing: *model,
+		New: models.Model{
 			Collection: collection,
-			ImgType: "albedo",
-			Resolution: "1024x1024",
-			FileExtension: "png",
+			ModelType: "scan",
+			LOD: "LOD2",
+			FileExtension: "gltf",
 		},
 	}
 
-	reqBody, _ := json.Marshal(putImage)
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	reqBody, _ := json.Marshal(putModel)
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.PutImageData(rec, req)
+	handler.PutModelData(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -972,18 +971,18 @@ func TestPutImageData_Success(t *testing.T) {
 	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
 }
 
-func TestPutImageData_BadRequest(t *testing.T) {
+func TestPutModelData_BadRequest(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	reqBody, _ := json.Marshal("{entirely:\"Wrong Field\"}")
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.PutImageData(rec, req)
+	handler.PutModelData(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -996,19 +995,19 @@ func TestPutImageData_BadRequest(t *testing.T) {
 	// repeat with invalid data
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
-	invalidImage := setupImage(t, storage, collection, "_", " ", "")
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
+	invalidModel := setupModel(t, storage, collection, "_", " ", "")
 
-	putImage := &models.PutRequest[models.Image]{
-		Existing: *image,
-		New: *invalidImage,
+	putModel := &models.PutRequest[models.Model]{
+		Existing: *model,
+		New: *invalidModel,
 	}
 
-	reqBody, _ = json.Marshal(putImage)
-	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	reqBody, _ = json.Marshal(putModel)
+	req = httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
 
-	handler.PutImageData(rec, req)
+	handler.PutModelData(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -1019,18 +1018,18 @@ func TestPutImageData_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 
 	// repeat with wrong model
-	model := &models.Model{
+	image := &models.Image{
 		Collection: collection,
-		ModelType: "Scan",
-		LOD: "LOD1",
-		FileExtension: "stl",
+		ImgType: "albedo",
+		Resolution: "2048x2048",
+		FileExtension: "png",
 	}
 
-	reqBody, _ = json.Marshal(model)
-	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	reqBody, _ = json.Marshal(image)
+	req = httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
 
-	handler.PutImageData(rec, req)
+	handler.PutModelData(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -1041,35 +1040,35 @@ func TestPutImageData_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidData, responseData.Message)
 }
 
-func TestPutImageData_NotFound(t *testing.T) {
+func TestPutModelData_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := models.Image{
+
+	model := models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD1",
+		FileExtension: "gltf",
 	}
-	
-	putImage := &models.PutRequest[models.Image]{
-		Existing: image,
-		New: models.Image{
+	putModel := &models.PutRequest[models.Model]{
+		Existing: model,
+		New: models.Model{
 			Collection: collection,
-			ImgType: "albedo",
-			Resolution: "1024x1024",
-			FileExtension: "png",
+			ModelType: "model",
+			LOD: "LOD2",
+			FileExtension: "stl",
 		},
 	}
 
-	reqBody, _ := json.Marshal(putImage)
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	reqBody, _ := json.Marshal(putModel)
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.PutImageData(rec, req)
+	handler.PutModelData(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -1081,20 +1080,20 @@ func TestPutImageData_NotFound(t *testing.T) {
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
 }
 
-func TestDeleteImage_Success(t *testing.T) {
+func TestDeleteModel_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 
-	reqBody, _ := json.Marshal(image)
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	reqBody, _ := json.Marshal(model)
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.DeleteImage(rec, req)
+	handler.DeleteModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -1106,27 +1105,27 @@ func TestDeleteImage_Success(t *testing.T) {
 	assert.Empty(t, responseData.Message)
 }
 
-func TestDeleteImage_BadRequest(t *testing.T) {
+func TestDeleteModel_BadRequest(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := &models.Image{
+	model := models.Model{
 		Collection: collection,
-		ImgType: "_albedo",
-		Resolution: "1024x1024",
-		FileExtension: "png",
+		ModelType: "_scan",
+		LOD: "LOD1",
+		FileExtension: "gltf",
 	}
 
-	reqBody, _ := json.Marshal(image)
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	reqBody, _ := json.Marshal(model)
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.DeleteImage(rec, req)
+	handler.DeleteModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()
@@ -1138,10 +1137,10 @@ func TestDeleteImage_BadRequest(t *testing.T) {
 
 	// repeat with malformed payload
 	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
-	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	req = httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec = httptest.NewRecorder()
 
-	handler.DeleteImage(rec, req)
+	handler.DeleteModel(rec, req)
 
 	res = rec.Result()
 	defer res.Body.Close()
@@ -1152,25 +1151,25 @@ func TestDeleteImage_BadRequest(t *testing.T) {
 	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
 }
 
-func TestDeleteImage_NotFound(t *testing.T) {
+func TestDeleteModel_NotFound(t *testing.T) {
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
-	handler := setupImagesHandler(storage, mockCache)
+	handler := setupModelHandler(storage, mockCache)
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	image := models.Image{
+	model := models.Model{
 		Collection: collection,
-		ImgType: "albedo",
-		Resolution: "2048x2048",
-		FileExtension: "png",
+		ModelType: "scan",
+		LOD: "LOD1",
+		FileExtension: "glTF",
 	}
 
-	reqBody, _ := json.Marshal(image)
-	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	reqBody, _ := json.Marshal(model)
+	req := httptest.NewRequest(http.MethodGet, "/models", bytes.NewReader(reqBody))
 	rec := httptest.NewRecorder()
 
-	handler.DeleteImage(rec, req)
+	handler.DeleteModel(rec, req)
 
 	res := rec.Result()
 	defer res.Body.Close()

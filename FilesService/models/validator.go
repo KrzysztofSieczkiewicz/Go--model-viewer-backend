@@ -17,7 +17,7 @@ var (
 
 	regexModelType       = regexp.MustCompile(`^[a-zA-Z]+$`)
 	regexLOD 			 = regexp.MustCompile(`^LOD[0-9]$`)
-	regexModelExtension  = regexp.MustCompile(`^(obj|glTF)$`)
+	regexModelExtension  = regexp.MustCompile(`^(obj|glTF|gltf|stl)$`)
 )
 
 func init() {
@@ -27,10 +27,16 @@ func init() {
 	validate.RegisterValidation("categoryPath", validateCategoryFilepath)
 	validate.RegisterValidation("collectionID", validateID)
 	validate.RegisterValidation("category", validateCategory)
+	validate.RegisterValidation("collection", validateCollection)
 
 	// IMAGE
 	validate.RegisterValidation("imgType", validateImageType)
 	validate.RegisterValidation("resolution", validateImageResolution)
 	validate.RegisterValidation("imgExtension", validateImageExtension)
-	validate.RegisterValidation("collection", validateCollection)
+
+
+	// MODEL
+	validate.RegisterValidation("modelType", validateModelType)
+	validate.RegisterValidation("lod", validateModelDetailLevel)
+	validate.RegisterValidation("modelExtension", validateModelExtension)
 }
