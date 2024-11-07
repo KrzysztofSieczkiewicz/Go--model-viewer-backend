@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -302,7 +303,7 @@ func TestGetImage_InvalidUrl(t *testing.T) {
 	assert.Equal(t, response.MessageExpiredUrl, responseData.Message)
 }
 
-func TestGetImage_NoAsset(t *testing.T) {
+func TestGetImage_NoFile(t *testing.T) {
 	var responseData response.MessageResponse
 
 	storage := setupStorage(t, 1)
@@ -338,3 +339,335 @@ func TestGetImage_NoAsset(t *testing.T) {
 	assert.Equal(t, response.MessageFailedRead, responseData.Message)
 }
 
+func TestPostImage_Success(t *testing.T) {
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+
+	collection := setupCollection(t, storage, category, "collection")
+	image := &models.Image{
+		Collection: collection,
+		ImgType: "albedo",
+		Resolution: "2048x2048",
+		FileExtension: "png",
+	}
+	imageJson, err := json.Marshal(image)
+	require.NoError(t, err)
+
+	// Create image metadata part
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	err = writer.WriteField("metadata", string(imageJson))
+	require.NoError(t, err)
+
+	// Create file part
+	file := []byte("dummy image data")
+	part, err := writer.CreateFormFile("file", image.ConstructName())
+	require.NoError(t, err)
+
+	_, err = part.Write(file)
+	require.NoError(t, err)
+	writer.Close()
+
+	// Send the request
+	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	t.Log(body)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageUploadSuccessful, responseData.Message)
+}
+
+func TestPostImage_InvalidMetadataPart(t *testing.T) {
+	var responseData response.MessageResponse
+
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := &models.Image{
+		Collection: collection,
+		ImgType: "albedo",
+		Resolution: "2048x2048",
+		FileExtension: "png",
+	}
+	imageJson, err := json.Marshal(image)
+	require.NoError(t, err)
+
+	// Create image metadata part
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	err = writer.WriteField("data", string(imageJson))
+	require.NoError(t, err)
+
+	// Provide invalid file tag
+	file := []byte("dummy image data")
+	part, err := writer.CreateFormFile("file", image.ConstructName())
+	require.NoError(t, err)
+
+	_, err = part.Write(file)
+	require.NoError(t, err)
+	writer.Close()
+
+	// Send the request
+	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidMultipartJson, responseData.Message)
+
+	// Repeat with no file tag
+	// Create image metadata part
+	body = new(bytes.Buffer)
+	writer = multipart.NewWriter(body)
+
+	// Provide invalid file tag
+	file = []byte("dummy image data")
+	part, err = writer.CreateFormFile("file", image.ConstructName())
+	require.NoError(t, err)
+	_, err = part.Write(file)
+	require.NoError(t, err)
+
+	writer.Close()
+
+	// Send the request
+	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec = httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidMultipartJson, responseData.Message)
+
+	// Repeat with malformed data
+	// Create image metadata part
+	body = new(bytes.Buffer)
+	writer = multipart.NewWriter(body)
+	err = writer.WriteField("metadata", "{entirely:\"Wrong Field\"}")
+	require.NoError(t, err)
+
+	// Create file part
+	file = []byte("dummy image data")
+	part, err = writer.CreateFormFile("file", image.ConstructName())
+	require.NoError(t, err)
+
+	_, err = part.Write(file)
+	require.NoError(t, err)
+	writer.Close()
+
+	// Send the request
+	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec = httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+}
+
+func TestPostImage_InvalidFilePart(t *testing.T) {
+	var responseData response.MessageResponse
+
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := &models.Image{
+		Collection: collection,
+		ImgType: "albedo",
+		Resolution: "2048x2048",
+		FileExtension: "png",
+	}
+	imageJson, err := json.Marshal(image)
+	require.NoError(t, err)
+
+	// Create image metadata part
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	err = writer.WriteField("metadata", string(imageJson))
+	require.NoError(t, err)
+
+	// Provide invalid file tag
+	file := []byte("dummy image data")
+	part, err := writer.CreateFormFile("files", image.ConstructName())
+	require.NoError(t, err)
+
+	_, err = part.Write(file)
+	require.NoError(t, err)
+	writer.Close()
+
+	// Send the request
+	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidMultipartFile, responseData.Message)
+
+	// Repeat with no file tag
+	// Create image metadata part
+	body = new(bytes.Buffer)
+	writer = multipart.NewWriter(body)
+	err = writer.WriteField("metadata", string(imageJson))
+	require.NoError(t, err)
+
+	writer.Close()
+
+	// Send the request
+	req = httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec = httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidMultipartFile, responseData.Message)
+}
+
+func TestPostImage_AlreadyExists(t *testing.T) {
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+
+	mockCache.On("Get", mock.Anything).Return(image.ConstructFilepath(), nil)
+
+	imageJson, err := json.Marshal(image)
+	require.NoError(t, err)
+
+	// Create image metadata part
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	err = writer.WriteField("metadata", string(imageJson))
+	require.NoError(t, err)
+
+	// Create file part
+	file := []byte("dummy image data")
+	part, err := writer.CreateFormFile("file", image.ConstructName())
+	require.NoError(t, err)
+
+	_, err = part.Write(file)
+	require.NoError(t, err)
+	writer.Close()
+
+	// Send the request
+	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
+}
+
+func TestPostImage_NotFound(t *testing.T) {
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+
+	collection := &models.Collection{
+		Category: *category,
+		ID: "collection",
+	}
+	image := &models.Image{
+		Collection: collection,
+		ImgType: "albedo",
+		Resolution: "2048x2048",
+		FileExtension: "png",
+	}
+
+	mockCache.On("Get", mock.Anything).Return(image.ConstructFilepath(), nil)
+
+	imageJson, err := json.Marshal(image)
+	require.NoError(t, err)
+
+	// Create image metadata part
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	err = writer.WriteField("metadata", string(imageJson))
+	require.NoError(t, err)
+
+	// Create file part
+	file := []byte("dummy image data")
+	part, err := writer.CreateFormFile("file", image.ConstructName())
+	require.NoError(t, err)
+
+	_, err = part.Write(file)
+	require.NoError(t, err)
+	writer.Close()
+
+	// Send the request
+	req := httptest.NewRequest(http.MethodPost, "/images", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	handler.PostImage(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageNotFound, responseData.Message)
+}

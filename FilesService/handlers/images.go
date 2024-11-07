@@ -172,7 +172,7 @@ func (h *ImagesHandler) GetImage(rw http.ResponseWriter, r *http.Request) {
 // Responses:
 // 	201: message
 //  400: message
-// 	403: message
+//	404: message
 // 	500: message
 func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	h.logger.Info("Processing POST Image request")
@@ -212,11 +212,11 @@ func (h *ImagesHandler) PostImage(rw http.ResponseWriter, r *http.Request) {
 	err = h.store.CreateAsset(image, file)
 	if err != nil {
 		if err == files.ErrAlreadyExists {
-			response.RespondWithMessage(rw, http.StatusForbidden, response.MessageAlreadyExists)
+			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageAlreadyExists)
 			return
 		}
 		if err == files.ErrNotFound {
-			response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageNotFound)
+			response.RespondWithMessage(rw, http.StatusNotFound, response.MessageNotFound)
 			return
 		}
 		response.RespondWithMessage(rw, http.StatusInternalServerError, response.MessageFailedCreate)
