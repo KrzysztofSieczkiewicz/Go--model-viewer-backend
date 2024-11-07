@@ -247,7 +247,7 @@ func (h *ImagesHandler) PutImage(rw http.ResponseWriter, r *http.Request) {
 	image := &models.Image{}
 	json := r.FormValue("metadata")
 	if json == "" {
-		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageFailedDataParsing)
+		response.RespondWithMessage(rw, http.StatusBadRequest, response.MessageInvalidMultipartJson)
 		return
 	}
 
