@@ -948,3 +948,147 @@ func TestPutImage_NotFound(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
 }
+
+func TestPutImageData_Success(t *testing.T) {
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	
+	putImage := &models.PutRequest[models.Image]{
+		Existing: *image,
+		New: models.Image{
+			Collection: collection,
+			ImgType: "albedo",
+			Resolution: "1024x1024",
+			FileExtension: "png",
+		},
+	}
+
+	reqBody, _ := json.Marshal(putImage)
+	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.PutImageData(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
+}
+
+func TestPutImageData_BadRequest(t *testing.T) {
+	var responseData response.MessageResponse
+
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	reqBody, _ := json.Marshal("{entirely:\"Wrong Field\"}")
+	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.PutImageData(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+
+	// repeat with invalid data
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+	invalidImage := setupImage(t, storage, collection, "_", " ", "")
+
+	putImage := &models.PutRequest[models.Image]{
+		Existing: *image,
+		New: *invalidImage,
+	}
+
+	reqBody, _ = json.Marshal(putImage)
+	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec = httptest.NewRecorder()
+
+	handler.PutImageData(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
+
+	// repeat with wrong model
+	model := &models.Model{
+		Collection: collection,
+		AssetType: "Scan",
+		LOD: "LOD1",
+		FileExtension: "stl",
+	}
+
+	reqBody, _ = json.Marshal(model)
+	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec = httptest.NewRecorder()
+
+	handler.PutImageData(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
+}
+
+func TestPutImageData_NotFound(t *testing.T) {
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := models.Image{
+		Collection: collection,
+		ImgType: "albedo",
+		Resolution: "2048x2048",
+		FileExtension: "png",
+	}
+	
+	putImage := &models.PutRequest[models.Image]{
+		Existing: image,
+		New: models.Image{
+			Collection: collection,
+			ImgType: "albedo",
+			Resolution: "1024x1024",
+			FileExtension: "png",
+		},
+	}
+
+	reqBody, _ := json.Marshal(putImage)
+	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.PutImageData(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageNotFound, responseData.Message)
+}
