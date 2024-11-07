@@ -1092,3 +1092,104 @@ func TestPutImageData_NotFound(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
 }
+
+func TestDeleteImage_Success(t *testing.T) {
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := setupImage(t, storage, collection, "albedo", "2048x2048", "png")
+
+	reqBody, _ := json.Marshal(image)
+	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.DeleteImage(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.Error(t, err)
+	assert.Empty(t, responseData.Message)
+}
+
+func TestDeleteImage_BadRequest(t *testing.T) {
+	var responseData response.MessageResponse
+
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := &models.Image{
+		Collection: collection,
+		ImgType: "_albedo",
+		Resolution: "1024x1024",
+		FileExtension: "png",
+	}
+
+	reqBody, _ := json.Marshal(image)
+	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.DeleteImage(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidData, responseData.Message)
+
+	// repeat with malformed payload
+	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
+	req = httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec = httptest.NewRecorder()
+
+	handler.DeleteImage(rec, req)
+
+	res = rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+	err = json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+}
+
+func TestDeleteImage_NotFound(t *testing.T) {
+	storage := setupStorage(t, 1)
+	mockCache := new(MockCache)
+	handler := setupImagesHandler(storage, mockCache)
+
+	category := setupCategory(t, storage, "category/path")
+	collection := setupCollection(t, storage, category, "collection")
+	image := models.Image{
+		Collection: collection,
+		ImgType: "albedo",
+		Resolution: "2048x2048",
+		FileExtension: "png",
+	}
+
+	reqBody, _ := json.Marshal(image)
+	req := httptest.NewRequest(http.MethodGet, "/images", bytes.NewReader(reqBody))
+	rec := httptest.NewRecorder()
+
+	handler.DeleteImage(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+	var responseData response.MessageResponse
+	err := json.NewDecoder(res.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, response.MessageNotFound, responseData.Message)
+}
