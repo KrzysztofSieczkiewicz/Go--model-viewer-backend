@@ -51,9 +51,9 @@ import (
 // DONE: Clean and fix validators
 // DONE: Write unit tests for storage and data packages
 // DONE: Register all endpoints and funcs
+// DONE: Add signedUrl unit tests
+// DONE: Add response unit tests
 
-// TODO: Add signedUrl unit tests
-// TODO: Add response unit tests
 // TODO: Add freeCache unit tests
 // TODO: Extend middleware if needed - preferably add some security stuff there
 // TODO: Resolve singular TODOs
