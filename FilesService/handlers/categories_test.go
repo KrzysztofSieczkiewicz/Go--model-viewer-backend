@@ -17,7 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupCategoriesHandler(storage files.Storage) (*handlers.CategoriesHandler) {
+// setupCategoriesHandler initializes the CategoriesHandler with mock storage
+func setupCategoriesHandler(storage files.Storage) *handlers.CategoriesHandler {
 	return handlers.NewCategories(
 		"http://localhost:3001",
 		storage,
@@ -25,31 +26,35 @@ func setupCategoriesHandler(storage files.Storage) (*handlers.CategoriesHandler)
 	)
 }
 
+// TestGetCategory_Success tests successful retrieval of category
 func TestGetCategory_Success(t *testing.T) {
-	storage := setupStorage(t, 1)
-	handler := setupCategoriesHandler(storage)
-	category := setupCategory(t, storage, "category/path")
+	t.Run("Success", func(t *testing.T) {
+		storage := setupStorage(t, 1)
+		handler := setupCategoriesHandler(storage)
+		category := setupCategory(t, storage, "category/path")
 
-	// Add two collections to the category
-	_ = setupCollection(t, storage, category, "FirstCollection")
-	_ = setupCollection(t, storage, category, "SecondCollection")
+		// Add two collections to the category
+		_ = setupCollection(t, storage, category, "FirstCollection")
+		_ = setupCollection(t, storage, category, "SecondCollection")
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.GetCategory(rec, req)
+		handler.GetCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.DirectoryContentsResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	require.NoError(t, err)
-	assert.Equal(t, 2, len(responseData.Contents))
+		var responseData response.DirectoryContentsResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, 2, len(responseData.Contents))
+	})
 }
 
+// TestGetCategory_BadRequest tests error handling when request is malformed
 func TestGetCategory_BadRequest(t *testing.T) {
 	storage := setupStorage(t, 1)
 	handler := setupCategoriesHandler(storage)
@@ -59,158 +64,145 @@ func TestGetCategory_BadRequest(t *testing.T) {
 	_ = setupCollection(t, storage, category, "FirstCollection")
 	_ = setupCollection(t, storage, category, "SecondCollection")
 
-	// Malform the category before marshalling
-	category.Path = "/./"
+	// Run subtests for different bad requests
+	t.Run("MalformCategory", func(t *testing.T) {
+		category.Path = "/./"
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+		handler.GetCategory(rec, req)
 
-	handler.GetCategory(rec, req)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		assert.NoError(t, err)
+		assert.Equal(t, response.MessageInvalidData, responseData.Message)
+	})
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
+	t.Run("EmptyPath", func(t *testing.T) {
+		category.Path = ""
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	// Repeat check with empty path
-	category.Path = ""
+		handler.GetCategory(rec, req)
 
-	reqBody, _ = json.Marshal(category)
-	req = httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	handler.GetCategory(rec, req)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		assert.NoError(t, err)
+		assert.Equal(t, response.MessageInvalidData, responseData.Message)
+	})
 
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	t.Run("InvalidModelData", func(t *testing.T) {
+		reqBody, _ := json.Marshal("{entirely:\"Wrong Field\"}")
+		req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
+		handler.GetCategory(rec, req)
 
-	// Repeat check with wrong model data
-	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
-	req = httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	handler.GetCategory(rec, req)
-
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		assert.NoError(t, err)
+		assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+	})
 }
 
+// TestGetCategory_NotFound tests category not found error
 func TestGetCategory_NotFound(t *testing.T) {
-	storage := setupStorage(t, 1)
-	handler := setupCategoriesHandler(storage)
-	category := setupCategory(t, storage, "category/path")
+	t.Run("CategoryNotFound", func(t *testing.T) {
+		storage := setupStorage(t, 1)
+		handler := setupCategoriesHandler(storage)
+		category := setupCategory(t, storage, "category/path")
 
-	// Malform the category
-	category.Path = "NonExistingCategory"
+		// Simulate a non-existing category
+		category.Path = "NonExistingCategory"
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.GetCategory(rec, req)
+		handler.GetCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageNotFound, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		assert.NoError(t, err)
+		assert.Equal(t, response.MessageNotFound, responseData.Message)
+	})
 }
 
+// TestPostCategory_Success tests successful creation of category
 func TestPostCategory_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	handler := setupCategoriesHandler(storage)
 
-	category := &models.Category{
-		Path: "example/category/path",
-	}
+	category := &models.Category{Path: "example/category/path"}
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	t.Run("Successfully creates category", func(t *testing.T) {
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PostCategory(rec, req)
+		handler.PostCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusNoContent, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	body, err := io.ReadAll(res.Body)
-	require.NoError(t, err)
-	assert.Empty(t, string(body))
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.Empty(t, string(body))
+	})
 }
 
 func TestPostCategory_BadRequest(t *testing.T) {
 	storage := setupStorage(t, 1)
 	handler := setupCategoriesHandler(storage)
 
-	category := &models.Category{
-		Path: "/./",
+	// Define the common bad requests to reduce repetition
+	badRequests := []struct {
+		path    	string
+		expectedMsg string
+	}{
+		{"/./", response.MessageInvalidData}, // Invalid path
+		{ "", response.MessageInvalidData},    // Empty path
+		{"wrong\"path", response.MessageInvalidData}, // Invalid JSON format
 	}
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	for _, badRequest := range badRequests {
+		t.Run("BadRequest for "+badRequest.path, func(t *testing.T) {
+			category := &models.Category{Path: badRequest.path}
+			reqBody, _ := json.Marshal(category)
+			req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(reqBody))
+			rec := httptest.NewRecorder()
 
-	handler.PostCategory(rec, req)
+			handler.PostCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			res := rec.Result()
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
-
-	// Repeat check with empty path
-	category.Path = ""
-
-	reqBody, _ = json.Marshal(category)
-	req = httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
-
-	handler.PostCategory(rec, req)
-
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
-
-	// Repeat check with wrong model data
-	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
-	req = httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
-
-	handler.PostCategory(rec, req)
-
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+			var responseData response.MessageResponse
+			err := json.NewDecoder(res.Body).Decode(&responseData)
+			require.NoError(t, err)
+			assert.Equal(t, badRequest.expectedMsg, responseData.Message)
+		})
+	}
 }
 
 func TestPostCategory_AlreadyExists(t *testing.T) {
@@ -218,20 +210,22 @@ func TestPostCategory_AlreadyExists(t *testing.T) {
 	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodGet, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	t.Run("Category already exists", func(t *testing.T) {
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PostCategory(rec, req)
+		handler.PostCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
+	})
 }
 
 func TestPutCategory_Success(t *testing.T) {
@@ -244,20 +238,22 @@ func TestPutCategory_Success(t *testing.T) {
 		New: models.Category{Path: "category/new"},
 	}
 
-	reqBody, _ := json.Marshal(putCategory)
-	req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	t.Run("Successfully updates category", func(t *testing.T) {
+		reqBody, _ := json.Marshal(putCategory)
+		req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PutCategory(rec, req)
+		handler.PutCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	require.NoError(t, err)
-	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
+	})
 }
 
 func TestPutCategory_BadRequest(t *testing.T) {
@@ -267,54 +263,60 @@ func TestPutCategory_BadRequest(t *testing.T) {
 
 	putCategory := &models.PutRequest[models.Category]{
 		Existing: *category,
-		New: models.Category{Path: "test/new"},
+		New: models.Category{Path: "category/new"},
 	}
-	reqBody, _ := json.Marshal(putCategory)
-	req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
 
-	handler.PostCategory(rec, req)
+	t.Run("BadRequest - Invalid data", func(t *testing.T) {
+		reqBody, _ := json.Marshal(putCategory)
+		req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		handler.PostCategory(rec, req)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	// Repeat check with empty path
-	putCategory.New.Path = ""
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageInvalidData, responseData.Message)
+	})
 
-	reqBody, _ = json.Marshal(putCategory)
-	req = httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
+	t.Run("BadRequest - Empty path", func(t *testing.T) {
+		putCategory.New.Path = ""
+		reqBody, _ := json.Marshal(putCategory)
+		req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PostCategory(rec, req)
+		handler.PostCategory(rec, req)
 
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageInvalidData, responseData.Message)
+	})
 
-	// Repeat check with wrong model data
-	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
-	req = httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
+	t.Run("BadRequest - Invalid JSON", func(t *testing.T) {
+		reqBody := []byte("{entirely:\"Wrong Field\"}")
+		req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PostCategory(rec, req)
+		handler.PostCategory(rec, req)
 
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
+	})
 }
 
 func TestPutCategory_NotFound(t *testing.T) {
@@ -326,20 +328,22 @@ func TestPutCategory_NotFound(t *testing.T) {
 		New: models.Category{Path: "test/nonExisting/path"},
 	}
 
-	reqBody, _ := json.Marshal(putCategory)
-	req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	t.Run("Category not found", func(t *testing.T) {
+		reqBody, _ := json.Marshal(putCategory)
+		req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PutCategory(rec, req)
+		handler.PutCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	require.NoError(t, err)
-	assert.Equal(t, response.MessageNotFound, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageNotFound, responseData.Message)
+	})
 }
 
 func TestPutCategory_AlreadyExists(t *testing.T) {
@@ -353,20 +357,22 @@ func TestPutCategory_AlreadyExists(t *testing.T) {
 		New: *newCategory,
 	}
 
-	reqBody, _ := json.Marshal(putCategory)
-	req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	t.Run("Category already exists", func(t *testing.T) {
+		reqBody, _ := json.Marshal(putCategory)
+		req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PutCategory(rec, req)
+		handler.PutCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	require.NoError(t, err)
-	assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
+	})
 }
 
 func TestPutCategory_UpdateFailed(t *testing.T) {
@@ -379,36 +385,68 @@ func TestPutCategory_UpdateFailed(t *testing.T) {
 		New: models.Category{Path: "test/nonExisting/path"},
 	}
 
-	reqBody, _ := json.Marshal(putCategory)
-	req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	t.Run("Update failed due to server error", func(t *testing.T) {
+		reqBody, _ := json.Marshal(putCategory)
+		req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.PutCategory(rec, req)
+		handler.PutCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	require.NoError(t, err)
-	assert.Equal(t, response.MessageFailedUpdate, responseData.Message)
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageFailedUpdate, responseData.Message)
+	})
 }
 
 func TestDeleteCategory_Success(t *testing.T) {
 	storage := setupStorage(t, 1)
 	handler := setupCategoriesHandler(storage)
-	category := setupCategory(t, storage, "category/path")
+	category := setupCategory(t, storage, "category/to/delete")
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodDelete, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	t.Run("Successfully deletes category by path", func(t *testing.T) {
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodDelete, "/categories/", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
 
-	handler.DeleteCategory(rec, req)
+		handler.DeleteCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusNoContent, res.StatusCode)
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		// Verify the category was deleted
+		deletedCategory, err := storage.ListCategoryContents(category)
+		require.Error(t, err)
+		assert.Nil(t, deletedCategory)
+	})
+}
+
+func TestDeleteCategory_NotFound(t *testing.T) {
+	storage := setupStorage(t, 1)
+	handler := setupCategoriesHandler(storage)
+	category := &models.Category{Path: "path/to/category"}
+
+	t.Run("Returns NotFound when category does not exist", func(t *testing.T) {
+		reqBody, _ := json.Marshal(category)
+		req := httptest.NewRequest(http.MethodDelete, "/categories/nonexistent", bytes.NewReader(reqBody))
+		rec := httptest.NewRecorder()
+
+		handler.DeleteCategory(rec, req)
+
+		res := rec.Result()
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+		var responseData response.MessageResponse
+		err := json.NewDecoder(res.Body).Decode(&responseData)
+		require.NoError(t, err)
+		assert.Equal(t, response.MessageNotFound, responseData.Message)
+	})
 }
 
 func TestDeleteCategory_BadRequest(t *testing.T) {
@@ -416,78 +454,36 @@ func TestDeleteCategory_BadRequest(t *testing.T) {
 	handler := setupCategoriesHandler(storage)
 	category := setupCategory(t, storage, "category/path")
 
-	category.Path = "/category/path"
-
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
-
-	handler.DeleteCategory(rec, req)
-
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
-
-	// Repeat check with empty path
-	category.Path = ""
-
-	reqBody, _ = json.Marshal(category)
-	req = httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
-
-	handler.DeleteCategory(rec, req)
-
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidData, responseData.Message)
-
-	// Repeat check with wrong model data
-	reqBody, _ = json.Marshal("{entirely:\"Wrong Field\"}")
-	req = httptest.NewRequest(http.MethodPut, "/categories", bytes.NewReader(reqBody))
-	rec = httptest.NewRecorder()
-
-	handler.DeleteCategory(rec, req)
-
-	res = rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-	err = json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
-}
-
-func TestDeleteCategory_NotFound(t *testing.T) {
-	storage := setupStorage(t, 1)
-	handler := setupCategoriesHandler(storage)
-	
-	category := &models.Category{
-		Path: "random/path",
+	badRequests := []struct {
+		path string
+		expectedMsg string
+	}{
+		{path: "/./", 		 	 expectedMsg: response.MessageInvalidData}, // Invalid path
+		{path: "", 				 expectedMsg: response.MessageInvalidData}, // Empty path
+		{path: "/category/path", expectedMsg: response.MessageInvalidData}, // Invalid prefix in path
+		{path: "wrong\"path", 	 expectedMsg: response.MessageInvalidData}, // Invalid JSON format
 	}
 
-	reqBody, _ := json.Marshal(category)
-	req := httptest.NewRequest(http.MethodDelete, "/categories", bytes.NewReader(reqBody))
-	rec := httptest.NewRecorder()
+	for _, badRequest := range badRequests {
+		t.Run("Delete Category with path: "+badRequest.path, func(t *testing.T) {
+			category.Path = badRequest.path
+			reqBody, _ := json.Marshal(category)
+			
+			req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(reqBody))
+			rec := httptest.NewRecorder()
 
-	handler.DeleteCategory(rec, req)
+			handler.PostCategory(rec, req)
 
-	res := rec.Result()
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+			res := rec.Result()
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	var responseData response.MessageResponse
-	err := json.NewDecoder(res.Body).Decode(&responseData)
-	assert.NoError(t, err)
-	assert.Equal(t, response.MessageNotFound, responseData.Message)
+			var responseData response.MessageResponse
+			err := json.NewDecoder(res.Body).Decode(&responseData)
+			require.NoError(t, err)
+			assert.Equal(t, badRequest.expectedMsg, responseData.Message)
+		})
+	}
 }
 
 func TestDeleteCategory_NotEmpty(t *testing.T) {

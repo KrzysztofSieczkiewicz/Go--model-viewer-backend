@@ -80,6 +80,7 @@ func setupModel(t *testing.T, storage *files.Local, collection *models.Collectio
 	return model
 }
 
+// Mock cache to simulate caching operations
 type MockCache struct {
 	mock.Mock
 }
