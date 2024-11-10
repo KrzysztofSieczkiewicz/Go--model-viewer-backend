@@ -52,9 +52,13 @@ import (
 // DONE: Write unit tests for storage and data packages
 // DONE: Register all endpoints and funcs
 
-// TODO: Retest all endpoints with test data
+// TODO: Add signedUrl unit tests
+// TODO: Add response unit tests
+// TODO: Add freeCache unit tests
+// TODO: Extend middleware if needed - preferably add some security stuff there
 // TODO: Resolve singular TODOs
 // TODO: Last iteration through swagger annotations
+// TODO: Retest all endpoints with test data
 // TODO: Pop a champagne
 
 func main() {
