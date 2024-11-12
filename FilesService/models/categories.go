@@ -17,7 +17,6 @@ func (c *Category) ConstructCategoryPath() string {
 		return ""
 	}
 
-	// TODO: Extend this method so it handles separators with more flexibility
 	dirs := strings.Split(c.Path, "/")
 	for i, dir := range dirs {
 		if dir != "" {
