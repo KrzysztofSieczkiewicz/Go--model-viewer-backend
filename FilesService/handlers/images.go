@@ -16,16 +16,16 @@ import (
 /*
 Example curls:
 GET IMAGE URL:
-curl -v -X GET http://localhost:9090/images/url -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+curl -v -X GET http://localhost:9090/images/url -H "Content-Type: application/json" -d "{\"collection\": {\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collection\"},\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 
 POST IMAGE:
-curl -v -i -X POST http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+curl -v -i -X POST http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"collection\": {\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collection\"},\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
 
 PUT IMAGE:
-curl -v -i -X PUT http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
+curl -v -i -X PUT http://localhost:9090/images -H "Content-Type: multipart/form-data" -F "metadata={\"collection\": {\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collection\"},\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"};type=application/json" -F "file=@FilesService/thumbnail.png;type=image/png"
 
 DELETE IMAGE:
-curl -v -i -X DELETE http://localhost:9090/images -H "Content-Type: application/json" -d "{\"category\":\"random/test\",\"id\":\"1\",\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
+curl -v -i -X DELETE http://localhost:9090/images -H "Content-Type: application/json" -d "{\"collection\": {\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collection\"},\"type\":\"albedo\",\"resolution\":\"2048x2048\",\"extension\":\"png\"}"
 */
 
 // Handler for reading and writing images into the imageSets in the storage

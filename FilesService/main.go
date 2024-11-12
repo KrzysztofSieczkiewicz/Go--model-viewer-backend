@@ -4,7 +4,6 @@
 //
 //	Schemes: http, https
 //	Host: localhost:9090
-//	BasePath: /files/
 //	Version: 1.0.0
 //
 // swagger:meta
@@ -30,37 +29,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// DONE: Add swagger documentation
-// DONE: Add proper success headers and responses for handler. Update swagger desc.
-// DONE: Give response body to 200 responses (?)
-// DONE: Register content type for GetUrl
-// DONE: Create separate handlers for different file types
-// DONE: Update gitignore
-// DONE: Improve logging
-// DONE: Improve swagger annotations (add model annotations, clean up the response annotations)
-// DONE: Clean up models, responses etc
-// DONE: Improve local.go with proper code sharing and new common funcs - too much repetiton + occasional verbose/non-functioning checks
-// 		 continue clearing the code, remember about unused errors.go in the files directory
-// DONE: Implement file type validation (based on filename decide if file is correct) - check Validator implementation from sceneManager
-// DONE: Clean up the handlers and methods - consider what data should be moved to jsons - preferably remove most data from url into json body
-// DONE: Test all endpoints + fix file write err (access is denied)
-// DONE: Revise data validators
-// DONE: Update Images models for requests (include category and id in the metadata)
-// DONE: Enforce that category name cannot have ID-like structure and enforce specific ID formatting
-// DONE: Add 3D assets handling
-// DONE: Clean and fix validators
-// DONE: Write unit tests for storage and data packages
-// DONE: Register all endpoints and funcs
-// DONE: Add signedUrl unit tests
-// DONE: Add response unit tests
-// DONE: Add freeCache unit tests
-// DONE: Extend middleware if needed - preferably add some security stuff there
-// DONE: Resolve singular TO/DOs
-
-// TODO: Last iteration through swagger annotations
-// TODO: Retest all endpoints with test data
-// TODO: Pop a champagne
-
 func main() {
 	// Initialize logger
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
@@ -77,11 +45,11 @@ func main() {
 	baseUrl := hostUrl + bindAddress
 
 	// Initialize the local files storage with Max file size: 5MB
-	modStorage, err := files.NewLocal(baseFilePath + "models", 5, logger)
+	modStorage, err := files.NewLocal(baseFilePath + "/models", 5, logger)
 	if err != nil {
 		logger.Error("Failed to initialize models storage")
 	}
-	imgStorage, err := files.NewLocal(baseFilePath + "images", 5, logger)
+	imgStorage, err := files.NewLocal(baseFilePath + "/images", 5, logger)
 	if err != nil {
 		logger.Error("Failed to initialize images storage")
 	}

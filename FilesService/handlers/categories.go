@@ -10,6 +10,20 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
+/*
+POST CATEGORY
+curl -v -X POST http://localhost:9090/models/categories -H "Content-Type: application/json" -d "{\"path\":\"random/test\"}"
+
+GET CATEGORY
+curl -v -X GET http://localhost:9090/models/categories -H "Content-Type: application/json" -d "{\"path\":\"random/test\"}"
+
+PUT CATEGORY
+curl -v -X PUT http://localhost:9090/models/categories -H "Content-Type: application/json" -d "{\"existing\":{\"path\":\"random/test\"},\"new\":{\"path\":\"random/testNew\"}}"
+
+DELETE CATEGORY
+curl -v -X DELETE http://localhost:9090/models/categories -H "Content-Type: application/json" -d "{\"path\":\"random/testNew\"}"
+*/
+
 // Handler for managing categories
 type CategoriesHandler struct {
 	baseUrl		string

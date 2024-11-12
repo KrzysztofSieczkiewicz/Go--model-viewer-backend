@@ -10,6 +10,20 @@ import (
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
+/*
+POST COLLECTION
+curl -v -X POST http://localhost:9090/models/collections -H "Content-Type: application/json" -d "{\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collection\"}"
+
+GET COLLECTION
+curl -v -X GET http://localhost:9090/models/collections -H "Content-Type: application/json" -d "{\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collection\"}"
+
+PUT COLLECTION
+curl -v -X PUT http://localhost:9090/models/collections -H "Content-Type: application/json" -d "{\"existing\":{\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collection\"},\"new\":{\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collectionNew\"}}"
+
+DELETE COLLECTION
+curl -v -X DELETE http://localhost:9090/models/collections -H "Content-Type: application/json" -d "{\"category\":{\"path\":\"random/testNew\"}, \"id\":\"collectionNew\"}"
+*/
+
 // Handler for managing collections
 type CollectionsHandler struct {
 	baseUrl		string
