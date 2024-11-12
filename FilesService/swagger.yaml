@@ -1,0 +1,541 @@
+basePath: /files/
+definitions:
+    Image:
+        description: Image defines a properties of a image file that are used to construct filename
+        properties:
+            extension:
+                maxLength: 8
+                minLength: 2
+                type: string
+                x-go-name: FileExtension
+            resolution:
+                maxLength: 16
+                minLength: 7
+                type: string
+                x-go-name: Resolution
+            type:
+                description: Image type determining general image purpose (eg. Albedo, Roughness)
+                maxLength: 64
+                minLength: 2
+                type: string
+                x-go-name: ImgType
+        required:
+            - type
+            - resolution
+            - extension
+        type: object
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
+    category:
+        description: Category defines a filepath of given category
+        properties:
+            filepath:
+                type: string
+                x-go-name: Filepath
+        type: object
+        x-go-name: Category
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
+    categoryContents:
+        properties:
+            directories:
+                description: List of directories stored inside given category
+                items:
+                    type: string
+                type: array
+                x-go-name: Directories
+        type: object
+        x-go-name: CategoryResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    empty:
+        type: object
+        x-go-name: EmptyResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    fileByteStream:
+        properties:
+            File:
+                description: File bytestream
+                items:
+                    format: uint8
+                    type: integer
+                type: array
+        type: object
+        x-go-name: FileResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    fileUrl:
+        properties:
+            filename:
+                description: filename
+                type: string
+                x-go-name: Filename
+            url:
+                description: url pointing to the resource
+                type: string
+                x-go-name: URL
+        type: object
+        x-go-name: FileUrlResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    imageSet:
+        description: ImageSet defines a properties of a set of images contributing to an entire texture with various resolutions or image types
+        properties:
+            category:
+                description: Category determining storage subdirectory
+                type: string
+                x-go-name: Category
+            id:
+                description: ID as it is stored in the database
+                type: string
+                x-go-name: ID
+        type: object
+        x-go-name: ImageSet
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
+    message:
+        properties:
+            message:
+                type: string
+                x-go-name: Message
+        type: object
+        x-go-name: MessageResponse
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response
+    updateCategory:
+        description: PutCategoryRequest defines combination of initial category filepath and the new filepath it should be updated to
+        properties:
+            existing:
+                $ref: '#/definitions/category'
+            new:
+                $ref: '#/definitions/category'
+        type: object
+        x-go-name: PutCategoryRequest
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
+    updateImageSet:
+        description: PutImageSetRequest defines combination of initial imageset and the new properties that it should be updated to
+        properties:
+            existing:
+                $ref: '#/definitions/imageSet'
+            new:
+                $ref: '#/definitions/imageSet'
+        type: object
+        x-go-name: PutImageSetRequest
+        x-go-package: github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models
+host: localhost:9090
+info:
+    description: Documentation of FilesApi
+    title: FilesService.
+    version: 1.0.0
+paths:
+    /{category}/{id}/{filename}:
+        delete:
+            description: Removes requested file from the filesystem. Doesn't remove any directories. Returns an error when file is not found
+            operationId: deleteFile
+            produces:
+                - text/plain
+            responses:
+                "204":
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
+                "404":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+        get:
+            description: Returns a signed url to requested resource. Url is timed
+            operationId: getFileUrl
+            produces:
+                - text/plain
+            responses:
+                "200":
+                    $ref: '#/responses/urlResponse'
+                "404":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+        post:
+            consumes:
+                - application/octet-stream
+            description: "Adds a file to the filesystem. Creates necessary folders. \nReturns an error when the file already exists"
+            operationId: postFile
+            produces:
+                - application/json
+            responses:
+                "201":
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
+                "403":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+        put:
+            consumes:
+                - application/octet-stream
+            description: Updates a file in the filesystem. Returns an error on file not found
+            operationId: putFile
+            produces:
+                - text/plain
+            responses:
+                "200":
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
+                "404":
+                    $ref: '#/responses/error'
+                "500":
+                    $ref: '#/responses/error'
+            tags:
+                - files
+    /{id}&{expires}&{signature}:
+        get:
+            description: Return an image from imageset. Can only be accessed by signed URLs
+            operationId: getImage
+            produces:
+                - application/octet-stream
+                - application/json
+            responses:
+                "200":
+                    description: fileByteStream
+                    schema:
+                        $ref: '#/definitions/fileByteStream'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "403":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - images
+    /imageCategories:
+        delete:
+            consumes:
+                - application/json
+            description: Delete existing category, requires being emptied beforehand
+            operationId: deleteCategory
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "403":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+        get:
+            consumes:
+                - application/json
+            description: List subdirectories available in the category
+            operationId: getCategory
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: categoryContents
+                    schema:
+                        $ref: '#/definitions/categoryContents'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+        post:
+            consumes:
+                - application/json
+            description: Creates a requested directory path
+            operationId: postCategory
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "403":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+        put:
+            consumes:
+                - application/json
+            description: Update existing Category
+            operationId: putCategory
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+    /imageSets:
+        delete:
+            consumes:
+                - application/json
+            description: Delete existing imageset
+            operationId: deleteImageSet
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+        get:
+            consumes:
+                - application/json
+            description: Return ImageSet details and available Images
+            operationId: getImageSet
+            produces:
+                - application/json
+            responses:
+                "200":
+                    $ref: '#/responses/getImageSet'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+        post:
+            consumes:
+                - application/json
+            description: Create a new image set
+            operationId: postImageSet
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "403":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+        put:
+            consumes:
+                - application/json
+            description: Update existing imageset id or category. Allows to move imageset to the different category, but it must be initialized beforehand
+            operationId: putImageSet
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - imageSets
+    /images/{category}/{id}:
+        delete:
+            consumes:
+                - application/json
+            description: Remove image from the image set
+            operationId: deleteImage
+            produces:
+                - application/json
+            responses:
+                "204":
+                    description: empty
+                    schema:
+                        $ref: '#/definitions/empty'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - images
+        get:
+            consumes:
+                - application/json
+            description: Return a signed url to requested image
+            operationId: getImageUrl
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: fileUrl
+                    schema:
+                        $ref: '#/definitions/fileUrl'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - images
+        post:
+            consumes:
+                - multipart/form-data
+            description: Add an image to the existing set
+            operationId: postImage
+            produces:
+                - application/json
+            responses:
+                "201":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "403":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - images
+        put:
+            consumes:
+                - multipart/form-data
+            description: Update an image in the image set
+            operationId: putImage
+            produces:
+                - application/json
+            responses:
+                "200":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "400":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "404":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+                "500":
+                    description: message
+                    schema:
+                        $ref: '#/definitions/message'
+            tags:
+                - images
+schemes:
+    - http
+    - https
+swagger: "2.0"
