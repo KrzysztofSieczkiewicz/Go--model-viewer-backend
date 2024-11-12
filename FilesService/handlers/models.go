@@ -25,7 +25,7 @@ type ModelsHandler struct {
 }
 
 func NewModels(baseUrl string, storage files.Storage, slogger *slog.Logger, cache caches.Cache) *ModelsHandler {
-	logger := slogger.With(slog.String("handler", "files")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
+	logger := slogger.With(slog.String("handler", "models"))
 
 	return &ModelsHandler{
 		baseUrl: baseUrl,
@@ -34,7 +34,7 @@ func NewModels(baseUrl string, storage files.Storage, slogger *slog.Logger, cach
 		cache:   cache,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
-			baseUrl+"/models", // TODO: accept as parameter from main.go
+			baseUrl + "/models",
 			time.Duration(5*int(time.Minute)),
 		),
 	}

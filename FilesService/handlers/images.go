@@ -37,16 +37,18 @@ type ImagesHandler struct {
 	signedUrl	signedurl.SignedUrl
 }
 
-func NewImages(baseUrl string, s files.Storage, l *slog.Logger, c caches.Cache) *ImagesHandler {
+func NewImages(baseUrl string, s files.Storage, slogger *slog.Logger, c caches.Cache) *ImagesHandler {
+	logger := slogger.With(slog.String("handler", "images"))
+
 	return &ImagesHandler{
 		baseUrl: baseUrl,
 		store: s, 
-		logger: l,
+		logger: logger,
 		cache: c,
 		signedUrl: *signedurl.NewSignedUrl(
 			"Secret key my boy",
 			baseUrl + "/images",
-			time.Duration(5 * int(time.Minute)),
+			time.Duration(5*int(time.Minute)),
 		),
 	}
 }

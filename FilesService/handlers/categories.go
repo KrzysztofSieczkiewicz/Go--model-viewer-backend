@@ -3,12 +3,10 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/files"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/response"
-	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/signedurl"
 	"github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/utils"
 )
 
@@ -17,21 +15,15 @@ type CategoriesHandler struct {
 	baseUrl		string
 	logger		*slog.Logger
 	store		files.Storage
-	signedUrl	signedurl.SignedUrl
 }
 
-func NewCategories(baseUrl string, s files.Storage, l *slog.Logger) *CategoriesHandler {
-	logger := l.With(slog.String("handler", "categories")) // TODO: do this when initializing logger in the main (you can pass the same logger to the store then)
+func NewCategories(baseUrl string, s files.Storage, slogger *slog.Logger) *CategoriesHandler {
+	logger := slogger.With(slog.String("handler", "categories"))
 
 	return &CategoriesHandler{
 		baseUrl: baseUrl,
 		store:   s,
 		logger:  logger,
-		signedUrl: *signedurl.NewSignedUrl(
-			"Secret key my boy",
-			baseUrl+"/files", // TODO: accept as parameter from main.go
-			time.Duration(5*int(time.Minute)),
-		),
 	}
 }
 
