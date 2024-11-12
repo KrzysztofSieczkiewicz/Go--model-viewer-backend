@@ -35,7 +35,7 @@ func setupCategory(t *testing.T, storage *files.Local) *models.Category {
 
 func setupCollection(t *testing.T, storage *files.Local, category *models.Category) *models.Collection {
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testID",
 	}
 	err := storage.CreateCollection(collection)
@@ -187,7 +187,7 @@ func TestDeleteCategory_NotEmpty(t *testing.T) {
     require.NoError(t, err)
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCategory",
 	}
 	err = localStorage.CreateCollection(collection)
@@ -210,7 +210,7 @@ func TestCreateCollection(t *testing.T) {
 	category := setupCategory(t, localStorage)
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCollection",
 	}
 
@@ -227,28 +227,28 @@ func TestCreateCollection_IllegalID(t *testing.T) {
 	category := setupCategory(t, localStorage)
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: ".",
 	}
 	err := localStorage.CreateCollection(collection)
 	assert.Error(t, err)
 
 	collection = &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "..",
 	}
 	err = localStorage.CreateCollection(collection)
 	assert.Error(t, err)
 
 	collection = &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "./..",
 	}
 	err = localStorage.CreateCollection(collection)
 	assert.Error(t, err)
 
 	collection = &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "",
 	}
 	err = localStorage.CreateCollection(collection)
@@ -263,7 +263,7 @@ func TestCreateCollection_NoSuchCategory(t *testing.T) {
 	}
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCollection",
 	}
 
@@ -280,14 +280,14 @@ func TestUpdateCollection(t *testing.T) {
 	category := setupCategory(t, localStorage)
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCollection",
 	}
 	err := localStorage.CreateCollection(collection)
 	require.NoError(t, err)
 
 	newCollection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCollection2",
 	}
 	err = localStorage.UpdateCollection(collection, newCollection)
@@ -304,7 +304,7 @@ func TestUpdateCollection_changeCategory(t *testing.T) {
 	category := setupCategory(t, localStorage)
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCollection",
 	}
 	err := localStorage.CreateCollection(collection)
@@ -317,7 +317,7 @@ func TestUpdateCollection_changeCategory(t *testing.T) {
 	require.NoError(t, err)
 
 	newCollection := &models.Collection{
-		Category: *newCategory,
+		Category: newCategory,
 		ID: "testCollection2",
 	}
 	err = localStorage.UpdateCollection(collection, newCollection)
@@ -334,7 +334,7 @@ func TestUpdateCollection_noSuchCategory(t *testing.T) {
 	category := setupCategory(t, localStorage)
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCollection",
 	}
 	err := localStorage.CreateCollection(collection)
@@ -344,7 +344,7 @@ func TestUpdateCollection_noSuchCategory(t *testing.T) {
 		Path: "/new/category/path",
 	}
 	newCollection := &models.Collection{
-		Category: *newCategory,
+		Category: newCategory,
 		ID: "testCollection2",
 	}
 	err = localStorage.UpdateCollection(collection, newCollection)
@@ -361,7 +361,7 @@ func TestDeleteCollection(t *testing.T) {
 	category := setupCategory(t, localStorage)
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "testCollection",
 	}
 	err := localStorage.CreateCollection(collection)

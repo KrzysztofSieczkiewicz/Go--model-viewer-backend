@@ -53,8 +53,8 @@ import (
 // DONE: Register all endpoints and funcs
 // DONE: Add signedUrl unit tests
 // DONE: Add response unit tests
+// DONE: Add freeCache unit tests
 
-// TODO: Add freeCache unit tests
 // TODO: Extend middleware if needed - preferably add some security stuff there
 // TODO: Resolve singular TODOs
 // TODO: Last iteration through swagger annotations
@@ -93,7 +93,7 @@ func main() {
 	// Initialize the ServeMux
 	router := http.NewServeMux()
 
-	// MODELS
+	// Register models
 	modh := handlers.NewModels(baseUrl, modStorage, logger, modCache)
 	router.HandleFunc("GET /models/url", modh.GetModelUrl)
 	router.HandleFunc("GET /models/{id}/{expires}/{signature}", modh.GetModel)
@@ -114,7 +114,7 @@ func main() {
 	router.HandleFunc("PUT /models/categories", modCath.PutCategory)
 	router.HandleFunc("DELETE /models/categories", modCath.DeleteCategory)
 
-	// IMAGES
+	// Register images
 	imgh := handlers.NewImages(baseUrl, imgStorage, logger, imgCache)
 	router.HandleFunc("GET /images/url", imgh.GetImageUrl)
 	router.HandleFunc("GET /images/{id}/{expires}/{signature}", imgh.GetImage)
