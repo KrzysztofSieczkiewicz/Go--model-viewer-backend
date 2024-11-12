@@ -1,7 +1,4 @@
-// TODO: should be moved to the models package
-package response
-
-import "github.com/KrzysztofSieczkiewicz/go--model-viewer-backend/FilesService/models"
+package models
 
 // swagger:model empty
 type EmptyResponse struct {}
@@ -14,7 +11,7 @@ type MessageResponse struct {
 // swagger:model directoryContents
 type DirectoryContentsResponse struct {
     // List of directories stored inside given category
-    Contents    []models.DirContent  `json:"contents"`
+    Contents    []DirContent  `json:"contents"`
 }
 
 // swagger:model fileByteStream

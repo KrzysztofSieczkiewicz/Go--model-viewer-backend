@@ -85,7 +85,7 @@ func (h *ModelsHandler) GetModelUrl(rw http.ResponseWriter, r *http.Request) {
 	h.cache.Set(tmpId, model)
 	url := h.signedUrl.GenerateSignedUrl(tmpId)
 
-    urlResponse := response.FileUrlResponse{URL: url}
+    urlResponse := models.FileUrlResponse{URL: url}
 	response.RespondWithJSON(rw, http.StatusOK, urlResponse)
 }
 

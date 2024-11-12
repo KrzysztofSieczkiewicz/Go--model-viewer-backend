@@ -76,7 +76,7 @@ func (h *CollectionsHandler) GetCollection(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	cr := &response.DirectoryContentsResponse{Contents: f}
+	cr := &models.DirectoryContentsResponse{Contents: f}
 
 	response.RespondWithJSON(rw, http.StatusOK, cr)
 }

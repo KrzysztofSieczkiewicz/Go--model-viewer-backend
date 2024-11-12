@@ -76,7 +76,7 @@ func (h *CategoriesHandler) GetCategory(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	cr := &response.DirectoryContentsResponse{Contents: f}
+	cr := &models.DirectoryContentsResponse{Contents: f}
 
 	response.RespondWithJSON(rw, http.StatusOK, cr)
 }

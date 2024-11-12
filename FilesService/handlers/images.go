@@ -96,7 +96,7 @@ func (h *ImagesHandler) GetImageUrl(rw http.ResponseWriter, r *http.Request) {
 	h.cache.Set(tmpId, image)
 	url := h.signedUrl.GenerateSignedUrl(tmpId)
 
-    urlResponse := response.FileUrlResponse{
+    urlResponse := models.FileUrlResponse{
         URL:      url,
     }
 

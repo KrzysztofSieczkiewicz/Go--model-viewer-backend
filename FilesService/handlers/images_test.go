@@ -54,13 +54,13 @@ func TestGetImageUrl_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.FileUrlResponse
+	var responseData models.FileUrlResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 }
 
 func TestGetImageUrl_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -193,7 +193,7 @@ func TestGetImageUrl_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -233,7 +233,7 @@ func TestGetImage_Success(t *testing.T) {
 }
 
 func TestGetImage_InvalidUrl(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -292,7 +292,7 @@ func TestGetImage_InvalidUrl(t *testing.T) {
 }
 
 func TestGetImage_NoFile(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -369,14 +369,14 @@ func TestPostImage_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageUploadSuccessful, responseData.Message)
 }
 
 func TestPostImage_InvalidMetadataPart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -485,7 +485,7 @@ func TestPostImage_InvalidMetadataPart(t *testing.T) {
 }
 
 func TestPostImage_InvalidFilePart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -597,7 +597,7 @@ func TestPostImage_AlreadyExists(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
@@ -652,7 +652,7 @@ func TestPostImage_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -695,14 +695,14 @@ func TestPutImage_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
 }
 
 func TestPutImage_InvalidFilePart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -775,7 +775,7 @@ func TestPutImage_InvalidFilePart(t *testing.T) {
 }
 
 func TestPutImage_InvalidMetadataPart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -931,7 +931,7 @@ func TestPutImage_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -966,14 +966,14 @@ func TestPutImageData_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
 }
 
 func TestPutImageData_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -1075,7 +1075,7 @@ func TestPutImageData_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -1100,14 +1100,14 @@ func TestDeleteImage_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.Error(t, err)
 	assert.Empty(t, responseData.Message)
 }
 
 func TestDeleteImage_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -1176,7 +1176,7 @@ func TestDeleteImage_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)

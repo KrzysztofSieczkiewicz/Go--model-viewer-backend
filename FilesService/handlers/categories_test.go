@@ -47,7 +47,7 @@ func TestGetCategory_Success(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		var responseData response.DirectoryContentsResponse
+		var responseData models.DirectoryContentsResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(responseData.Contents))
@@ -77,7 +77,7 @@ func TestGetCategory_BadRequest(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		assert.NoError(t, err)
 		assert.Equal(t, response.MessageInvalidData, responseData.Message)
@@ -95,7 +95,7 @@ func TestGetCategory_BadRequest(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		assert.NoError(t, err)
 		assert.Equal(t, response.MessageInvalidData, responseData.Message)
@@ -112,7 +112,7 @@ func TestGetCategory_BadRequest(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		assert.NoError(t, err)
 		assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
@@ -139,7 +139,7 @@ func TestGetCategory_NotFound(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		assert.NoError(t, err)
 		assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -197,7 +197,7 @@ func TestPostCategory_BadRequest(t *testing.T) {
 			defer res.Body.Close()
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-			var responseData response.MessageResponse
+			var responseData models.MessageResponse
 			err := json.NewDecoder(res.Body).Decode(&responseData)
 			require.NoError(t, err)
 			assert.Equal(t, badRequest.expectedMsg, responseData.Message)
@@ -221,7 +221,7 @@ func TestPostCategory_AlreadyExists(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
@@ -249,7 +249,7 @@ func TestPutCategory_Success(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
@@ -277,7 +277,7 @@ func TestPutCategory_BadRequest(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageInvalidData, responseData.Message)
@@ -295,7 +295,7 @@ func TestPutCategory_BadRequest(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageInvalidData, responseData.Message)
@@ -312,7 +312,7 @@ func TestPutCategory_BadRequest(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageInvalidJsonFormat, responseData.Message)
@@ -339,7 +339,7 @@ func TestPutCategory_NotFound(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -368,7 +368,7 @@ func TestPutCategory_AlreadyExists(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
@@ -396,7 +396,7 @@ func TestPutCategory_UpdateFailed(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageFailedUpdate, responseData.Message)
@@ -442,7 +442,7 @@ func TestDeleteCategory_NotFound(t *testing.T) {
 		defer res.Body.Close()
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		var responseData response.MessageResponse
+		var responseData models.MessageResponse
 		err := json.NewDecoder(res.Body).Decode(&responseData)
 		require.NoError(t, err)
 		assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -478,7 +478,7 @@ func TestDeleteCategory_BadRequest(t *testing.T) {
 			defer res.Body.Close()
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-			var responseData response.MessageResponse
+			var responseData models.MessageResponse
 			err := json.NewDecoder(res.Body).Decode(&responseData)
 			require.NoError(t, err)
 			assert.Equal(t, badRequest.expectedMsg, responseData.Message)
@@ -502,7 +502,7 @@ func TestDeleteCategory_NotEmpty(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageDirectoryNotEmpty, responseData.Message)

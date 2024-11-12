@@ -54,13 +54,13 @@ func TestGetModelUrl_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.FileUrlResponse
+	var responseData models.FileUrlResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 }
 
 func TestGetModelUrl_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -193,7 +193,7 @@ func TestGetModelUrl_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -233,7 +233,7 @@ func TestGetModel_Success(t *testing.T) {
 }
 
 func TestGetModel_InvalidUrl(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -292,7 +292,7 @@ func TestGetModel_InvalidUrl(t *testing.T) {
 }
 
 func TestGetModel_NoFile(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -369,14 +369,14 @@ func TestPostModel_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageUploadSuccessful, responseData.Message)
 }
 
 func TestPostModel_InvalidMetadataPart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -485,7 +485,7 @@ func TestPostModel_InvalidMetadataPart(t *testing.T) {
 }
 
 func TestPostModel_InvalidFilePart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -564,11 +564,11 @@ func TestPostModel_AlreadyExists(t *testing.T) {
 
 	category := setupCategory(t, storage, "category/path")
 	collection := setupCollection(t, storage, category, "collection")
-	models := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
+	model := setupModel(t, storage, collection, "scan", "LOD1", "gltf")
 
-	mockCache.On("Get", mock.Anything).Return(models.ConstructFilepath(), nil)
+	mockCache.On("Get", mock.Anything).Return(model.ConstructFilepath(), nil)
 
-	modelsJson, err := json.Marshal(models)
+	modelsJson, err := json.Marshal(model)
 	require.NoError(t, err)
 
 	// Create image metadata part
@@ -579,7 +579,7 @@ func TestPostModel_AlreadyExists(t *testing.T) {
 
 	// Create file part
 	file := []byte("dummy image data")
-	part, err := writer.CreateFormFile("file", models.ConstructName())
+	part, err := writer.CreateFormFile("file", model.ConstructName())
 	require.NoError(t, err)
 
 	_, err = part.Write(file)
@@ -597,7 +597,7 @@ func TestPostModel_AlreadyExists(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageAlreadyExists, responseData.Message)
@@ -651,7 +651,7 @@ func TestPostModel_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -694,14 +694,14 @@ func TestPutModel_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
 }
 
 func TestPutModel_InvalidFilePart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -774,7 +774,7 @@ func TestPutModel_InvalidFilePart(t *testing.T) {
 }
 
 func TestPutModel_InvalidMetadataPart(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -930,7 +930,7 @@ func TestPutModel_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err = json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -965,14 +965,14 @@ func TestPutModelData_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageUpdateSuccessful, responseData.Message)
 }
 
 func TestPutModelData_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -1074,7 +1074,7 @@ func TestPutModelData_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
@@ -1099,14 +1099,14 @@ func TestDeleteModel_Success(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.Error(t, err)
 	assert.Empty(t, responseData.Message)
 }
 
 func TestDeleteModel_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	mockCache := new(MockCache)
@@ -1175,7 +1175,7 @@ func TestDeleteModel_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)

@@ -54,8 +54,8 @@ import (
 // DONE: Add signedUrl unit tests
 // DONE: Add response unit tests
 // DONE: Add freeCache unit tests
+// DONE: Extend middleware if needed - preferably add some security stuff there
 
-// TODO: Extend middleware if needed - preferably add some security stuff there
 // TODO: Resolve singular TODOs
 // TODO: Last iteration through swagger annotations
 // TODO: Retest all endpoints with test data

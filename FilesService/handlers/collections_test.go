@@ -26,7 +26,7 @@ func setupCollectionsHandler(storage files.Storage) *handlers.CollectionsHandler
 }
 
 func TestGetCollecion_Success(t *testing.T) {
-	var responseData response.DirectoryContentsResponse
+	var responseData models.DirectoryContentsResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -48,7 +48,7 @@ func TestGetCollecion_Success(t *testing.T) {
 }
 
 func TestGetCollecion_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -106,7 +106,7 @@ func TestGetCollecion_BadRequest(t *testing.T) {
 }
 
 func TestGetCollection_NotFound(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -175,7 +175,7 @@ func TestPostCollection_Success(t *testing.T) {
 }
 
 func TestPostCollecion_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -273,14 +273,14 @@ func TestPostCollection_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 	err := json.NewDecoder(res.Body).Decode(&responseData)
 	assert.NoError(t, err)
 	assert.Equal(t, response.MessageNotFound, responseData.Message)
 }
 
 func TestPostCollection_AlreadyExists(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -308,7 +308,7 @@ func TestPostCollection_AlreadyExists(t *testing.T) {
 }
 
 func TestPutCollection_Success(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -338,7 +338,7 @@ func TestPutCollection_Success(t *testing.T) {
 }
 
 func TestPutCollection_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -456,7 +456,7 @@ func TestPutCollection_BadRequest(t *testing.T) {
 }
 
 func TestPutCollection_NotFound(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -491,7 +491,7 @@ func TestPutCollection_NotFound(t *testing.T) {
 }
 
 func TestPutCollection_AlreadyExists(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -520,7 +520,7 @@ func TestPutCollection_AlreadyExists(t *testing.T) {
 }
 
 func TestDeleteCollection_Success(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -542,7 +542,7 @@ func TestDeleteCollection_Success(t *testing.T) {
 }
 
 func TestDeleteCollection_BadRequest(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
@@ -617,7 +617,7 @@ func TestDeleteCollection_BadRequest(t *testing.T) {
 }
 
 func TestDeleteCollection_NotFound(t *testing.T) {
-	var responseData response.MessageResponse
+	var responseData models.MessageResponse
 
 	storage := setupStorage(t, 1)
 	handler := setupCollectionsHandler(storage)
