@@ -9,7 +9,7 @@ type Collection struct {
 	ID string `json:"id" validate:"required,collectionID"`
 
 	// Category structure describing collection
-	Category Category `json:"category" validate:"required,category"`
+	Category *Category `json:"category" validate:"required,category"`
 }
 
 

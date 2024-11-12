@@ -35,7 +35,7 @@ func setupCategory(t *testing.T, storage *files.Local, path string) *models.Cate
 
 func setupCollection(t *testing.T, storage *files.Local, category *models.Category, id string) *models.Collection {
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: id,
 	}
 	err := storage.CreateCollection(collection)

@@ -10,9 +10,9 @@ type freeCacheWrapper struct {
 	defaultExpiraton int
 }
 
-func NewFreeCache(cacheSizeMB int, defaultExpMinutes int) *freeCacheWrapper {
+func NewFreeCache(cacheSizeMB int, defaultExpSeconds int) *freeCacheWrapper {
 	cacheSize := cacheSizeMB * 1024 * 1024
-	expirationTime := defaultExpMinutes * 60
+	expirationTime := defaultExpSeconds
 
 	return &freeCacheWrapper{
 		cache: freecache.NewCache(cacheSize),

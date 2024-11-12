@@ -611,7 +611,7 @@ func TestPostModel_NotFound(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "collection",
 	}
 	model := &models.Model{
@@ -889,7 +889,7 @@ func TestPutModel_NotFound(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "collection",
 	}
 	model := &models.Model{

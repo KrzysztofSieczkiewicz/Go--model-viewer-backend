@@ -87,8 +87,8 @@ func main() {
 	}
 
 	// Initialize a cache
-	imgCache := caches.NewFreeCache(64, 2)
-	modCache := caches.NewFreeCache(128, 5)
+	imgCache := caches.NewFreeCache(64, 120)
+	modCache := caches.NewFreeCache(128, 300)
 
 	// Initialize the ServeMux
 	router := http.NewServeMux()

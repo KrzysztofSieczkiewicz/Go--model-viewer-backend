@@ -113,7 +113,7 @@ func TestGetCollection_NotFound(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 	
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "nonExistingCollection",
 	}
 
@@ -155,7 +155,7 @@ func TestPostCollection_Success(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 	
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "newCollection",
 	}
 
@@ -182,7 +182,7 @@ func TestPostCollecion_BadRequest(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 	
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "_newID",
 	}
 
@@ -259,7 +259,7 @@ func TestPostCollection_NotFound(t *testing.T) {
 	}
 	
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "someCollection",
 	}
 
@@ -288,7 +288,7 @@ func TestPostCollection_AlreadyExists(t *testing.T) {
 	_ = setupCollection(t, storage, category, "collection")
 	
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "collection",
 	}
 
@@ -318,7 +318,7 @@ func TestPutCollection_Success(t *testing.T) {
 	putCollection := &models.PutRequest[models.Collection]{
 		Existing: *initCollection,
 		New : models.Collection{
-			Category: *category,
+			Category: category,
 			ID: "newCollection",
 		},
 	}
@@ -349,7 +349,7 @@ func TestPutCollection_BadRequest(t *testing.T) {
 	putCollection := &models.PutRequest[models.Collection]{
 		Existing: *initCollection,
 		New : models.Collection{
-			Category: *category,
+			Category: category,
 			ID: "newCollection",
 		},
 	}
@@ -373,7 +373,7 @@ func TestPutCollection_BadRequest(t *testing.T) {
 	putCollection = &models.PutRequest[models.Collection]{
 		Existing: *initCollection,
 		New: models.Collection{
-			Category: *category,
+			Category: category,
 			ID: "_newCollection",
 		},
 	}
@@ -395,7 +395,7 @@ func TestPutCollection_BadRequest(t *testing.T) {
 	// New collection malformed category path
 	putCollection = &models.PutRequest[models.Collection]{
 		New: models.Collection{
-			Category: models.Category{
+			Category: &models.Category{
 				Path: "/test/",
 			},
 			ID: "_newCollection",
@@ -419,7 +419,7 @@ func TestPutCollection_BadRequest(t *testing.T) {
 	// New collection with returning category path
 	putCollection = &models.PutRequest[models.Collection]{
 		New: models.Collection{
-			Category: models.Category{
+			Category: &models.Category{
 				Path: "/test/",
 			},
 			ID: "./../test",
@@ -463,11 +463,11 @@ func TestPutCollection_NotFound(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 
 	initCollection := models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "existingCollection",
 	}
 	newCollection := models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "newCollection",
 	}
 	putCollection := &models.PutRequest[models.Collection]{
@@ -624,7 +624,7 @@ func TestDeleteCollection_NotFound(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "collection",
 	}
 

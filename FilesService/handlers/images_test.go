@@ -611,7 +611,7 @@ func TestPostImage_NotFound(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "collection",
 	}
 	image := &models.Image{
@@ -890,7 +890,7 @@ func TestPutImage_NotFound(t *testing.T) {
 	category := setupCategory(t, storage, "category/path")
 
 	collection := &models.Collection{
-		Category: *category,
+		Category: category,
 		ID: "collection",
 	}
 	image := &models.Image{
